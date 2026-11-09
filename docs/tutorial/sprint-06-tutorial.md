@@ -2,8 +2,7 @@
 
 ## Sprint 6 — Observability, Security & Analytics
 
-> Companion to `docs/roadmap/sprint-06-observability-security.md`. Every `S6-Txx` section is one ticket. Tickets follow the sprint file's order.
-> **Golden rule of this sprint:** every integration is **optional**. With *no* environment variables the app boots exactly as before; with *all* of them (dummy keys) it still boots and no page breaks. Tests prove both (ADR-008).
+> Companion to `docs/roadmap/sprint-06-observability-security.md`. Every `S6-Txx` section is one ticket. Tickets follow the sprint file's order. **Golden rule of this sprint:** every integration is **optional**. With _no_ environment variables the app boots exactly as before; with _all_ of them (dummy keys) it still boots and no page breaks. Tests prove both (ADR-008).
 
 🪟 **Windows + Cmder:** use the **Git Bash tab**. Paths with `[brackets]`/`(parentheses)` must be quoted. Windows-specific notes are marked 🪟.
 
@@ -23,7 +22,7 @@
 ## 🧭 Decisions & deviations (made once, here)
 
 | Topic | Decision | Why |
-|---|---|---|
+| --- | --- | --- |
 | Optional integrations | Each lives behind a tiny adapter that **no-ops** without its env vars | Zero-config local start; easy to strip (S8) |
 | Sentry tunnel | **Not** used | A tunnel route would collide with the locale proxy; ad-blocker loss is acceptable for now |
 | Sentry Replay | Off by default; **lazy-loaded only after consent** (S6-T10) | Privacy; bundle size |
@@ -54,6 +53,7 @@ gh pr checks --watch
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line. Run `pnpm pin` after adding dependencies. CI's only required check is **`CI OK`** (Sprint 5).
 
 ---
@@ -65,6 +65,7 @@ git switch main && git pull
 pnpm install
 pnpm check              # Sprint 5 must be green
 ```
+
 Set **Current sprint: Sprint 6** in `docs/roadmap/06-project-state.md`.
 
 Create **free** accounts now (you can skip any — each ticket also works without): [Sentry](https://sentry.io), [Better Stack](https://betterstack.com), [Arcjet](https://arcjet.com), [PostHog](https://posthog.com), [Checkly](https://checklyhq.com). Keep their keys in `.env.local` only.
@@ -83,6 +84,7 @@ pnpm add @sentry/nextjs
 ### 1. Environment (all optional)
 
 📄 **Edit `src/libs/Env.ts`** — `flag` already exists. Add to `server`, `client` and `runtimeEnv`:
+
 ```ts
   server: {
     // …
@@ -100,6 +102,7 @@ pnpm add @sentry/nextjs
       .transform((value) => value === 'true'),
   },
 ```
+
 ```ts
     SENTRY_ORG: process.env.SENTRY_ORG,
     SENTRY_PROJECT: process.env.SENTRY_PROJECT,
@@ -107,7 +110,9 @@ pnpm add @sentry/nextjs
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SENTRY_SPOTLIGHT: process.env.NEXT_PUBLIC_SENTRY_SPOTLIGHT,
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Sentry (optional: no DSN → nothing is sent) ────
 NEXT_PUBLIC_SENTRY_DSN=
@@ -122,6 +127,7 @@ NEXT_PUBLIC_SENTRY_SPOTLIGHT=false
 ### 2. Framework hooks
 
 📄 **Create `src/instrumentation.ts`:**
+
 ```ts
 import * as Sentry from '@sentry/nextjs';
 
@@ -135,7 +141,9 @@ export async function register() {
 // Reports errors thrown while rendering Server Components and in Route Handlers / Server Actions
 export const onRequestError = Sentry.captureRequestError;
 ```
+
 📄 **Create `src/sentry.server.config.ts`:**
+
 ```ts
 import * as Sentry from '@sentry/nextjs';
 
@@ -152,7 +160,9 @@ if (Env.NEXT_PUBLIC_SENTRY_DSN || Env.NEXT_PUBLIC_SENTRY_SPOTLIGHT) {
   });
 }
 ```
+
 📄 **Create `src/instrumentation-client.ts`:**
+
 ```ts
 import * as Sentry from '@sentry/nextjs';
 
@@ -171,9 +181,11 @@ if (Env.NEXT_PUBLIC_SENTRY_DSN || Env.NEXT_PUBLIC_SENTRY_SPOTLIGHT) {
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
 ```
+
 > `process.env.VERCEL_ENV`, `NODE_ENV` and `NEXT_RUNTIME` are framework-provided, not our configuration. Our env guard must allow these two files:
 
 📄 **Edit `scripts/check-env-usage.mjs`:**
+
 ```js
 const ALLOWED = new Set([
   'src/libs/Env.ts',
@@ -183,17 +195,23 @@ const ALLOWED = new Set([
   'src/sentry.server.config.ts',
 ]);
 ```
+
 (also add the three files to `knip.config.ts` → `entry`)
 
 ### 3. The adapter the app code uses
 
 📄 **Create `src/libs/Sentry.ts`:**
+
 ```ts
 import * as Sentry from '@sentry/nextjs';
 
 import { redactValue } from '@/libs/logger-redaction';
 
-type Context = { requestId?: string; tags?: Record<string, string>; extra?: Record<string, unknown> };
+type Context = {
+  requestId?: string;
+  tags?: Record<string, string>;
+  extra?: Record<string, unknown>;
+};
 
 /**
  * The only way application code reports unexpected errors. Safe to call without a DSN (no-op).
@@ -206,42 +224,58 @@ export function reportError(error: unknown, { requestId, tags, extra }: Context 
   });
 }
 ```
+
 📄 **Create `src/libs/Sentry.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
 import { reportError } from './Sentry';
 
 it('is a harmless no-op when Sentry is not initialised (no DSN)', () => {
-  expect(() => reportError(new Error('boom'), { requestId: 'r1', extra: { password: 'x' } })).not.toThrow();
+  expect(() =>
+    reportError(new Error('boom'), { requestId: 'r1', extra: { password: 'x' } }),
+  ).not.toThrow();
 });
 ```
 
 ### 4. Use it where unexpected errors are caught
 
 📄 **Edit `src/utils/action.ts`** — in the `catch` branch for unknown errors:
+
 ```ts
 import { reportError } from '@/libs/Sentry';
 // …
-      getLogger('app').error('Unhandled error in server action', { error });
-      reportError(error); // Sentry (no-op without DSN)
+getLogger('app').error('Unhandled error in server action', { error });
+reportError(error); // Sentry (no-op without DSN)
 ```
+
 📄 **Edit `src/app/[locale]/error.tsx`** and **`(app)/error.tsx`:**
+
 ```tsx
 import { useEffect } from 'react';
+
 import { reportError } from '@/libs/Sentry';
 
 // inside the component, before the return:
-  useEffect(() => {
-    reportError(error, { tags: { boundary: 'route' } });
-  }, [error]);
+useEffect(() => {
+  reportError(error, { tags: { boundary: 'route' } });
+}, [error]);
 ```
+
 📄 **Edit `src/app/global-error.tsx`** (crash in the root layout):
+
 ```tsx
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 
-export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -252,6 +286,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 ### 5. Build plugin: release + source maps (only when a token exists)
 
 📄 **Edit `next.config.ts`:**
+
 ```ts
 import { withSentryConfig } from '@sentry/nextjs';
 
@@ -268,13 +303,16 @@ export default withSentryConfig(config, {
   // 🔍 release name defaults to the Git SHA on Vercel/GitHub; set `release: { name }` to override
 });
 ```
+
 > Add `@sentry/nextjs` to `serverExternalPackages`? Not needed. If the build complains about the Turbopack/webpack plugin mode, follow the current Sentry docs for **Turbopack** (source-map upload is supported in recent SDKs 🔍).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm check:env
 pnpm build            # works WITHOUT any Sentry variable (warning about the token is fine)
 ```
+
 1. **Without a DSN:** `pnpm dev`, break something (temporarily `throw new Error('test')` in a page) → the error page appears, the terminal shows **no Sentry output**.
 2. **With a DSN** in `.env.local` (`NEXT_PUBLIC_SENTRY_DSN=…` from your free Sentry project): restart, trigger the error again → the issue appears in Sentry within seconds: **server** errors (page throws), **client** errors (throw inside a `useEffect` of a client component) and **Server Action** failures (throw a non-`AppError` inside a handler) all show up. `AppError`s (e.g. a validation failure) do **not**.
 3. Remove the test throws.
@@ -296,12 +334,19 @@ git switch main && git pull && git switch -c feat/s6-t02-sentry-scrub
 ### 1. The scrubber (pure, tested)
 
 📄 **Create `src/libs/sentry-scrub.ts`:**
+
 ```ts
 import { redactValue } from '@/libs/logger-redaction';
 
 type SentryEventLike = {
   message?: string;
-  request?: { cookies?: unknown; headers?: Record<string, string>; url?: string; query_string?: unknown; data?: unknown };
+  request?: {
+    cookies?: unknown;
+    headers?: Record<string, string>;
+    url?: string;
+    query_string?: unknown;
+    data?: unknown;
+  };
   user?: { id?: string | number; email?: string; ip_address?: string | null; username?: string };
   extra?: Record<string, unknown>;
   exception?: { values?: { value?: string }[] };
@@ -322,7 +367,10 @@ export function scrubEvent<T extends SentryEventLike>(event: T): T {
     if (event.request.url) event.request.url = scrubString(event.request.url);
     if (event.request.headers) {
       event.request.headers = Object.fromEntries(
-        Object.entries(event.request.headers).map(([name, value]) => [name, SENSITIVE_HEADER.test(name) ? '[REDACTED]' : value]),
+        Object.entries(event.request.headers).map(([name, value]) => [
+          name,
+          SENSITIVE_HEADER.test(name) ? '[REDACTED]' : value,
+        ]),
       );
     }
   }
@@ -344,7 +392,9 @@ export function scrubEvent<T extends SentryEventLike>(event: T): T {
   return event;
 }
 ```
+
 📄 **Create `src/libs/sentry-scrub.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -352,8 +402,12 @@ import { scrubEvent, scrubString } from './sentry-scrub';
 
 describe('scrubString', () => {
   it('hides secret-looking URL parameters but keeps the rest', () => {
-    expect(scrubString('https://app.test/reset?token=abc123&lang=fr')).toBe('https://app.test/reset?token=[REDACTED]&lang=fr');
-    expect(scrubString('failed for /verify?code=999111')).toBe('failed for /verify?code=[REDACTED]');
+    expect(scrubString('https://app.test/reset?token=abc123&lang=fr')).toBe(
+      'https://app.test/reset?token=[REDACTED]&lang=fr',
+    );
+    expect(scrubString('failed for /verify?code=999111')).toBe(
+      'failed for /verify?code=[REDACTED]',
+    );
   });
 });
 
@@ -374,8 +428,14 @@ describe('scrubEvent', () => {
       breadcrumbs: [{ message: 'GET /x?code=123456', data: { apiKey: 'k', status: 200 } }],
     });
 
-    expect(JSON.stringify(event)).not.toMatch(/SECRET|hunter2|ada@example|1\.2\.3\.4|123456|Bearer x/);
-    expect(event.request?.headers).toMatchObject({ Authorization: '[REDACTED]', Cookie: '[REDACTED]', 'user-agent': 'Chrome' });
+    expect(JSON.stringify(event)).not.toMatch(
+      /SECRET|hunter2|ada@example|1\.2\.3\.4|123456|Bearer x/,
+    );
+    expect(event.request?.headers).toMatchObject({
+      Authorization: '[REDACTED]',
+      Cookie: '[REDACTED]',
+      'user-agent': 'Chrome',
+    });
     expect(event.user).toEqual({ id: 'u1' });
     expect(event.extra).toEqual({ password: '[REDACTED]', note: 'ok' });
   });
@@ -385,7 +445,9 @@ describe('scrubEvent', () => {
   });
 });
 ```
+
 Wire it into both inits (`sentry.server.config.ts`, `instrumentation-client.ts`):
+
 ```ts
 import { scrubEvent } from '@/libs/sentry-scrub';
 // inside Sentry.init({ … }):
@@ -396,40 +458,47 @@ import { scrubEvent } from '@/libs/sentry-scrub';
 ### 2. Spotlight: see events locally, without a Sentry account
 
 📄 **Edit `package.json`:** `"spotlight": "spotlight"` and install the sidecar:
+
 ```bash
 pnpm add -D @spotlightjs/spotlight
 ```
+
 Two terminals:
+
 ```bash
 # Tab 1
 pnpm spotlight                      # UI at http://localhost:8969
 # Tab 2 — .env.local: NEXT_PUBLIC_SENTRY_SPOTLIGHT=true   (no DSN needed)
 pnpm dev
 ```
+
 > 🔒 Spotlight stays **dev-only**: it listens on localhost, and Spotlight mode is off by default.
 
 ### 3. Source maps in CI releases (only when the token exists)
 
-The upload already happens inside `next build` when `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` are set. Make sure **only the real build** has them: in GitHub → *Settings → Secrets* add the three secrets, and expose them to the **release/deploy build only** (Sprint 8) — not to PR builds from forks.
+The upload already happens inside `next build` when `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` are set. Make sure **only the real build** has them: in GitHub → _Settings → Secrets_ add the three secrets, and expose them to the **release/deploy build only** (Sprint 8) — not to PR builds from forks.
 
 📄 **Document it** — create `docs/guides/observability.md` (extended in later tickets):
-````markdown
+
+```markdown
 # Observability
 
 ## Sentry
+
 - Optional: set `NEXT_PUBLIC_SENTRY_DSN`. Without it every `Sentry.*` call is a no-op.
 - Report unexpected errors only (`reportError`, `src/libs/Sentry.ts`). `AppError` subclasses are expected → not reported.
-- Everything is scrubbed before leaving the process (`src/libs/sentry-scrub.ts`): cookies, bodies, auth headers,
-  e-mail/IP, `token|code|secret…` URL params.
+- Everything is scrubbed before leaving the process (`src/libs/sentry-scrub.ts`): cookies, bodies, auth headers, e-mail/IP, `token|code|secret…` URL params.
 - Releases + source maps: set `SENTRY_ORG/PROJECT/AUTH_TOKEN` for production builds. Maps are deleted after upload.
 - Local debugging without an account: `pnpm spotlight` + `NEXT_PUBLIC_SENTRY_SPOTLIGHT=true`.
 - Session Replay: off by default; loaded only after the visitor consents (S6-T10).
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 ```
+
 1. With Spotlight running and `NEXT_PUBLIC_SENTRY_SPOTLIGHT=true`: throw an error in a page → it appears in the Spotlight UI with traces; **sign in first**, then throw inside a Server Action with the message `"Bad token=SECRET"` → in the event, `SECRET` is **not** visible, no cookies, no `Authorization` header, user shows only an `id`.
 2. `git grep -n "Sentry.init" src` → exactly **two** places (server + client configs).
 3. `pnpm build` still succeeds without the Sentry variables.
@@ -451,12 +520,15 @@ git switch main && git pull && git switch -c feat/s6-t03-betterstack
 ### 1. Environment
 
 📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`):
+
 ```ts
     BETTER_STACK_SOURCE_TOKEN: z.string().min(1).optional(),
     // e.g. s1234567.eu-nbg-2.betterstackdata.com (shown on your source's page)
     BETTER_STACK_INGESTING_HOST: z.string().min(1).optional(),
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Better Stack logs (optional: both → logs are shipped; otherwise console only) ──
 BETTER_STACK_SOURCE_TOKEN=
@@ -466,6 +538,7 @@ BETTER_STACK_INGESTING_HOST=
 ### 2. A batching sink
 
 📄 **Create `src/libs/logger-betterstack.ts`:**
+
 ```ts
 import type { LogRecord, Sink } from '@logtape/logtape';
 
@@ -487,7 +560,9 @@ function toPayload(record: LogRecord) {
     level: record.level,
     category: record.category.join('.'),
     // LogTape messages alternate text and interpolated values
-    message: record.message.map((part) => (typeof part === 'string' ? part : JSON.stringify(part))).join(''),
+    message: record.message
+      .map((part) => (typeof part === 'string' ? part : JSON.stringify(part)))
+      .join(''),
     ...record.properties, // requestId, userId, orgId… (already redacted by withRedaction)
   };
 }
@@ -548,7 +623,9 @@ export function createBetterStackSink({
   return sink;
 }
 ```
+
 📄 **Create `src/libs/logger-betterstack.test.ts`:**
+
 ```ts
 import type { LogRecord } from '@logtape/logtape';
 import { describe, expect, it, vi } from 'vitest';
@@ -557,14 +634,25 @@ import { createBetterStackSink } from './logger-betterstack';
 import { withRedaction } from './logger-redaction';
 
 const record = (message: string, properties: Record<string, unknown> = {}): LogRecord =>
-  ({ level: 'info', category: ['app', 'auth'], message: [message], rawMessage: message, timestamp: 1_700_000_000_000, properties }) as LogRecord;
+  ({
+    level: 'info',
+    category: ['app', 'auth'],
+    message: [message],
+    rawMessage: message,
+    timestamp: 1_700_000_000_000,
+    properties,
+  }) as LogRecord;
 
 const ok = () => vi.fn().mockResolvedValue(new Response('', { status: 202 }));
 
 describe('createBetterStackSink', () => {
   it('sends one batch with a bearer token and the log fields', async () => {
     const fetchMock = ok();
-    const sink = createBetterStackSink({ endpoint: 'https://logs.test', token: 't0k', fetchImpl: fetchMock });
+    const sink = createBetterStackSink({
+      endpoint: 'https://logs.test',
+      token: 't0k',
+      fetchImpl: fetchMock,
+    });
 
     sink(record('one', { requestId: 'r1' }));
     sink(record('two'));
@@ -575,14 +663,24 @@ describe('createBetterStackSink', () => {
     expect(url).toBe('https://logs.test');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer t0k');
     expect(JSON.parse(init.body as string)).toEqual([
-      expect.objectContaining({ message: 'one', requestId: 'r1', category: 'app.auth', level: 'info' }),
+      expect.objectContaining({
+        message: 'one',
+        requestId: 'r1',
+        category: 'app.auth',
+        level: 'info',
+      }),
       expect.objectContaining({ message: 'two' }),
     ]);
   });
 
   it('flushes immediately when the batch is full', async () => {
     const fetchMock = ok();
-    const sink = createBetterStackSink({ endpoint: 'x', token: 't', fetchImpl: fetchMock, maxBatch: 2 });
+    const sink = createBetterStackSink({
+      endpoint: 'x',
+      token: 't',
+      fetchImpl: fetchMock,
+      maxBatch: 2,
+    });
     sink(record('a'));
     sink(record('b'));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
@@ -590,7 +688,12 @@ describe('createBetterStackSink', () => {
 
   it('never throws into the caller when the network is down, and retries before giving up', async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('offline'));
-    const sink = createBetterStackSink({ endpoint: 'x', token: 't', fetchImpl: fetchMock, retries: 2 });
+    const sink = createBetterStackSink({
+      endpoint: 'x',
+      token: 't',
+      fetchImpl: fetchMock,
+      retries: 2,
+    });
 
     sink(record('lost'));
     await expect(sink.flush()).resolves.toBeUndefined();
@@ -599,11 +702,20 @@ describe('createBetterStackSink', () => {
 
   it('bounds memory: the oldest logs are dropped beyond maxQueue', async () => {
     const fetchMock = ok();
-    const sink = createBetterStackSink({ endpoint: 'x', token: 't', fetchImpl: fetchMock, maxQueue: 3, maxBatch: 1000, flushIntervalMs: 60_000 });
+    const sink = createBetterStackSink({
+      endpoint: 'x',
+      token: 't',
+      fetchImpl: fetchMock,
+      maxQueue: 3,
+      maxBatch: 1000,
+      flushIntervalMs: 60_000,
+    });
     for (let i = 1; i <= 5; i += 1) sink(record(`m${i}`));
     await sink.flush();
 
-    const sent = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string) as { message: string }[];
+    const sent = JSON.parse((fetchMock.mock.calls[0]![1] as RequestInit).body as string) as {
+      message: string;
+    }[];
     expect(sent.map((entry) => entry.message)).toEqual(['m3', 'm4', 'm5']);
   });
 
@@ -624,13 +736,14 @@ describe('createBetterStackSink', () => {
 ### 3. Plug it into the logger (only when configured)
 
 📄 **Edit `src/libs/Logger.ts`:**
+
 ```ts
 import { createBetterStackSink, type FlushableSink } from '@/libs/logger-betterstack';
 
 let betterStack: FlushableSink | undefined;
 
 if (!globalForLog.__logtapeConfigured) {
-  const consoleSink = withRedaction(getConsoleSink({ /* …unchanged formatter… */ }));
+  const consoleSink = withRedaction(getConsoleSink({/* …unchanged formatter… */}));
 
   // Both variables → ship logs. Either missing → console only (zero-config local start).
   if (Env.BETTER_STACK_SOURCE_TOKEN && Env.BETTER_STACK_INGESTING_HOST) {
@@ -646,7 +759,11 @@ if (!globalForLog.__logtapeConfigured) {
       ...(betterStack ? { betterstack: withRedaction(betterStack) } : {}), // redaction BEFORE anything leaves
     },
     loggers: [
-      { category: ['app'], lowestLevel: Env.LOG_LEVEL, sinks: betterStack ? ['console', 'betterstack'] : ['console'] },
+      {
+        category: ['app'],
+        lowestLevel: Env.LOG_LEVEL,
+        sinks: betterStack ? ['console', 'betterstack'] : ['console'],
+      },
       { category: ['logtape', 'meta'], lowestLevel: 'warning', sinks: ['console'] },
     ],
   });
@@ -658,29 +775,34 @@ export async function flushLogs(): Promise<void> {
   await betterStack?.flush();
 }
 ```
+
 > 🔍 `betterStack` is module-level: if Next bundles `Logger.ts` more than once, only the instance that configured LogTape holds the sink — we already keep LogTape external (`serverExternalPackages`); flush through the same module in practice (Server Actions).
 
 📄 **Flush after Server Actions** — edit `src/utils/action.ts`: wrap the returned function so logs are flushed when the action finishes (`after()` keeps serverless alive long enough):
+
 ```ts
 import { after } from 'next/server';
+
 import { flushLogs, getLogger } from '@/libs/Logger';
 
 // inside createAction(...)'s returned async function, at the very top:
-    try {
-      after(() => flushLogs());
-    } catch {
-      // not in a request scope (tests/scripts): nothing to flush later
-    }
+try {
+  after(() => flushLogs());
+} catch {
+  // not in a request scope (tests/scripts): nothing to flush later
+}
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 ```
+
 1. **Without** the two variables: `pnpm dev` → logs only in the terminal; no network calls (watch with `LOG_LEVEL=debug`).
-2. **With** your Better Stack source (`BETTER_STACK_SOURCE_TOKEN`, `BETTER_STACK_INGESTING_HOST` in `.env.local`): submit the contact form → within a few seconds the line **"Contact form received"** appears in *Live tail*; a line with `password` in its properties shows `[REDACTED]`.
+2. **With** your Better Stack source (`BETTER_STACK_SOURCE_TOKEN`, `BETTER_STACK_INGESTING_HOST` in `.env.local`): submit the contact form → within a few seconds the line **"Contact form received"** appears in _Live tail_; a line with `password` in its properties shows `[REDACTED]`.
 3. Set a wrong token → the app keeps working (check the terminal: no stack traces from the sink).
-4. Record the serverless caveat in `06-project-state.md`: *"`TD-14` — log batches can be lost when a serverless function is frozen; use Better Stack's Vercel integration in production."*
+4. Record the serverless caveat in `06-project-state.md`: _"`TD-14` — log batches can be lost when a serverless function is frozen; use Better Stack's Vercel integration in production."_
 
 **🚢 Ship** — branch `feat/s6-t03-betterstack` · message: `feat(obs): ship logs to better stack with a bounded, redacted, non-blocking batch sink`
 
@@ -690,7 +812,7 @@ pnpm test && pnpm check
 
 **Branch:** `feat/s6-t04-request-id` · **Story:** US-061 · **3 SP**
 
-> 🎯 *"A customer says: reference abc123."* One search finds the logs **and** the Sentry event **and** the failing request. The id is born in `proxy.ts`, travels in a header, and is attached to every log line written during that request.
+> 🎯 _"A customer says: reference abc123."_ One search finds the logs **and** the Sentry event **and** the failing request. The id is born in `proxy.ts`, travels in a header, and is attached to every log line written during that request.
 
 ```bash
 git switch main && git pull && git switch -c feat/s6-t04-request-id
@@ -699,13 +821,17 @@ git switch main && git pull && git switch -c feat/s6-t04-request-id
 ### 1. Helpers for the proxy (pure, tested)
 
 📄 **Create `src/libs/request-id.ts`:**
+
 ```ts
 export const REQUEST_ID_HEADER = 'x-request-id';
 
 const SAFE_ID = /^[A-Za-z0-9._-]{8,64}$/;
 
 /** Reuse a well-formed incoming id (load balancer, CDN); otherwise mint one. Never trust arbitrary content in logs. */
-export function resolveRequestId(incoming: string | null | undefined, generate: () => string = () => crypto.randomUUID()): string {
+export function resolveRequestId(
+  incoming: string | null | undefined,
+  generate: () => string = () => crypto.randomUUID(),
+): string {
   return incoming && SAFE_ID.test(incoming) ? incoming : generate();
 }
 
@@ -716,7 +842,9 @@ export function withRequestIdHeader(headers: Headers, requestId: string): Header
   return copy;
 }
 ```
+
 📄 **Create `src/libs/request-id.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -727,7 +855,15 @@ describe('resolveRequestId', () => {
     expect(resolveRequestId('abc-12345678', () => 'generated')).toBe('abc-12345678');
   });
   it('replaces missing, malformed or log-injecting ids', () => {
-    for (const bad of [null, undefined, '', 'short', 'has spaces in it!!', 'line\nbreak-injection', 'x'.repeat(200)]) {
+    for (const bad of [
+      null,
+      undefined,
+      '',
+      'short',
+      'has spaces in it!!',
+      'line\nbreak-injection',
+      'x'.repeat(200),
+    ]) {
       expect(resolveRequestId(bad, () => 'generated')).toBe('generated');
     }
   });
@@ -744,6 +880,7 @@ it('withRequestIdHeader does not mutate the original headers', () => {
 ### 2. Born in the proxy
 
 📄 **Edit `src/proxy.ts`:**
+
 ```ts
 import { REQUEST_ID_HEADER, resolveRequestId, withRequestIdHeader } from './libs/request-id';
 
@@ -753,32 +890,39 @@ export default function proxy(request: NextRequest) {
   const { path } = splitLocale(pathname);
 
   if (isProtectedPath(path) && !getSessionCookie(request)) {
-    const redirect = NextResponse.redirect(new URL(buildSignInRedirect(pathname, search), request.url));
+    const redirect = NextResponse.redirect(
+      new URL(buildSignInRedirect(pathname, search), request.url),
+    );
     redirect.headers.set(REQUEST_ID_HEADER, requestId);
     return redirect;
   }
 
   // Forward the id to server code (headers()) AND echo it to the client
-  const forwarded = new NextRequest(request, { headers: withRequestIdHeader(request.headers, requestId) });
+  const forwarded = new NextRequest(request, {
+    headers: withRequestIdHeader(request.headers, requestId),
+  });
   const response = intlMiddleware(forwarded);
   response.headers.set(REQUEST_ID_HEADER, requestId);
   return response;
 }
 ```
+
 > 🔍 Confirm in the next-intl docs that passing a **new `NextRequest` with modified headers** into the middleware keeps them on the rewritten request. If a server component can't read `x-request-id`, fall back to the context helper's generated id (below) — the **response header** still carries the proxy's id for support.
 
 ### 3. Bind it to every log line (LogTape context)
 
 📄 **Edit `src/libs/Logger.ts`** — enable implicit contexts:
+
 ```ts
 import { AsyncLocalStorage } from 'node:async_hooks';
 // in configureSync({ … }):
     contextLocalStorage: new AsyncLocalStorage(), // 🔍 enables withContext(); name per your LogTape version
 ```
+
 📄 **Create `src/libs/request-context.ts`:**
+
 ```ts
 import 'server-only';
-
 import { withContext } from '@logtape/logtape';
 import { headers } from 'next/headers';
 
@@ -795,7 +939,10 @@ export async function currentRequestId(): Promise<string> {
 }
 
 /** Every log line written inside `fn` (even in nested async calls) carries these properties. */
-export async function withRequestContext<T>(extra: Record<string, unknown>, fn: (requestId: string) => Promise<T>): Promise<T> {
+export async function withRequestContext<T>(
+  extra: Record<string, unknown>,
+  fn: (requestId: string) => Promise<T>,
+): Promise<T> {
   const requestId = await currentRequestId();
   setRequestTag(requestId); // same id on Sentry events
   return withContext({ requestId, ...extra }, () => fn(requestId));
@@ -806,13 +953,17 @@ export function bindContext<T>(extra: Record<string, unknown>, fn: () => Promise
   return withContext(extra, fn);
 }
 ```
+
 📄 **Add to `src/libs/Sentry.ts`:**
+
 ```ts
 export function setRequestTag(requestId: string): void {
   Sentry.getCurrentScope().setTag('requestId', requestId);
 }
 ```
+
 📄 **Use it in the action wrapper** — edit `src/utils/action.ts`: wrap the body, put the id into unknown-error results and logs:
+
 ```ts
 import { withRequestContext } from '@/libs/request-context';
 
@@ -825,26 +976,33 @@ export type ActionError = {
 };
 
 // inside the returned async function, wrap everything after the `after(...)` block:
-    return withRequestContext({}, async (requestId) => {
-      /* …existing parse → try/catch…; in the unknown-error branch: */
-      reportError(error, { requestId });
-      return { ok: false, error: { code: 'INTERNAL', messageKey: 'errors.internal', reference: requestId } };
-    });
+return withRequestContext({}, async (requestId) => {
+  /* …existing parse → try/catch…; in the unknown-error branch: */
+  reportError(error, { requestId });
+  return {
+    ok: false,
+    error: { code: 'INTERNAL', messageKey: 'errors.internal', reference: requestId },
+  };
+});
 ```
+
 📄 **Bind user and organization** — edit `src/data/with-auth.ts`:
+
 ```ts
 import { bindContext } from '@/libs/request-context';
 
-  return async (input: Input): Promise<Result> => {
-    const session = await getSessionOrThrow();
-    return bindContext({ userId: session.user.id }, () => handler(input, { session }));
-  };
+return async (input: Input): Promise<Result> => {
+  const session = await getSessionOrThrow();
+  return bindContext({ userId: session.user.id }, () => handler(input, { session }));
+};
 ```
+
 and in `withOrgPermission` (`src/data/authz.ts`): `return bindContext({ orgId: context.org.id, userId: context.session.user.id }, () => handler(input, context));` (after computing `context = await requirePermission(…)`).
 
 ### 4. Show the reference to people
 
 📄 **Edit `src/components/forms/form-error.tsx`:**
+
 ```tsx
 export function FormError({ messageKey, reference }: { messageKey?: string | null; reference?: string | null }) {
   // …existing…
@@ -857,16 +1015,21 @@ export function FormError({ messageKey, reference }: { messageKey?: string | nul
         ) : null}
       </AlertDescription>
 ```
+
 Pass it where a Server Action result is shown — `ContactForm` first (state `{ messageKey, reference }`); other forms can adopt the same two lines. The route error boundary already prints Next's `digest` ("Reference: …", Sprint 1).
 
 📄 **Test the context plumbing** — `src/libs/request-context.test.ts`:
+
 ```ts
-import { getLogger, configureSync, reset } from '@logtape/logtape';
 import { AsyncLocalStorage } from 'node:async_hooks';
+
+import { getLogger, configureSync, reset } from '@logtape/logtape';
 import { afterEach, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
-vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-request-id': 'req-12345678' }) }));
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers({ 'x-request-id': 'req-12345678' }),
+}));
 
 import { withRequestContext } from './request-context';
 
@@ -891,24 +1054,29 @@ it('puts the request id on every log record written inside the context', async (
   expect(seen[1]).not.toHaveProperty('requestId');
 });
 ```
+
 > 🔍 Option names (`contextLocalStorage`, `reset`) follow current LogTape docs; adjust if yours differ.
 
 ### 5. How to trace one request (document it)
 
 📄 **Append to `docs/guides/observability.md`:**
-````markdown
+
+```markdown
 ## Following one request
+
 1. Every response carries `x-request-id` (DevTools → Network). Unexpected errors in forms/error pages show it as **Reference**.
 2. Logs: search `requestId:"<id>"` in Better Stack (or grep the terminal).
 3. Sentry: the event has the tag `requestId` — search `requestId:<id>`.
 4. Server Action logs also carry `userId` and (for organization actions) `orgId`.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. `curl -i http://localhost:3000/` → header `x-request-id: <uuid>`; with `-H "x-request-id: my-trace-12345"` the **same** value is echoed; with `-H "x-request-id: bad value!"` a fresh id is generated.
 2. Submit the contact form; the terminal's log lines for that action show the same `requestId`.
 3. Make a Server Action fail unexpectedly (throw a plain `Error` in a handler): the UI shows **Reference: `<id>`**, the same id is on the log line **and** (with a DSN) on the Sentry event's tags.
@@ -922,7 +1090,7 @@ pnpm dev
 
 **Branch:** `feat/s6-t05-arcjet-adapter` · **Story:** US-062 · **3 SP** · 🔍 Read the Arcjet **Next.js** docs
 
-> 🎯 Arcjet adds bot detection, a WAF-style *shield*, rate limits and email validation. We wrap it so that **(a)** no key → everything is allowed, **(b)** `DRY_RUN` only *logs* what it would have blocked, **(c)** an Arcjet outage never takes the site down (fail open), **(d)** the logic is testable without Arcjet.
+> 🎯 Arcjet adds bot detection, a WAF-style _shield_, rate limits and email validation. We wrap it so that **(a)** no key → everything is allowed, **(b)** `DRY_RUN` only _logs_ what it would have blocked, **(c)** an Arcjet outage never takes the site down (fail open), **(d)** the logic is testable without Arcjet.
 
 ```bash
 git switch main && git pull && git switch -c feat/s6-t05-arcjet-adapter
@@ -932,12 +1100,15 @@ pnpm add @arcjet/next
 ### 1. Environment
 
 📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`):
+
 ```ts
     ARCJET_KEY: z.string().min(1).optional(),
     // DRY_RUN = log only. Default: LIVE in production, DRY_RUN everywhere else.
     ARCJET_MODE: z.enum(['DRY_RUN', 'LIVE']).optional(),
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Arcjet (optional: no key → no protection layer, nothing breaks) ──
 ARCJET_KEY=
@@ -948,6 +1119,7 @@ ARCJET_MODE=
 ### 2. Interpreting a decision (pure → testable)
 
 📄 **Create `src/libs/arcjet-decision.ts`:**
+
 ```ts
 export type DenyReason = 'rate_limit' | 'bot' | 'shield' | 'email' | 'other';
 
@@ -962,7 +1134,13 @@ export type DecisionLike = {
   results?: { state?: string; conclusion?: string }[];
 };
 
-const STATUS: Record<DenyReason, 400 | 403 | 429> = { rate_limit: 429, bot: 403, shield: 403, email: 400, other: 403 };
+const STATUS: Record<DenyReason, 400 | 403 | 429> = {
+  rate_limit: 429,
+  bot: 403,
+  shield: 403,
+  email: 400,
+  other: 403,
+};
 
 export function interpretDecision(decision: DecisionLike): Verdict {
   if (!decision.isDenied()) return { allowed: true };
@@ -981,16 +1159,24 @@ export function interpretDecision(decision: DecisionLike): Verdict {
 
 /** In DRY_RUN rules "run" but never deny — this tells us what LIVE mode would have done. */
 export function wouldHaveDenied(decision: DecisionLike): boolean {
-  return (decision.results ?? []).some((result) => result.state === 'DRY_RUN' && result.conclusion === 'DENY');
+  return (decision.results ?? []).some(
+    (result) => result.state === 'DRY_RUN' && result.conclusion === 'DENY',
+  );
 }
 ```
+
 📄 **Create `src/libs/arcjet-decision.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
 import { type DecisionLike, interpretDecision, wouldHaveDenied } from './arcjet-decision';
 
-const decision = (denied: boolean, kind?: 'rate' | 'bot' | 'shield' | 'email', results: DecisionLike['results'] = []): DecisionLike => ({
+const decision = (
+  denied: boolean,
+  kind?: 'rate' | 'bot' | 'shield' | 'email',
+  results: DecisionLike['results'] = [],
+): DecisionLike => ({
   isDenied: () => denied,
   reason: {
     isRateLimit: () => kind === 'rate',
@@ -1016,13 +1202,21 @@ describe('interpretDecision', () => {
   });
 
   it('treats unknown denials as 403', () => {
-    expect(interpretDecision(decision(true))).toEqual({ allowed: false, reason: 'other', status: 403 });
+    expect(interpretDecision(decision(true))).toEqual({
+      allowed: false,
+      reason: 'other',
+      status: 403,
+    });
   });
 });
 
 it('wouldHaveDenied spots DRY_RUN denials only', () => {
-  expect(wouldHaveDenied(decision(false, undefined, [{ state: 'DRY_RUN', conclusion: 'DENY' }]))).toBe(true);
-  expect(wouldHaveDenied(decision(false, undefined, [{ state: 'RUN', conclusion: 'ALLOW' }]))).toBe(false);
+  expect(
+    wouldHaveDenied(decision(false, undefined, [{ state: 'DRY_RUN', conclusion: 'DENY' }])),
+  ).toBe(true);
+  expect(wouldHaveDenied(decision(false, undefined, [{ state: 'RUN', conclusion: 'ALLOW' }]))).toBe(
+    false,
+  );
   expect(wouldHaveDenied(decision(false))).toBe(false);
 });
 ```
@@ -1030,6 +1224,7 @@ it('wouldHaveDenied spots DRY_RUN denials only', () => {
 ### 3. Where in the app each request belongs (pure)
 
 📄 **Create `src/libs/arcjet-routes.ts`:**
+
 ```ts
 export type RouteKind = 'page' | 'auth-api' | 'auth-signup' | 'auth-email-link' | 'auth-sign-in';
 
@@ -1053,7 +1248,9 @@ export function classifyRoute(pathname: string): RouteKind {
 /** Endpoints where the caller supplies an email we should validate / rate-limit per address. */
 export const kindsWithEmail: readonly RouteKind[] = ['auth-signup', 'auth-email-link'];
 ```
+
 📄 **Create `src/libs/arcjet-routes.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -1073,16 +1270,24 @@ it('classifies paths into protection profiles', () => {
 ### 4. The adapter
 
 📄 **Create `src/libs/Arcjet.ts`:**
+
 ```ts
 import arcjet, { detectBot, shield } from '@arcjet/next';
 
-import { type DecisionLike, interpretDecision, type Verdict, wouldHaveDenied } from '@/libs/arcjet-decision';
+import {
+  type DecisionLike,
+  interpretDecision,
+  type Verdict,
+  wouldHaveDenied,
+} from '@/libs/arcjet-decision';
 import { classifyRoute, kindsWithEmail, type RouteKind } from '@/libs/arcjet-routes';
 import { Env } from '@/libs/Env';
 import { getLogger } from '@/libs/Logger';
 
 /** What we use of an Arcjet client — lets tests pass fakes. */
-export type ProtectClient = { protect: (request: Request, options?: Record<string, unknown>) => Promise<DecisionLike> };
+export type ProtectClient = {
+  protect: (request: Request, options?: Record<string, unknown>) => Promise<DecisionLike>;
+};
 export type Clients = { general?: ProtectClient; email?: ProtectClient };
 type Input = { request: Request; pathname: string; email?: string | undefined };
 
@@ -1092,22 +1297,33 @@ const ALLOWED: Verdict = { allowed: true };
  * The testable core. Fail-open by design: if Arcjet itself errors we let the request through
  * (an outage of a security vendor must not become OUR outage) and say so in the logs.
  */
-export async function evaluate(clients: Clients, { request, pathname, email }: Input, kind: RouteKind = classifyRoute(pathname)): Promise<Verdict> {
+export async function evaluate(
+  clients: Clients,
+  { request, pathname, email }: Input,
+  kind: RouteKind = classifyRoute(pathname),
+): Promise<Verdict> {
   const log = getLogger('security');
   const runs: { client: ProtectClient | undefined; options?: Record<string, unknown> }[] = [
     { client: clients.general },
-    ...(email && kindsWithEmail.includes(kind) ? [{ client: clients.email, options: { email, userEmail: email } }] : []),
+    ...(email && kindsWithEmail.includes(kind)
+      ? [{ client: clients.email, options: { email, userEmail: email } }]
+      : []),
   ];
 
   for (const { client, options } of runs) {
     if (!client) continue;
     try {
       const decision = await client.protect(request, options);
-      if (wouldHaveDenied(decision)) log.warning('Arcjet DRY_RUN would block {kind} {path}', { kind, path: pathname });
+      if (wouldHaveDenied(decision))
+        log.warning('Arcjet DRY_RUN would block {kind} {path}', { kind, path: pathname });
 
       const verdict = interpretDecision(decision);
       if (!verdict.allowed) {
-        log.warning('Arcjet blocked {kind} {path}: {reason}', { kind, path: pathname, reason: verdict.reason });
+        log.warning('Arcjet blocked {kind} {path}: {reason}', {
+          kind,
+          path: pathname,
+          reason: verdict.reason,
+        });
         return verdict;
       }
     } catch (error) {
@@ -1142,18 +1358,30 @@ export function protectRequest(request: Request, input: Omit<Input, 'request'>) 
   return evaluate({ general }, { request, ...input });
 }
 ```
+
 📄 **Create `src/libs/arcjet.test.ts`** (fake clients; no network):
+
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DecisionLike } from './arcjet-decision';
 import { evaluate, type ProtectClient } from './Arcjet';
+import type { DecisionLike } from './arcjet-decision';
 
 const request = new Request('http://localhost/api/auth/sign-in/email', { method: 'POST' });
 
-const decision = (denied: boolean, over: Partial<DecisionLike['reason']> = {}, results: DecisionLike['results'] = []): DecisionLike => ({
+const decision = (
+  denied: boolean,
+  over: Partial<DecisionLike['reason']> = {},
+  results: DecisionLike['results'] = [],
+): DecisionLike => ({
   isDenied: () => denied,
-  reason: { isRateLimit: () => false, isBot: () => false, isShield: () => false, isEmail: () => false, ...over },
+  reason: {
+    isRateLimit: () => false,
+    isBot: () => false,
+    isShield: () => false,
+    isEmail: () => false,
+    ...over,
+  },
   results,
 });
 const client = (result: DecisionLike | Error): ProtectClient => ({
@@ -1169,27 +1397,44 @@ describe('evaluate', () => {
   });
 
   it('blocks bots with 403 and rate-limited callers with 429', async () => {
-    expect(await evaluate({ general: client(decision(true, { isBot: () => true })) }, { request, pathname: '/' })).toMatchObject({ allowed: false, status: 403, reason: 'bot' });
-    expect(await evaluate({ general: client(decision(true, { isRateLimit: () => true })) }, { request, pathname: '/api/auth/sign-in/email' })).toMatchObject({ allowed: false, status: 429 });
+    expect(
+      await evaluate(
+        { general: client(decision(true, { isBot: () => true })) },
+        { request, pathname: '/' },
+      ),
+    ).toMatchObject({ allowed: false, status: 403, reason: 'bot' });
+    expect(
+      await evaluate(
+        { general: client(decision(true, { isRateLimit: () => true })) },
+        { request, pathname: '/api/auth/sign-in/email' },
+      ),
+    ).toMatchObject({ allowed: false, status: 429 });
   });
 
   it('FAILS OPEN when Arcjet throws', async () => {
-    expect(await evaluate({ general: client(new Error('arcjet is down')) }, { request, pathname: '/' })).toEqual({ allowed: true });
+    expect(
+      await evaluate({ general: client(new Error('arcjet is down')) }, { request, pathname: '/' }),
+    ).toEqual({ allowed: true });
   });
 
   it('DRY_RUN decisions never block', async () => {
     const dry = decision(false, {}, [{ state: 'DRY_RUN', conclusion: 'DENY' }]);
-    expect(await evaluate({ general: client(dry) }, { request, pathname: '/' })).toEqual({ allowed: true });
+    expect(await evaluate({ general: client(dry) }, { request, pathname: '/' })).toEqual({
+      allowed: true,
+    });
   });
 });
 ```
+
 > The email client is added in S6-T07; `evaluate` already knows how to use it.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm check:env
 pnpm build            # builds WITHOUT ARCJET_KEY (the adapter is not used by any route yet)
 ```
+
 `protectRequest` is exported but nothing calls it until S6-T06 — add `src/libs/Arcjet.ts` to Knip's temporary `entry` list if it complains.
 
 **🚢 Ship** — branch `feat/s6-t05-arcjet-adapter` · message: `feat(sec): add optional arcjet adapter with dry-run mode and fail-open behaviour`
@@ -1207,6 +1452,7 @@ git switch main && git pull && git switch -c feat/s6-t06-arcjet-proxy
 ### 1. Denied responses
 
 📄 **Create `src/libs/proxy-responses.ts`:**
+
 ```ts
 import { NextResponse } from 'next/server';
 
@@ -1221,13 +1467,29 @@ const MESSAGES = {
   other: 'Request blocked.',
 } as const;
 
-const CODES = { rate_limit: 'RATE_LIMITED', bot: 'BLOCKED', shield: 'BLOCKED', email: 'EMAIL_REJECTED', other: 'BLOCKED' } as const;
+const CODES = {
+  rate_limit: 'RATE_LIMITED',
+  bot: 'BLOCKED',
+  shield: 'BLOCKED',
+  email: 'EMAIL_REJECTED',
+  other: 'BLOCKED',
+} as const;
 
 /** JSON for API paths (Better Auth's client understands `{ code, message }`), plain text for pages. */
-export function denyResponse(verdict: Extract<Verdict, { allowed: false }>, requestId: string, isApi: boolean) {
+export function denyResponse(
+  verdict: Extract<Verdict, { allowed: false }>,
+  requestId: string,
+  isApi: boolean,
+) {
   const response = isApi
-    ? NextResponse.json({ code: CODES[verdict.reason], message: MESSAGES[verdict.reason] }, { status: verdict.status })
-    : new NextResponse(MESSAGES[verdict.reason], { status: verdict.status, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+    ? NextResponse.json(
+        { code: CODES[verdict.reason], message: MESSAGES[verdict.reason] },
+        { status: verdict.status },
+      )
+    : new NextResponse(MESSAGES[verdict.reason], {
+        status: verdict.status,
+        headers: { 'content-type': 'text/plain; charset=utf-8' },
+      });
   response.headers.set(REQUEST_ID_HEADER, requestId);
   if (verdict.reason === 'rate_limit') response.headers.set('Retry-After', '60');
   return response;
@@ -1237,10 +1499,11 @@ export function denyResponse(verdict: Extract<Verdict, { allowed: false }>, requ
 ### 2. The proxy, now protecting pages **and** auth endpoints
 
 📄 **Rewrite `src/proxy.ts`:**
+
 ```ts
 import { getSessionCookie } from 'better-auth/cookies';
-import { type NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { routing } from './i18n/routing';
 import { protectRequest } from './libs/Arcjet';
@@ -1262,7 +1525,9 @@ export default async function proxy(request: NextRequest) {
 
   // 2) Better Auth endpoints: just forward (no locale handling), with the request id
   if (isAuthApi) {
-    const response = NextResponse.next({ request: { headers: withRequestIdHeader(request.headers, requestId) } });
+    const response = NextResponse.next({
+      request: { headers: withRequestIdHeader(request.headers, requestId) },
+    });
     response.headers.set(REQUEST_ID_HEADER, requestId);
     return response;
   }
@@ -1270,13 +1535,17 @@ export default async function proxy(request: NextRequest) {
   // 3) Optimistic auth redirect (ADR-003): the real check is in src/data/session.ts
   const { path } = splitLocale(pathname);
   if (isProtectedPath(path) && !getSessionCookie(request)) {
-    const redirect = NextResponse.redirect(new URL(buildSignInRedirect(pathname, search), request.url));
+    const redirect = NextResponse.redirect(
+      new URL(buildSignInRedirect(pathname, search), request.url),
+    );
     redirect.headers.set(REQUEST_ID_HEADER, requestId);
     return redirect;
   }
 
   // 4) Locale routing
-  const forwarded = new NextRequest(request, { headers: withRequestIdHeader(request.headers, requestId) });
+  const forwarded = new NextRequest(request, {
+    headers: withRequestIdHeader(request.headers, requestId),
+  });
   const response = intlMiddleware(forwarded);
   response.headers.set(REQUEST_ID_HEADER, requestId);
   return response;
@@ -1291,17 +1560,20 @@ export const config = {
   ],
 };
 ```
+
 > 🔒 `/api/health` (S6-T08) and `/api/csp-report` stay **outside** the matcher on purpose: monitors and browsers must never be rate-limited or bot-blocked by our own guard.
 
 ### 3. Check that nothing legitimate is blocked
 
 - Search engines, link previews and uptime monitors are in the `allow` list (S6-T05).
-- Our **Playwright** tests run without `ARCJET_KEY`, so they're never classified as bots. If you later run E2E *with* a key, set `ARCJET_MODE=DRY_RUN`.
+- Our **Playwright** tests run without `ARCJET_KEY`, so they're never classified as bots. If you later run E2E _with_ a key, set `ARCJET_MODE=DRY_RUN`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm e2e        # unchanged behaviour with no key: everything passes
 ```
+
 1. **No key:** browse the app, run E2E — identical to before. `curl -i localhost:3000/` still returns `x-request-id`.
 2. **With a key, `DRY_RUN`** (`ARCJET_KEY=… ` in `.env.local`, restart): browse normally → no blocks. Run a bot-like request: `curl -A "python-requests/2.0" -i http://localhost:3000/` → still **200**, but the terminal logs **"Arcjet DRY_RUN would block page /"**.
 3. **`ARCJET_MODE=LIVE`** (temporarily): the same `curl` now gets **403** `Automated traffic is not allowed.` while your browser keeps working. Revert to `DRY_RUN`.
@@ -1325,6 +1597,7 @@ git switch main && git pull && git switch -c feat/s6-t07-arcjet-limits
 ### 1. Reading the email from the body (carefully)
 
 📄 **Create `src/libs/request-body.ts`:**
+
 ```ts
 const MAX_BODY_BYTES = 10_000; // auth bodies are tiny; never buffer something huge in the proxy
 
@@ -1336,21 +1609,35 @@ export async function readEmail(request: Request): Promise<string | undefined> {
 
   try {
     const body: unknown = await request.clone().json();
-    const email = typeof body === 'object' && body !== null ? (body as Record<string, unknown>).email : undefined;
-    return typeof email === 'string' && email.length <= 254 ? email.trim().toLowerCase() : undefined;
+    const email =
+      typeof body === 'object' && body !== null
+        ? (body as Record<string, unknown>).email
+        : undefined;
+    return typeof email === 'string' && email.length <= 254
+      ? email.trim().toLowerCase()
+      : undefined;
   } catch {
     return undefined; // not JSON / malformed → Better Auth will reject it itself
   }
 }
 ```
+
 📄 **Create `src/libs/request-body.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
 import { readEmail } from './request-body';
 
-const post = (body: unknown, headers: Record<string, string> = { 'content-type': 'application/json' }) =>
-  new Request('http://localhost/api/auth/sign-up/email', { method: 'POST', headers, body: typeof body === 'string' ? body : JSON.stringify(body) });
+const post = (
+  body: unknown,
+  headers: Record<string, string> = { 'content-type': 'application/json' },
+) =>
+  new Request('http://localhost/api/auth/sign-up/email', {
+    method: 'POST',
+    headers,
+    body: typeof body === 'string' ? body : JSON.stringify(body),
+  });
 
 describe('readEmail', () => {
   it('returns the normalised email and leaves the body readable', async () => {
@@ -1372,12 +1659,15 @@ describe('readEmail', () => {
 ### 2. Rate limits and an email client
 
 📄 **Edit `src/libs/Arcjet.ts`:**
+
 ```ts
 import arcjet, { detectBot, shield, slidingWindow, validateEmail } from '@arcjet/next';
 
 import { readEmail } from '@/libs/request-body';
 ```
+
 Replace the `general` client with one that also rate-limits the auth API **per IP**, and add the per-email client:
+
 ```ts
 const general: ProtectClient | undefined = Env.ARCJET_KEY
   ? arcjet({
@@ -1385,7 +1675,10 @@ const general: ProtectClient | undefined = Env.ARCJET_KEY
       characteristics: ['ip.src'],
       rules: [
         shield({ mode }),
-        detectBot({ mode, allow: ['CATEGORY:SEARCH_ENGINE', 'CATEGORY:PREVIEW', 'CATEGORY:MONITOR'] }),
+        detectBot({
+          mode,
+          allow: ['CATEGORY:SEARCH_ENGINE', 'CATEGORY:PREVIEW', 'CATEGORY:MONITOR'],
+        }),
         // Generous for humans, hopeless for scripts. (Pages are not limited: CDNs and monitors need them.)
         // Stricter per-endpoint limits already exist inside Better Auth (src/libs/auth-rate-limit.ts).
         slidingWindow({ mode, interval: '1m', max: 60 }),
@@ -1405,7 +1698,9 @@ const email: ProtectClient | undefined = Env.ARCJET_KEY
     })
   : undefined;
 ```
+
 and update the exported function so it reads the email only for the endpoints that need it:
+
 ```ts
 import { classifyRoute, kindsWithEmail } from '@/libs/arcjet-routes';
 
@@ -1415,6 +1710,7 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
   return evaluate({ general, email }, { request, pathname, email: address }, kind);
 }
 ```
+
 (`evaluate` already runs the email client only when an address was found **and** the route kind carries one.)
 
 > 🔒 **Order matters:** the cheap per-IP checks run first; the per-email checks only run when those pass.
@@ -1422,25 +1718,38 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
 ### 3. Tell users why a sign-up was refused
 
 📄 **Add the message** — `validation` in both locale files:
+
 ```json
     "emailRejected": "Please use a valid, permanent email address."
 ```
+
 ```json
     "emailRejected": "Veuillez utiliser une adresse e-mail valide et permanente."
 ```
+
 📄 **Edit `src/libs/auth-error-keys.ts`** — `KEYS`: `EMAIL_REJECTED: 'validation.emailRejected',` (the proxy answers `{ code: 'EMAIL_REJECTED' }` with HTTP 400; HTTP 429 already maps to the rate-limit message).
 
 📄 **Extend `src/libs/arcjet.test.ts`:**
+
 ```ts
 it('checks the email client only for endpoints that carry an address', async () => {
   const general = client(decision(false));
   const email = client(decision(false));
 
-  await evaluate({ general, email }, { request, pathname: '/api/auth/sign-up/email', email: 'ada@example.com' });
-  expect(email.protect).toHaveBeenCalledWith(request, { email: 'ada@example.com', userEmail: 'ada@example.com' });
+  await evaluate(
+    { general, email },
+    { request, pathname: '/api/auth/sign-up/email', email: 'ada@example.com' },
+  );
+  expect(email.protect).toHaveBeenCalledWith(request, {
+    email: 'ada@example.com',
+    userEmail: 'ada@example.com',
+  });
 
   const other = client(decision(false));
-  await evaluate({ general, email: other }, { request, pathname: '/api/auth/sign-in/email', email: 'ada@example.com' });
+  await evaluate(
+    { general, email: other },
+    { request, pathname: '/api/auth/sign-in/email', email: 'ada@example.com' },
+  );
   expect(other.protect).not.toHaveBeenCalled();
 });
 
@@ -1448,16 +1757,29 @@ it('rejects disposable addresses (HTTP 400) and over-used addresses (HTTP 429)',
   const disposable = client(decision(true, { isEmail: () => true }));
   const limited = client(decision(true, { isRateLimit: () => true }));
 
-  expect(await evaluate({ email: disposable }, { request, pathname: '/api/auth/sign-up/email', email: 'x@mailinator.com' })).toMatchObject({ status: 400, reason: 'email' });
-  expect(await evaluate({ email: limited }, { request, pathname: '/api/auth/request-password-reset', email: 'a@b.co' })).toMatchObject({ status: 429, reason: 'rate_limit' });
+  expect(
+    await evaluate(
+      { email: disposable },
+      { request, pathname: '/api/auth/sign-up/email', email: 'x@mailinator.com' },
+    ),
+  ).toMatchObject({ status: 400, reason: 'email' });
+  expect(
+    await evaluate(
+      { email: limited },
+      { request, pathname: '/api/auth/request-password-reset', email: 'a@b.co' },
+    ),
+  ).toMatchObject({ status: 429, reason: 'rate_limit' });
 });
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm e2e
 ```
+
 With a real key (`ARCJET_MODE=LIVE` temporarily, dev server):
+
 1. **Sign up with a disposable address** (e.g. `test@mailinator.com`) → the form shows "Please use a valid, permanent email address." (HTTP 400, nothing created).
 2. **Per-address limit:** request a password reset for the same address 6 times within an hour (use a fake IP header with `curl -H "x-forwarded-for: 1.2.3.4"` and a different one each time) → the 6th is **429**, even though the IPs differ.
 3. **Per-IP limit:** `for i in $(seq 70); do curl -s -o /dev/null -w "%{http_code} " -X POST localhost:3000/api/auth/get-session; done` → 429s after ~60.
@@ -1479,12 +1801,12 @@ mkdir -p src/app/api/health __checks__
 
 ### 1. The health check
 
-📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`): `APP_VERSION: z.string().min(1).optional(),` · `.env.example`: `APP_VERSION=` *(optional; e.g. the Git SHA set by your deploy)*.
+📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`): `APP_VERSION: z.string().min(1).optional(),` · `.env.example`: `APP_VERSION=` _(optional; e.g. the Git SHA set by your deploy)_.
 
 📄 **Create `src/data/health.ts`** (database access stays in `src/data`, per the tenant-boundary rule):
+
 ```ts
 import 'server-only';
-
 import { sql } from 'drizzle-orm';
 
 import { db } from '@/db/client';
@@ -1509,7 +1831,9 @@ export async function checkDatabase(timeoutMs = 1000): Promise<DatabaseStatus> {
   }
 }
 ```
+
 📄 **Create `src/app/api/health/route.ts`:**
+
 ```ts
 import { NextResponse } from 'next/server';
 
@@ -1536,7 +1860,9 @@ export async function GET() {
   );
 }
 ```
+
 📄 **Create `src/app/api/health/route.test.ts`:**
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -1554,7 +1880,11 @@ describe('GET /api/health', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(await response.json()).toMatchObject({ status: 'ok', db: 'ok', version: expect.any(String) });
+    expect(await response.json()).toMatchObject({
+      status: 'ok',
+      db: 'ok',
+      version: expect.any(String),
+    });
   });
 
   it('503 when the database is down — and reveals nothing else', async () => {
@@ -1567,7 +1897,9 @@ describe('GET /api/health', () => {
   });
 });
 ```
+
 📄 **Create `src/data/health.test.ts`:**
+
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
@@ -1597,7 +1929,9 @@ describe('checkDatabase', () => {
 ```bash
 pnpm add -D checkly
 ```
+
 📄 **Create `checkly.config.ts`:**
+
 ```ts
 import { defineConfig } from 'checkly';
 import { Frequency } from 'checkly/constructs';
@@ -1615,7 +1949,9 @@ export default defineConfig({
   cli: { runLocation: 'eu-west-1' },
 });
 ```
+
 📄 **Create `__checks__/health.check.ts`:**
+
 ```ts
 import { ApiCheck, AssertionBuilder } from 'checkly/constructs';
 
@@ -1636,7 +1972,9 @@ new ApiCheck('health-endpoint', {
   },
 });
 ```
+
 📄 **Create `__checks__/pages.check.ts`:**
+
 ```ts
 import { BrowserCheck } from 'checkly/constructs';
 
@@ -1648,7 +1986,9 @@ new BrowserCheck('public-pages', {
   environmentVariables: [{ key: 'BASE_URL', value: baseUrl }],
 });
 ```
+
 📄 **Create `__checks__/pages.spec.ts`:**
+
 ```ts
 import { expect, test } from '@playwright/test';
 
@@ -1666,17 +2006,20 @@ test('the sign-in page renders its form', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible();
 });
 ```
+
 📄 **Edit `package.json`:**
+
 ```json
 "checkly:test": "checkly test --record=false",
 "checkly:deploy": "checkly deploy --force"
 ```
-📄 **Edit `knip.config.ts`** → `entry`: add `'checkly.config.ts'`, `'__checks__/**/*.ts'`.
-📄 **Edit `vitest.config.ts`** → make sure the spec isn't picked up as a unit test: it ends in `.spec.ts` (our unit pattern is `*.test.ts`) ✓ nothing to do.
+
+📄 **Edit `knip.config.ts`** → `entry`: add `'checkly.config.ts'`, `'__checks__/**/*.ts'`. 📄 **Edit `vitest.config.ts`** → make sure the spec isn't picked up as a unit test: it ends in `.spec.ts` (our unit pattern is `*.test.ts`) ✓ nothing to do.
 
 ### 3. Deploy checks from CI (only when the secrets exist)
 
 📄 **Create `.github/workflows/checkly.yml`:**
+
 ```yaml
 name: Checkly
 
@@ -1706,18 +2049,21 @@ jobs:
         if: ${{ env.CHECKLY_API_KEY == '' || env.CHECKLY_BASE_URL == '' }}
         run: echo "Checkly secrets/variables not configured — skipping (optional integration)."
 ```
+
 > Set `CHECKLY_BASE_URL` as a repository **variable** (your production URL) and the two Checkly values as **secrets** when you're ready (Sprint 8's deployment guide repeats this).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev && curl -i http://localhost:3000/api/health
 ```
+
 1. `200` with `{"status":"ok","version":"…","db":"ok","time":"…"}` and `Cache-Control: no-store`.
 2. Stop the DB (kill `pnpm db:server`) → the same URL answers **503** within ~1 s with `db":"fail"` and nothing else. Restart the DB.
 3. Health works with **any** user-agent and is **not** rate-limited (outside the proxy matcher).
 4. (Optional, needs a Checkly account) `npx checkly login` → `pnpm checkly:test` runs both checks against `CHECKLY_BASE_URL` (use your local tunnel or deployed preview).
-5. The new workflow is green on the PR *(it only prints the "skipping" message until secrets exist)*.
+5. The new workflow is green on the PR _(it only prints the "skipping" message until secrets exist)_.
 
 **🚢 Ship** — branch `feat/s6-t08-health-checkly` · message: `feat(obs): add health endpoint and checkly monitoring as code`
 
@@ -1736,6 +2082,7 @@ git switch main && git pull && git switch -c feat/s6-t09-security-headers
 ### 1. One tested definition
 
 📄 **Create `src/libs/security-headers.ts`:**
+
 ```ts
 export type HeaderEntry = { key: string; value: string };
 
@@ -1762,18 +2109,24 @@ export function buildSecurityHeaders({ production }: { production: boolean }): H
 
   // HSTS tells browsers "HTTPS only, for two years". Only meaningful (and safe to promise) in production.
   if (production) {
-    headers.push({ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' });
+    headers.push({
+      key: 'Strict-Transport-Security',
+      value: 'max-age=63072000; includeSubDomains; preload',
+    });
   }
   return headers;
 }
 ```
+
 📄 **Create `src/libs/security-headers.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
 import { buildSecurityHeaders } from './security-headers';
 
-const asMap = (production: boolean) => new Map(buildSecurityHeaders({ production }).map((entry) => [entry.key, entry.value]));
+const asMap = (production: boolean) =>
+  new Map(buildSecurityHeaders({ production }).map((entry) => [entry.key, entry.value]));
 
 describe('buildSecurityHeaders', () => {
   it('always sends the baseline protections, once each', () => {
@@ -1791,7 +2144,8 @@ describe('buildSecurityHeaders', () => {
     const policy = asMap(false).get('Permissions-Policy')!;
     expect(policy).toContain('publickey-credentials-get=(self)');
     expect(policy).toContain('publickey-credentials-create=(self)');
-    for (const denied of ['camera=()', 'microphone=()', 'geolocation=()']) expect(policy).toContain(denied);
+    for (const denied of ['camera=()', 'microphone=()', 'geolocation=()'])
+      expect(policy).toContain(denied);
   });
 
   it('adds HSTS only in production', () => {
@@ -1804,23 +2158,33 @@ describe('buildSecurityHeaders', () => {
 ### 2. Apply it to every route
 
 📄 **Edit `next.config.ts`:**
+
 ```ts
-const { buildSecurityHeaders } = (await jiti.import('./src/libs/security-headers')) as typeof import('./src/libs/security-headers');
+const { buildSecurityHeaders } = (await jiti.import(
+  './src/libs/security-headers',
+)) as typeof import('./src/libs/security-headers');
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ['@logtape/logtape'],
   async headers() {
-    return [{ source: '/:path*', headers: buildSecurityHeaders({ production: process.env.NODE_ENV === 'production' }) }];
+    return [
+      {
+        source: '/:path*',
+        headers: buildSecurityHeaders({ production: process.env.NODE_ENV === 'production' }),
+      },
+    ];
   },
 };
 ```
+
 (keep the existing `jiti` setup at the top of the file)
 
 ### 3. Prove it from a real browser's point of view
 
 📄 **Create `e2e/security-headers.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 
@@ -1841,10 +2205,12 @@ for (const path of ['/', '/sign-in', '/fr/contact', '/api/health']) {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 CI=1 pnpm e2e        # or: pnpm e2e  — the new spec plus ALL existing specs (passkeys included!)
 ```
+
 1. DevTools → Network → any document → **Response Headers** show the six headers (HSTS only on the production build).
 2. Passkey registration/sign-in (`e2e/auth-advanced.spec.ts`) **still passes** — proof that `Permissions-Policy` didn't break WebAuthn.
 3. Put the site in an `<iframe>` from another origin (use a local HTML file) → the browser refuses to render it.
@@ -1856,9 +2222,9 @@ CI=1 pnpm e2e        # or: pnpm e2e  — the new spec plus ALL existing specs (p
 
 ## 🎫 S6-T10 — Cookie consent
 
-**Branch:** `feat/s6-t10-consent` · **Story:** US-065 · **1 SP** *(the plan sized it small; the UI + tests make it the biggest "1" you'll meet — allow time)*
+**Branch:** `feat/s6-t10-consent` · **Story:** US-065 · **1 SP** _(the plan sized it small; the UI + tests make it the biggest "1" you'll meet — allow time)_
 
-> 🎯 **Nothing non-essential runs before the visitor says yes.** Default = *denied*. A browser's **Global Privacy Control** signal counts as a "no" (and we don't nag). The choice lives in a first-party cookie, is versioned (bump the version → everyone is asked again) and can be reopened from the footer.
+> 🎯 **Nothing non-essential runs before the visitor says yes.** Default = _denied_. A browser's **Global Privacy Control** signal counts as a "no" (and we don't nag). The choice lives in a first-party cookie, is versioned (bump the version → everyone is asked again) and can be reopened from the footer.
 
 ```bash
 git switch main && git pull && git switch -c feat/s6-t10-consent
@@ -1868,6 +2234,7 @@ mkdir -p src/components/consent
 ### 1. Strings
 
 📄 **`src/locales/en.json`** — in `footer` add `"cookieSettings": "Cookie settings"`, and a new top-level object:
+
 ```json
   "consent": {
     "title": "Your privacy choices",
@@ -1886,7 +2253,9 @@ mkdir -p src/components/consent
     "gpc": "Your browser sent a Global Privacy Control signal, so analytics stays off."
   }
 ```
+
 📄 **`src/locales/fr.json`** — `footer.cookieSettings` = `"Paramètres des cookies"`, plus:
+
 ```json
   "consent": {
     "title": "Vos choix de confidentialité",
@@ -1909,6 +2278,7 @@ mkdir -p src/components/consent
 ### 2. The consent rules (pure, tested)
 
 📄 **Create `src/libs/consent.ts`:**
+
 ```ts
 export const CONSENT_COOKIE = 'consent';
 /** Bump when categories or purposes change: everybody is asked again. */
@@ -1927,7 +2297,12 @@ export function parseConsent(raw: string | null | undefined): ConsentChoice | nu
   if (!raw) return null;
   try {
     const data = JSON.parse(decodeURIComponent(raw)) as Record<string, unknown>;
-    if (data.v !== CONSENT_VERSION || typeof data.analytics !== 'boolean' || typeof data.replay !== 'boolean') return null;
+    if (
+      data.v !== CONSENT_VERSION ||
+      typeof data.analytics !== 'boolean' ||
+      typeof data.replay !== 'boolean'
+    )
+      return null;
     return { analytics: data.analytics, replay: data.replay };
   } catch {
     return null;
@@ -1938,7 +2313,11 @@ export function readConsentFromCookieHeader(header: string | null | undefined): 
   return new RegExp(`(?:^|;\\s*)${CONSENT_COOKIE}=([^;]*)`).exec(header ?? '')?.[1];
 }
 
-export function consentCookieString(choice: ConsentChoice, { secure }: { secure: boolean }, now?: number): string {
+export function consentCookieString(
+  choice: ConsentChoice,
+  { secure }: { secure: boolean },
+  now?: number,
+): string {
   return `${CONSENT_COOKIE}=${serializeConsent(choice, now)}; Path=/; Max-Age=${MAX_AGE_SECONDS}; SameSite=Lax${secure ? '; Secure' : ''}`;
 }
 
@@ -1948,14 +2327,19 @@ export function consentCookieString(choice: ConsentChoice, { secure }: { secure:
  *  - otherwise a Global Privacy Control signal = "no" and we don't prompt
  *  - otherwise: denied + prompt
  */
-export function resolveInitial({ cookie, gpc }: { cookie: string | undefined; gpc: boolean }): { status: 'set' | 'unset'; choice: ConsentChoice } {
+export function resolveInitial({ cookie, gpc }: { cookie: string | undefined; gpc: boolean }): {
+  status: 'set' | 'unset';
+  choice: ConsentChoice;
+} {
   const stored = parseConsent(cookie);
   if (stored) return { status: 'set', choice: gpc ? { ...stored, analytics: false } : stored };
   if (gpc) return { status: 'set', choice: DENIED };
   return { status: 'unset', choice: DENIED };
 }
 ```
+
 📄 **Create `src/libs/consent.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -1971,27 +2355,49 @@ import {
 
 describe('parseConsent', () => {
   it('round-trips a choice', () => {
-    expect(parseConsent(serializeConsent({ analytics: true, replay: false }))).toEqual({ analytics: true, replay: false });
+    expect(parseConsent(serializeConsent({ analytics: true, replay: false }))).toEqual({
+      analytics: true,
+      replay: false,
+    });
   });
 
   it('treats missing, corrupt and outdated cookies as "no decision"', () => {
     expect(parseConsent(undefined)).toBeNull();
     expect(parseConsent('%7Bnot json')).toBeNull();
-    expect(parseConsent(encodeURIComponent(JSON.stringify({ v: CONSENT_VERSION + 1, analytics: true, replay: true })))).toBeNull();
-    expect(parseConsent(encodeURIComponent(JSON.stringify({ v: CONSENT_VERSION, analytics: 'yes', replay: true })))).toBeNull();
+    expect(
+      parseConsent(
+        encodeURIComponent(
+          JSON.stringify({ v: CONSENT_VERSION + 1, analytics: true, replay: true }),
+        ),
+      ),
+    ).toBeNull();
+    expect(
+      parseConsent(
+        encodeURIComponent(JSON.stringify({ v: CONSENT_VERSION, analytics: 'yes', replay: true })),
+      ),
+    ).toBeNull();
   });
 });
 
 describe('resolveInitial', () => {
   it('defaults to denied and asks', () => {
-    expect(resolveInitial({ cookie: undefined, gpc: false })).toEqual({ status: 'unset', choice: DENIED });
+    expect(resolveInitial({ cookie: undefined, gpc: false })).toEqual({
+      status: 'unset',
+      choice: DENIED,
+    });
   });
   it('respects a stored choice', () => {
     const cookie = serializeConsent({ analytics: true, replay: true });
-    expect(resolveInitial({ cookie, gpc: false })).toEqual({ status: 'set', choice: { analytics: true, replay: true } });
+    expect(resolveInitial({ cookie, gpc: false })).toEqual({
+      status: 'set',
+      choice: { analytics: true, replay: true },
+    });
   });
   it('Global Privacy Control means no analytics — and no prompt', () => {
-    expect(resolveInitial({ cookie: undefined, gpc: true })).toEqual({ status: 'set', choice: DENIED });
+    expect(resolveInitial({ cookie: undefined, gpc: true })).toEqual({
+      status: 'set',
+      choice: DENIED,
+    });
     const cookie = serializeConsent({ analytics: true, replay: true });
     expect(resolveInitial({ cookie, gpc: true }).choice.analytics).toBe(false);
   });
@@ -2012,12 +2418,27 @@ it('reads the consent cookie out of a Cookie header', () => {
 ### 3. Provider, banner, settings
 
 📄 **Create `src/components/consent/consent-provider.tsx`:**
+
 ```tsx
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
-import { type ConsentChoice, consentCookieString, DENIED, readConsentFromCookieHeader, resolveInitial } from '@/libs/consent';
+import {
+  type ConsentChoice,
+  consentCookieString,
+  DENIED,
+  readConsentFromCookieHeader,
+  resolveInitial,
+} from '@/libs/consent';
 
 type Status = 'unknown' | 'unset' | 'set'; // "unknown" until mounted: avoids a server/client mismatch
 
@@ -2036,11 +2457,16 @@ type ConsentContextValue = {
 const ConsentContext = createContext<ConsentContextValue | null>(null);
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ status: Status; choice: ConsentChoice; gpc: boolean }>({ status: 'unknown', choice: DENIED, gpc: false });
+  const [state, setState] = useState<{ status: Status; choice: ConsentChoice; gpc: boolean }>({
+    status: 'unknown',
+    choice: DENIED,
+    gpc: false,
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
-    const gpc = (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
+    const gpc =
+      (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true;
     const initial = resolveInitial({ cookie: readConsentFromCookieHeader(document.cookie), gpc });
     setState({ ...initial, gpc });
   }, []);
@@ -2048,7 +2474,9 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
   const save = useCallback((choice: ConsentChoice) => {
     setState((current) => {
       const effective = current.gpc ? { ...choice, analytics: false } : choice; // GPC always wins
-      document.cookie = consentCookieString(effective, { secure: window.location.protocol === 'https:' });
+      document.cookie = consentCookieString(effective, {
+        secure: window.location.protocol === 'https:',
+      });
       return { ...current, status: 'set', choice: effective };
     });
     setSettingsOpen(false);
@@ -2076,7 +2504,9 @@ export function useConsent(): ConsentContextValue {
   return value;
 }
 ```
+
 📄 **Create `src/components/consent/consent-banner.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2086,7 +2516,14 @@ import { useEffect, useState } from 'react';
 import { useConsent } from '@/components/consent/consent-provider';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
 function SettingsDialog() {
@@ -2108,10 +2545,17 @@ function SettingsDialog() {
 
         <div className="space-y-4">
           <div className="flex items-start gap-3">
-            <Checkbox id="consent-necessary" checked disabled aria-describedby="consent-necessary-d" />
+            <Checkbox
+              id="consent-necessary"
+              checked
+              disabled
+              aria-describedby="consent-necessary-d"
+            />
             <div>
               <Label htmlFor="consent-necessary">{t('necessary')}</Label>
-              <p id="consent-necessary-d" className="text-muted-foreground text-sm">{t('necessaryDescription')}</p>
+              <p id="consent-necessary-d" className="text-muted-foreground text-sm">
+                {t('necessaryDescription')}
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
@@ -2123,11 +2567,17 @@ function SettingsDialog() {
             />
             <div>
               <Label htmlFor="consent-analytics">{t('analytics')}</Label>
-              <p className="text-muted-foreground text-sm">{gpc ? t('gpc') : t('analyticsDescription')}</p>
+              <p className="text-muted-foreground text-sm">
+                {gpc ? t('gpc') : t('analyticsDescription')}
+              </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Checkbox id="consent-replay" checked={draft.replay} onCheckedChange={(value) => setDraft({ ...draft, replay: value === true })} />
+            <Checkbox
+              id="consent-replay"
+              checked={draft.replay}
+              onCheckedChange={(value) => setDraft({ ...draft, replay: value === true })}
+            />
             <div>
               <Label htmlFor="consent-replay">{t('replay')}</Label>
               <p className="text-muted-foreground text-sm">{t('replayDescription')}</p>
@@ -2161,8 +2611,12 @@ export function ConsentBanner() {
             </div>
             <div className="flex flex-wrap gap-2">
               {/* "Reject" is exactly as easy and as visible as "Accept" — no dark patterns */}
-              <Button variant="outline" onClick={rejectAll}>{t('rejectAll')}</Button>
-              <Button variant="outline" onClick={openSettings}>{t('customize')}</Button>
+              <Button variant="outline" onClick={rejectAll}>
+                {t('rejectAll')}
+              </Button>
+              <Button variant="outline" onClick={openSettings}>
+                {t('customize')}
+              </Button>
               <Button onClick={acceptAll}>{t('acceptAll')}</Button>
             </div>
           </div>
@@ -2173,7 +2627,9 @@ export function ConsentBanner() {
   );
 }
 ```
+
 📄 **Create `src/components/consent/cookie-settings-button.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2195,41 +2651,48 @@ export function CookieSettingsButton({ className }: { className?: string }) {
 ### 4. Mount it
 
 📄 **Edit `src/app/[locale]/layout.tsx`** — inside `<NextIntlClientProvider>`:
+
 ```tsx
 import { ConsentBanner } from '@/components/consent/consent-banner';
 import { ConsentProvider } from '@/components/consent/consent-provider';
 // …
-        <NextIntlClientProvider>
-          <ConsentProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              {children}
-              <Toaster richColors />
-              <ConsentBanner />
-            </ThemeProvider>
-          </ConsentProvider>
-        </NextIntlClientProvider>
+<NextIntlClientProvider>
+  <ConsentProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      {children}
+      <Toaster richColors />
+      <ConsentBanner />
+    </ThemeProvider>
+  </ConsentProvider>
+</NextIntlClientProvider>;
 ```
+
 📄 **Edit `src/components/layout/site-footer.tsx`:**
+
 ```tsx
 import { CookieSettingsButton } from '@/components/consent/cookie-settings-button';
 // inside the footer container (keep data-visual-mask on the year element):
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm">
-        <span data-visual-mask className="text-muted-foreground">
-          © {new Date().getFullYear()} {t('common.appName')}. {t('footer.rights')}
-        </span>
-        <CookieSettingsButton className="text-muted-foreground hover:text-foreground underline" />
-      </div>
+<div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-sm">
+  <span data-visual-mask className="text-muted-foreground">
+    © {new Date().getFullYear()} {t('common.appName')}. {t('footer.rights')}
+  </span>
+  <CookieSettingsButton className="text-muted-foreground hover:text-foreground underline" />
+</div>;
 ```
+
 and in `UserMenu` add a `DropdownMenuItem onSelect={openSettings}` using `useConsent()` with label `t('footer.cookieSettings')` (use `useTranslations('footer')`).
 
 ### 5. Replay: only after consent, only when configured
 
 📄 **Edit both Sentry inits** (`sentry.server.config.ts` needs nothing; `instrumentation-client.ts`):
+
 ```ts
     replaysSessionSampleRate: 0, // never record ordinary sessions
     replaysOnErrorSampleRate: 1, // record the moments around an error — but only once the integration is added
 ```
+
 📄 **Create `src/components/consent/sentry-replay-consent.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2249,7 +2712,10 @@ export function SentryReplayConsent() {
       const replay = Sentry.getReplay();
       if (choice.replay) {
         if (replay) void replay.start?.();
-        else Sentry.addIntegration(Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }));
+        else
+          Sentry.addIntegration(
+            Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+          );
       } else {
         void replay?.stop();
       }
@@ -2259,16 +2725,17 @@ export function SentryReplayConsent() {
   return null;
 }
 ```
+
 (render `<SentryReplayConsent />` next to `<ConsentBanner />` in the layout)
 
 ### 6. Tests
 
 📄 **Create `src/components/consent/consent.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { ConsentBanner } from './consent-banner';
 import { ConsentProvider } from './consent-provider';
 
@@ -2308,15 +2775,19 @@ test('a Global Privacy Control signal means: no prompt, analytics off', async ()
   Object.defineProperty(navigator, 'globalPrivacyControl', { value: true, configurable: true });
   const screen = await mount();
 
-  await expect.poll(() => screen.getByRole('button', { name: 'Accept all' }).elements().length).toBe(0);
+  await expect
+    .poll(() => screen.getByRole('button', { name: 'Accept all' }).elements().length)
+    .toBe(0);
 });
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check
 pnpm dev
 ```
+
 1. First visit (private window): the banner appears; **no** cookie named `consent` yet; DevTools → Network shows **no** third-party requests.
 2. **Reject** → banner disappears, cookie `consent` has `analytics:false`; reload → no banner. **Footer → Cookie settings** reopens the dialog; toggle and save; the cookie changes.
 3. Change `CONSENT_VERSION` to `2` → everyone is asked again. Revert.
@@ -2325,6 +2796,7 @@ pnpm dev
 6. **Fix the E2E and visual suites** — a fixed banner would cover buttons and appear in every screenshot. Give every browser context a stored "denied" choice:
 
 📄 **Create `e2e/helpers/consent.ts`:**
+
 ```ts
 import { CONSENT_COOKIE, CONSENT_VERSION } from '../../src/libs/consent';
 
@@ -2334,7 +2806,9 @@ export const consentCookie = (baseURL: string, choice = { analytics: false, repl
   url: baseURL,
 });
 ```
+
 📄 **Edit `e2e/fixtures.ts`** — in `openAs` after creating the context: `await context.addCookies([consentCookie(baseURL!)]);`, and in the auto fixture:
+
 ```ts
   _clientIp: [
     async ({ context, baseURL }, use) => {
@@ -2345,7 +2819,9 @@ export const consentCookie = (baseURL: string, choice = { analytics: false, repl
     { auto: true },
   ],
 ```
+
 📄 **Create `e2e/consent.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 
@@ -2364,7 +2840,8 @@ test('the banner appears on a first visit and remembers the choice', async ({ pa
   await expect(page.getByRole('heading', { name: 'Cookie settings' })).toBeVisible();
 });
 ```
-Run `pnpm e2e` and `pnpm e2e:visual` — the visual suite must be **unchanged** (no banner in screenshots; the footer's new "Cookie settings" link *does* change the footer in every public page → re-baseline with the `update-snapshots` label, reviewing that **only the footer** differs).
+
+Run `pnpm e2e` and `pnpm e2e:visual` — the visual suite must be **unchanged** (no banner in screenshots; the footer's new "Cookie settings" link _does_ change the footer in every public page → re-baseline with the `update-snapshots` label, reviewing that **only the footer** differs).
 
 **🚢 Ship** — branch `feat/s6-t10-consent` · message: `feat(privacy): add versioned cookie consent with gpc support and sentry replay gating`
 
@@ -2374,7 +2851,7 @@ Run `pnpm e2e` and `pnpm e2e:visual` — the visual suite must be **unchanged** 
 
 **Branch:** `feat/s6-t11-csp` · **Story:** US-065 · **2 SP** · risk **R-10**
 
-> 🎯 A CSP is the browser-side seatbelt against **XSS**: even if an attacker injects `<script>`, the browser refuses to run it. The hard part is *not breaking ourselves*. So: report-only first, E2E that fails on any violation, then enforce.
+> 🎯 A CSP is the browser-side seatbelt against **XSS**: even if an attacker injects `<script>`, the browser refuses to run it. The hard part is _not breaking ourselves_. So: report-only first, E2E that fails on any violation, then enforce.
 
 ```bash
 git switch main && git pull && git switch -c feat/s6-t11-csp
@@ -2384,23 +2861,31 @@ mkdir -p src/app/api/csp-report
 ### 1. Two tiers (and why)
 
 | Tier | Pages | `script-src` | Why |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Strict** | dashboard, admin, sign-in/up, reset/verify, 2FA, invitations (all **dynamic**) | `'self' 'nonce-…' 'strict-dynamic'` | A fresh nonce per request: injected scripts have no nonce → blocked |
 | **Relaxed** | marketing, contact, 404 (**static** HTML) | `'self' 'unsafe-inline'` | A per-request nonce forces dynamic rendering and would kill static caching/Lighthouse (Sprint 7). These pages render no user-supplied HTML |
 
-Both tiers share the *other* strong directives: `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `connect-src` allow-list.
+Both tiers share the _other_ strong directives: `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `connect-src` allow-list.
 
 ### 2. The policy builder (pure, tested)
 
 📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`): `CSP_MODE: z.enum(['off', 'report-only', 'enforce']).default('report-only'),` · `.env.example`: `CSP_MODE=report-only  # off | report-only | enforce`.
 
 📄 **Create `src/libs/csp.ts`:**
+
 ```ts
 import { splitLocale } from '@/libs/route-guard';
 
 const STRICT_PREFIXES = [
-  '/dashboard', '/admin', '/sign-in', '/sign-up', '/forgot-password', '/reset-password',
-  '/two-factor', '/verify-email', '/accept-invitation',
+  '/dashboard',
+  '/admin',
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/reset-password',
+  '/two-factor',
+  '/verify-email',
+  '/accept-invitation',
 ] as const;
 
 /** Dynamic areas can carry a per-request nonce; static marketing pages cannot. */
@@ -2419,8 +2904,17 @@ export type CspInput = {
   upgradeInsecure?: boolean;
 };
 
-export function buildCsp({ nonce, strict, dev, connectSources = [], reportUri, upgradeInsecure = false }: CspInput): string {
-  const scriptSrc = strict ? [`'self'`, `'nonce-${nonce}'`, `'strict-dynamic'`] : [`'self'`, `'unsafe-inline'`];
+export function buildCsp({
+  nonce,
+  strict,
+  dev,
+  connectSources = [],
+  reportUri,
+  upgradeInsecure = false,
+}: CspInput): string {
+  const scriptSrc = strict
+    ? [`'self'`, `'nonce-${nonce}'`, `'strict-dynamic'`]
+    : [`'self'`, `'unsafe-inline'`];
   if (dev) scriptSrc.push(`'unsafe-eval'`); // React's dev tooling needs it; never in production
 
   const directives: Record<string, string[]> = {
@@ -2444,7 +2938,15 @@ export function buildCsp({ nonce, strict, dev, connectSources = [], reportUri, u
 }
 
 /** Origins to allow in connect-src, derived from the integrations that are actually configured. */
-export function connectSourcesFor({ sentryDsn, spotlight, dev }: { sentryDsn?: string | undefined; spotlight: boolean; dev: boolean }): string[] {
+export function connectSourcesFor({
+  sentryDsn,
+  spotlight,
+  dev,
+}: {
+  sentryDsn?: string | undefined;
+  spotlight: boolean;
+  dev: boolean;
+}): string[] {
   const sources: string[] = [];
   if (sentryDsn) {
     try {
@@ -2459,7 +2961,9 @@ export function connectSourcesFor({ sentryDsn, spotlight, dev }: { sentryDsn?: s
 
 export const newNonce = () => btoa(crypto.randomUUID());
 ```
+
 📄 **Create `src/libs/csp.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -2496,7 +3000,12 @@ describe('buildCsp', () => {
   });
 
   it('adds configured connect sources, a report endpoint and optional upgrade-insecure-requests', () => {
-    const policy = buildCsp({ ...base, strict: true, connectSources: ['https://o1.ingest.sentry.io'], upgradeInsecure: true });
+    const policy = buildCsp({
+      ...base,
+      strict: true,
+      connectSources: ['https://o1.ingest.sentry.io'],
+      upgradeInsecure: true,
+    });
     expect(policy).toContain(`connect-src 'self' https://o1.ingest.sentry.io`);
     expect(policy).toContain('report-uri /api/csp-report');
     expect(policy).toContain('upgrade-insecure-requests');
@@ -2505,7 +3014,13 @@ describe('buildCsp', () => {
 
 describe('usesStrictCsp', () => {
   it('is strict for dynamic areas (any language) and relaxed for static pages', () => {
-    for (const path of ['/dashboard/acme', '/fr/admin/users', '/sign-in', '/fr/two-factor', '/accept-invitation/x']) {
+    for (const path of [
+      '/dashboard/acme',
+      '/fr/admin/users',
+      '/sign-in',
+      '/fr/two-factor',
+      '/accept-invitation/x',
+    ]) {
       expect(usesStrictCsp(path), path).toBe(true);
     }
     for (const path of ['/', '/fr', '/contact', '/fr/contact', '/does-not-exist']) {
@@ -2516,7 +3031,13 @@ describe('usesStrictCsp', () => {
 
 describe('connectSourcesFor', () => {
   it('derives origins only from configured integrations', () => {
-    expect(connectSourcesFor({ sentryDsn: 'https://pub@o9.ingest.de.sentry.io/123', spotlight: false, dev: false })).toEqual(['https://o9.ingest.de.sentry.io']);
+    expect(
+      connectSourcesFor({
+        sentryDsn: 'https://pub@o9.ingest.de.sentry.io/123',
+        spotlight: false,
+        dev: false,
+      }),
+    ).toEqual(['https://o9.ingest.de.sentry.io']);
     expect(connectSourcesFor({ spotlight: true, dev: true })).toEqual(['http://localhost:8969']);
     expect(connectSourcesFor({ spotlight: true, dev: false })).toEqual([]); // never in production
     expect(connectSourcesFor({ sentryDsn: 'not a url', spotlight: false, dev: false })).toEqual([]);
@@ -2527,6 +3048,7 @@ describe('connectSourcesFor', () => {
 ### 3. The report endpoint
 
 📄 **Create `src/app/api/csp-report/route.ts`:**
+
 ```ts
 import { getLogger } from '@/libs/Logger';
 
@@ -2552,7 +3074,9 @@ export async function POST(request: Request) {
   return new Response(null, { status: 204 });
 }
 ```
+
 📄 **Create `src/app/api/csp-report/route.test.ts`:**
+
 ```ts
 import { describe, expect, it, vi } from 'vitest';
 
@@ -2561,14 +3085,25 @@ vi.mock('@/libs/Logger', () => ({ getLogger: () => ({ warning }) }));
 
 import { POST } from './route';
 
-const post = (body: string) => POST(new Request('http://localhost/api/csp-report', { method: 'POST', body }));
+const post = (body: string) =>
+  POST(new Request('http://localhost/api/csp-report', { method: 'POST', body }));
 
 describe('POST /api/csp-report', () => {
   it('logs a clipped violation and answers 204', async () => {
-    const response = await post(JSON.stringify({ 'csp-report': { 'violated-directive': 'script-src', 'blocked-uri': 'inline', 'document-uri': 'https://x/' + 'a'.repeat(500) } }));
+    const response = await post(
+      JSON.stringify({
+        'csp-report': {
+          'violated-directive': 'script-src',
+          'blocked-uri': 'inline',
+          'document-uri': 'https://x/' + 'a'.repeat(500),
+        },
+      }),
+    );
     expect(response.status).toBe(204);
     expect(warning).toHaveBeenCalledOnce();
-    expect((warning.mock.calls[0]![1] as { document: string }).document.length).toBeLessThanOrEqual(200);
+    expect((warning.mock.calls[0]![1] as { document: string }).document.length).toBeLessThanOrEqual(
+      200,
+    );
   });
 
   it('survives garbage and rejects oversized bodies', async () => {
@@ -2581,47 +3116,55 @@ describe('POST /api/csp-report', () => {
 ### 4. Applied in the proxy
 
 📄 **Edit `src/proxy.ts`** — add before step 4 ("Locale routing"):
+
 ```ts
 import { buildCsp, connectSourcesFor, newNonce, usesStrictCsp } from './libs/csp';
 import { Env } from './libs/Env';
 
-  // 4) Content-Security-Policy (strict, nonce-based for dynamic areas)
-  const forwardedHeaders = withRequestIdHeader(request.headers, requestId);
-  let cspHeader: { name: string; value: string } | undefined;
+// 4) Content-Security-Policy (strict, nonce-based for dynamic areas)
+const forwardedHeaders = withRequestIdHeader(request.headers, requestId);
+let cspHeader: { name: string; value: string } | undefined;
 
-  if (Env.CSP_MODE !== 'off') {
-    const nonce = newNonce();
-    const policy = buildCsp({
-      nonce,
-      strict: usesStrictCsp(pathname),
+if (Env.CSP_MODE !== 'off') {
+  const nonce = newNonce();
+  const policy = buildCsp({
+    nonce,
+    strict: usesStrictCsp(pathname),
+    dev: Env.NODE_ENV !== 'production',
+    connectSources: connectSourcesFor({
+      sentryDsn: Env.NEXT_PUBLIC_SENTRY_DSN,
+      spotlight: Env.NEXT_PUBLIC_SENTRY_SPOTLIGHT,
       dev: Env.NODE_ENV !== 'production',
-      connectSources: connectSourcesFor({ sentryDsn: Env.NEXT_PUBLIC_SENTRY_DSN, spotlight: Env.NEXT_PUBLIC_SENTRY_SPOTLIGHT, dev: Env.NODE_ENV !== 'production' }),
-      reportUri: '/api/csp-report',
-      upgradeInsecure: Env.NODE_ENV === 'production',
-    });
-    // Next.js reads the nonce from the REQUEST header and stamps it on its own inline scripts
-    forwardedHeaders.set('x-nonce', nonce);
-    forwardedHeaders.set('content-security-policy', policy);
-    cspHeader = {
-      name: Env.CSP_MODE === 'enforce' ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only',
-      value: policy,
-    };
-  }
+    }),
+    reportUri: '/api/csp-report',
+    upgradeInsecure: Env.NODE_ENV === 'production',
+  });
+  // Next.js reads the nonce from the REQUEST header and stamps it on its own inline scripts
+  forwardedHeaders.set('x-nonce', nonce);
+  forwardedHeaders.set('content-security-policy', policy);
+  cspHeader = {
+    name:
+      Env.CSP_MODE === 'enforce'
+        ? 'Content-Security-Policy'
+        : 'Content-Security-Policy-Report-Only',
+    value: policy,
+  };
+}
 
-  // 5) Locale routing
-  const forwarded = new NextRequest(request, { headers: forwardedHeaders });
-  const response = intlMiddleware(forwarded);
-  response.headers.set(REQUEST_ID_HEADER, requestId);
-  if (cspHeader) response.headers.set(cspHeader.name, cspHeader.value);
-  return response;
+// 5) Locale routing
+const forwarded = new NextRequest(request, { headers: forwardedHeaders });
+const response = intlMiddleware(forwarded);
+response.headers.set(REQUEST_ID_HEADER, requestId);
+if (cspHeader) response.headers.set(cspHeader.name, cspHeader.value);
+return response;
 ```
-> 🔍 **Verify against the Next.js CSP guide:** nonce extraction from the *request* `content-security-policy` header, and that the nonce survives next-intl's rewrite. The E2E test below fails loudly if scripts end up without a nonce.
-> 🔒 `/api/*` responses (JSON) don't get a CSP — it governs *documents*. The security headers from S6-T09 still apply to them.
-> ⚠️ The `proxy.ts` matcher must keep `/api/csp-report` **outside** (it already is: `api` is excluded) so violation reports aren't themselves blocked or rate-limited.
 
-### 5. E2E: *no* violations, with *every* integration switched on
+> 🔍 **Verify against the Next.js CSP guide:** nonce extraction from the _request_ `content-security-policy` header, and that the nonce survives next-intl's rewrite. The E2E test below fails loudly if scripts end up without a nonce. 🔒 `/api/*` responses (JSON) don't get a CSP — it governs _documents_. The security headers from S6-T09 still apply to them. ⚠️ The `proxy.ts` matcher must keep `/api/csp-report` **outside** (it already is: `api` is excluded) so violation reports aren't themselves blocked or rate-limited.
+
+### 5. E2E: _no_ violations, with _every_ integration switched on
 
 📄 **Edit `playwright.config.ts`** → `appEnv`:
+
 ```ts
   CSP_MODE: 'enforce', // tests run with the policy ENFORCED: any violation breaks a page
   // Dummy values that switch the client integrations ON, so the policy is tested with them present
@@ -2629,15 +3172,19 @@ import { Env } from './libs/Env';
   NEXT_PUBLIC_POSTHOG_KEY: 'phc_e2e_dummy',
   NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com',
 ```
+
 📄 **Edit `.github/workflows/ci.yml`** → workflow-level `env:` (these are baked into the client bundle at build time, so the **build** job needs them too):
+
 ```yaml
-  NEXT_PUBLIC_SENTRY_DSN: https://public@o0.ingest.sentry.io/0
-  NEXT_PUBLIC_POSTHOG_KEY: phc_e2e_dummy
-  NEXT_PUBLIC_POSTHOG_HOST: https://eu.i.posthog.com
+NEXT_PUBLIC_SENTRY_DSN: https://public@o0.ingest.sentry.io/0
+NEXT_PUBLIC_POSTHOG_KEY: phc_e2e_dummy
+NEXT_PUBLIC_POSTHOG_HOST: https://eu.i.posthog.com
 ```
+
 (the same three lines in `.github/workflows/visual-update.yml` so baseline generation uses the same build)
 
 📄 **Create `e2e/csp.spec.ts`:**
+
 ```ts
 import type { Page } from '@playwright/test';
 
@@ -2647,12 +3194,20 @@ import { consentCookie } from './helpers/consent';
 function collectViolations(page: Page) {
   const violations: string[] = [];
   page.on('console', (message) => {
-    if (/Content[- ]Security[- ]Policy|violates the following/i.test(message.text())) violations.push(message.text());
+    if (/Content[- ]Security[- ]Policy|violates the following/i.test(message.text()))
+      violations.push(message.text());
   });
   return violations;
 }
 
-const PUBLIC_PAGES = ['/', '/contact', '/sign-in', '/fr/sign-up', '/forgot-password', '/does-not-exist'];
+const PUBLIC_PAGES = [
+  '/',
+  '/contact',
+  '/sign-in',
+  '/fr/sign-up',
+  '/forgot-password',
+  '/does-not-exist',
+];
 
 test.describe('Content-Security-Policy is enforced and nothing legitimate is blocked', () => {
   for (const path of PUBLIC_PAGES) {
@@ -2679,14 +3234,22 @@ test.describe('Content-Security-Policy is enforced and nothing legitimate is blo
 
   test('signed-in pages work under the strict policy', async ({ ownerPage, world }) => {
     const violations = collectViolations(ownerPage);
-    for (const path of [`/dashboard/${world.orgSlug}`, `/dashboard/${world.orgSlug}/projects`, '/dashboard/account/security']) {
+    for (const path of [
+      `/dashboard/${world.orgSlug}`,
+      `/dashboard/${world.orgSlug}/projects`,
+      '/dashboard/account/security',
+    ]) {
       await ownerPage.goto(path);
       await ownerPage.waitForLoadState('networkidle');
     }
     expect(violations).toEqual([]);
   });
 
-  test('with analytics and replay consent (all integrations active) nothing is blocked either', async ({ page, context, baseURL }) => {
+  test('with analytics and replay consent (all integrations active) nothing is blocked either', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
     await context.addCookies([consentCookie(baseURL!, { analytics: true, replay: true })]);
     const violations = collectViolations(page);
 
@@ -2698,29 +3261,34 @@ test.describe('Content-Security-Policy is enforced and nothing legitimate is blo
   });
 });
 ```
+
 > The last test only becomes meaningful once PostHog arrives (S6-T13); it passes now and **guards** that ticket.
 
 ### 6. Rollout procedure (document it)
 
 📄 **Append to `docs/guides/security.md`** (create the file if S6-T12 isn't merged yet):
-````markdown
+
+```markdown
 ## Content-Security-Policy
+
 `CSP_MODE`: `off` | `report-only` (default) | `enforce`. Policy: `src/libs/csp.ts`. Reports: `/api/csp-report` → logs (`security`).
 
 Rolling out in a new environment:
+
 1. Deploy with `report-only`. Browse every area; read the `CSP violation` log lines (Better Stack / terminal).
 2. Each violation is either a legitimate resource (add its origin to the matching directive **in code**, with a test) or an actual problem (remove it).
-3. When a week of traffic is clean → set `CSP_MODE=enforce`.
-Adding a third-party script/connection? Update `connectSourcesFor` + `csp.test.ts` first — the E2E suite runs with the policy enforced.
-````
+3. When a week of traffic is clean → set `CSP_MODE=enforce`. Adding a third-party script/connection? Update `connectSourcesFor` + `csp.test.ts` first — the E2E suite runs with the policy enforced.
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 CI=1 pnpm e2e          # the whole suite under an ENFORCED CSP, with Sentry/PostHog switched on
 ```
+
 1. DevTools → Console on `/sign-in`, `/dashboard/<org>`, `/contact`: **no** CSP errors. Network → document → the header is `Content-Security-Policy` (E2E) or `…-Report-Only` (default dev).
-2. **Prove it blocks:** in the console of a **strict** page run `const s=document.createElement('script'); s.textContent='alert(1)'; document.body.append(s)` → *Refused to execute inline script* (and a report appears in the terminal log). On the **relaxed** tier it would run — which is why those pages never render user-supplied HTML.
+2. **Prove it blocks:** in the console of a **strict** page run `const s=document.createElement('script'); s.textContent='alert(1)'; document.body.append(s)` → _Refused to execute inline script_ (and a report appears in the terminal log). On the **relaxed** tier it would run — which is why those pages never render user-supplied HTML.
 3. `CSP_MODE=report-only pnpm dev`: same page loads, violations only logged.
 4. Responses on strict pages contain `<script nonce="…">`; view-source and confirm every inline script has the nonce.
 5. Re-run `pnpm e2e:visual` — unchanged.
@@ -2740,6 +3308,7 @@ git switch main && git pull && git switch -c ci/s6-t12-secret-scanning
 ### 1. gitleaks configuration
 
 📄 **Create `.gitleaks.toml`:**
+
 ```toml
 title = "saas-boilerplate"
 
@@ -2764,27 +3333,32 @@ regexes = [
   '''phc_e2e_dummy''',
 ]
 ```
+
 > Allow-list **narrowly**. Every entry is a place where a real leak could now hide.
 
 ### 2. Local guard (optional, automatic if installed)
 
 gitleaks is a Go program, not an npm package:
+
 ```bash
 winget install Gitleaks.Gitleaks          # 🪟 Windows · macOS: brew install gitleaks
 gitleaks version
 ```
+
 📄 **Edit `lefthook.yml`** → `pre-commit.commands`:
+
 ```yaml
-    secrets:
-      # 🔍 gitleaks ≥ 8.19: `gitleaks git --pre-commit --staged`; older: `gitleaks protect --staged`
-      run: gitleaks git --pre-commit --staged --redact --config .gitleaks.toml
-      skip:
-        - run: '! command -v gitleaks' # not installed locally → CI is the backstop
+secrets:
+  # 🔍 gitleaks ≥ 8.19: `gitleaks git --pre-commit --staged`; older: `gitleaks protect --staged`
+  run: gitleaks git --pre-commit --staged --redact --config .gitleaks.toml
+  skip:
+    - run: '! command -v gitleaks' # not installed locally → CI is the backstop
 ```
 
 ### 3. CI: scan the whole history, and CodeQL
 
 📄 **Create `.github/workflows/security.yml`:**
+
 ```yaml
 name: Security
 
@@ -2825,6 +3399,7 @@ jobs:
           build-mode: none
       - uses: github/codeql-action/analyze@v3
 ```
+
 Add **`Secret scan`** to the aggregate in `.github/workflows/ci.yml`? It lives in its own workflow so PRs from forks and scheduled runs behave independently: in GitHub's branch rule add `Secret scan` and `CodeQL` as **additional required checks**.
 
 ### 4. GitHub's own protection (settings, not code)
@@ -2834,15 +3409,17 @@ Repository → **Settings → Code security**: enable **Dependabot alerts**, **S
 ### 5. What to do when a secret leaks
 
 📄 **Create `docs/guides/security.md`** (or append, if S6-T11 created it):
-````markdown
+
+```markdown
 # Security guide
 
 ## If a secret leaks (assume it is compromised)
+
 1. **Revoke/rotate first**, clean up later. Removing a commit does not un-leak a secret.
 2. Rotate: see the table. 3. Check logs/Sentry for use of the old value. 4. Then (optionally) rewrite history.
 
 | Secret | Where it lives | How to rotate | Side effect |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `BETTER_AUTH_SECRET` | env | generate a new one (`pnpm setup:env`), deploy | **every user is signed out**; stored TOTP secrets need re-enrolment if they were encrypted with the old key 🔍 |
 | Database URL / password | env | reset the password in Neon, update `DATABASE_URL*`, redeploy | brief downtime |
 | `RESEND_API_KEY` | env | create a new key, revoke the old | none |
@@ -2851,15 +3428,17 @@ Repository → **Settings → Code security**: enable **Dependabot alerts**, **S
 | `NEXT_PUBLIC_*` keys (Sentry DSN, PostHog key) | public by design | rotate only if abused | none |
 
 ## Guards in this repository
+
 - `.env*` is git-ignored (except examples); T3 Env separates server and `NEXT_PUBLIC_` variables.
 - Pre-commit (if gitleaks is installed) + CI scan of the **whole history** + GitHub push protection + CodeQL.
-````
+```
 
 ### ✅ Verify
+
 1. **Local guard (if installed):** create `leak.txt` containing a made-up AWS key: `AKIAIOSFODNN7EXAMPLE` and `aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` → `git add leak.txt && git commit -m "test: leak"` → **blocked** ("leaks found"). Remove the file.
 2. **CI:** push a throw-away branch containing that file → the `Secret scan` job **fails**. Delete the branch.
 3. `.env.example` and the docs containing the dummy `ci-only-secret-…` values pass (allow-list).
-4. The **CodeQL** job completes (first run takes a few minutes); alerts, if any, appear under *Security → Code scanning*.
+4. The **CodeQL** job completes (first run takes a few minutes); alerts, if any, appear under _Security → Code scanning_.
 5. Confirm GitHub **Push protection** is on (try pushing the fake key from a test branch — GitHub rejects it).
 
 **🚢 Ship** — branch `ci/s6-t12-secret-scanning` · message: `ci(sec): add gitleaks config and hooks, codeql workflow and secret rotation guide`
@@ -2881,21 +3460,27 @@ mkdir -p src/libs/analytics src/components/analytics
 ### 1. Environment and the reverse proxy
 
 📄 **Edit `src/libs/Env.ts`** — `client` + `runtimeEnv`:
+
 ```ts
     NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
     // EU cloud by default; use https://us.i.posthog.com for the US cloud
     NEXT_PUBLIC_POSTHOG_HOST: z.url().default('https://eu.i.posthog.com'),
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── PostHog (optional; only active after the visitor consents) ──
 NEXT_PUBLIC_POSTHOG_KEY=
 NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com
 ```
+
 📄 **Create `src/libs/analytics/hosts.ts`:**
+
 ```ts
 /** https://eu.i.posthog.com → https://eu-assets.i.posthog.com (static assets live on a sibling host). */
-export const posthogAssetsHost = (host: string) => host.replace('.i.posthog.com', '-assets.i.posthog.com');
+export const posthogAssetsHost = (host: string) =>
+  host.replace('.i.posthog.com', '-assets.i.posthog.com');
 
 /** https://eu.i.posthog.com → https://eu.posthog.com (the app UI, for the toolbar). */
 export const posthogUiHost = (host: string) => host.replace('.i.posthog.com', '.posthog.com');
@@ -2905,7 +3490,9 @@ export function analyticsUrl(origin: string, pathname: string): string {
   return `${origin}${pathname.split(/[?#]/)[0]}`;
 }
 ```
+
 📄 **Create `src/libs/analytics/hosts.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -2918,11 +3505,17 @@ it('derives the sibling hosts for each region', () => {
 });
 
 it('never sends query strings or fragments to analytics', () => {
-  expect(analyticsUrl('https://app.test', '/reset-password?token=SECRET#x')).toBe('https://app.test/reset-password');
-  expect(analyticsUrl('https://app.test', '/dashboard/acme')).toBe('https://app.test/dashboard/acme');
+  expect(analyticsUrl('https://app.test', '/reset-password?token=SECRET#x')).toBe(
+    'https://app.test/reset-password',
+  );
+  expect(analyticsUrl('https://app.test', '/dashboard/acme')).toBe(
+    'https://app.test/dashboard/acme',
+  );
 });
 ```
+
 📄 **Edit `next.config.ts`** — first-party proxy path (ad-blockers and third-party-cookie rules then matter less, and CSP needs only `'self'`):
+
 ```ts
 const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
 const posthogAssets = posthogHost.replace('.i.posthog.com', '-assets.i.posthog.com');
@@ -2938,7 +3531,9 @@ const nextConfig: NextConfig = {
   },
 };
 ```
+
 📄 **Edit the proxy matcher** (`src/proxy.ts`) — `/ingest` must not be locale-prefixed or inspected:
+
 ```ts
     '/((?!api|trpc|ingest|_next|_vercel|.*\\..*).*)',
 ```
@@ -2946,6 +3541,7 @@ const nextConfig: NextConfig = {
 ### 2. The client wrapper (the ONLY place that talks to posthog-js)
 
 📄 **Create `src/libs/analytics/events.ts`:**
+
 ```ts
 /**
  * Every analytics event the product sends, with its allowed properties.
@@ -2959,7 +3555,9 @@ export type AnalyticsEvents = {
   project_created: { status: 'active' | 'archived' };
 };
 ```
+
 📄 **Create `src/libs/analytics/client.ts`:**
+
 ```ts
 import posthog from 'posthog-js';
 
@@ -2998,10 +3596,16 @@ export function deactivateAnalytics(): void {
 
 export function capturePageview(pathname: string): void {
   if (!active) return;
-  posthog.capture('$pageview', { $current_url: analyticsUrl(window.location.origin, pathname), $pathname: pathname.split(/[?#]/)[0] });
+  posthog.capture('$pageview', {
+    $current_url: analyticsUrl(window.location.origin, pathname),
+    $pathname: pathname.split(/[?#]/)[0],
+  });
 }
 
-export function trackEvent<E extends keyof AnalyticsEvents>(event: E, properties: AnalyticsEvents[E]): void {
+export function trackEvent<E extends keyof AnalyticsEvents>(
+  event: E,
+  properties: AnalyticsEvents[E],
+): void {
   if (!active) return;
   posthog.capture(event, properties);
 }
@@ -3022,7 +3626,9 @@ export function resetAnalytics(): void {
   posthog.reset();
 }
 ```
+
 📄 **Create `src/libs/analytics/client.test.ts`** (posthog-js mocked; module state reset per test):
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -3059,7 +3665,15 @@ describe('analytics client', () => {
     const analytics = await load();
     analytics.activateAnalytics({ key: 'phc_x', host: 'https://eu.i.posthog.com' });
 
-    expect(posthog.init).toHaveBeenCalledWith('phc_x', expect.objectContaining({ api_host: '/ingest', autocapture: false, capture_pageview: false, disable_session_recording: true }));
+    expect(posthog.init).toHaveBeenCalledWith(
+      'phc_x',
+      expect.objectContaining({
+        api_host: '/ingest',
+        autocapture: false,
+        capture_pageview: false,
+        disable_session_recording: true,
+      }),
+    );
     expect(posthog.opt_in_capturing).toHaveBeenCalled();
   });
 
@@ -3108,6 +3722,7 @@ it('typed events', async () => {
 ### 3. React side: provider + pageviews
 
 📄 **Create `src/components/analytics/analytics-provider.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3154,9 +3769,11 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
   );
 }
 ```
+
 📄 **Edit `src/app/[locale]/layout.tsx`** — inside `<ConsentProvider>`: `<AnalyticsProvider> … </AnalyticsProvider>` around `ThemeProvider` (import it).
 
 📄 **Create `src/components/analytics/analytics-provider.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -3164,7 +3781,6 @@ import { ConsentBanner } from '@/components/consent/consent-banner';
 import { ConsentProvider } from '@/components/consent/consent-provider';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { AnalyticsProvider } from './analytics-provider';
 
 const analytics = vi.hoisted(() => ({
@@ -3173,7 +3789,12 @@ const analytics = vi.hoisted(() => ({
   capturePageview: vi.fn(),
 }));
 vi.mock('@/libs/analytics/client', () => analytics);
-vi.mock('@/libs/Env', () => ({ Env: { NEXT_PUBLIC_POSTHOG_KEY: 'phc_test', NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com' } }));
+vi.mock('@/libs/Env', () => ({
+  Env: {
+    NEXT_PUBLIC_POSTHOG_KEY: 'phc_test',
+    NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com',
+  },
+}));
 vi.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
 
 const mount = () =>
@@ -3207,7 +3828,12 @@ test('accepting activates analytics and sends the first pageview', async () => {
   const screen = await mount();
   await screen.getByRole('button', { name: 'Accept all' }).click();
 
-  await vi.waitFor(() => expect(analytics.activateAnalytics).toHaveBeenCalledWith({ key: 'phc_test', host: 'https://eu.i.posthog.com' }));
+  await vi.waitFor(() =>
+    expect(analytics.activateAnalytics).toHaveBeenCalledWith({
+      key: 'phc_test',
+      host: 'https://eu.i.posthog.com',
+    }),
+  );
   await vi.waitFor(() => expect(analytics.capturePageview).toHaveBeenCalledWith('/dashboard'));
 });
 ```
@@ -3215,9 +3841,9 @@ test('accepting activates analytics and sends the first pageview', async () => {
 ### 4. Server-side events — with the same consent rule
 
 📄 **Create `src/libs/analytics/server.ts`:**
+
 ```ts
 import 'server-only';
-
 import { cookies } from 'next/headers';
 import { after } from 'next/server';
 import { PostHog } from 'posthog-node';
@@ -3230,14 +3856,22 @@ import { Env } from '@/libs/Env';
  * Server-side events are still analytics: they need the SAME consent as the browser ones.
  * No key, no consent cookie, or analytics declined → silently nothing.
  */
-export async function trackServer<E extends keyof AnalyticsEvents>(distinctId: string, event: E, properties: AnalyticsEvents[E]): Promise<void> {
+export async function trackServer<E extends keyof AnalyticsEvents>(
+  distinctId: string,
+  event: E,
+  properties: AnalyticsEvents[E],
+): Promise<void> {
   const key = Env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!key) return;
 
   const consent = parseConsent((await cookies()).get(CONSENT_COOKIE)?.value);
   if (!consent?.analytics) return;
 
-  const client = new PostHog(key, { host: Env.NEXT_PUBLIC_POSTHOG_HOST, flushAt: 1, flushInterval: 0 });
+  const client = new PostHog(key, {
+    host: Env.NEXT_PUBLIC_POSTHOG_HOST,
+    flushAt: 1,
+    flushInterval: 0,
+  });
   client.capture({ distinctId, event, properties });
   // Keep the (serverless) function alive until the event is delivered
   try {
@@ -3247,7 +3881,9 @@ export async function trackServer<E extends keyof AnalyticsEvents>(distinctId: s
   }
 }
 ```
+
 📄 **Create `src/libs/analytics/server.test.ts`:**
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -3255,11 +3891,23 @@ vi.mock('server-only', () => ({}));
 const cookieValue = vi.hoisted(() => ({ current: undefined as string | undefined }));
 const capture = vi.hoisted(() => vi.fn());
 const shutdown = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
-const env = vi.hoisted(() => ({ NEXT_PUBLIC_POSTHOG_KEY: 'phc_x' as string | undefined, NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com' }));
+const env = vi.hoisted(() => ({
+  NEXT_PUBLIC_POSTHOG_KEY: 'phc_x' as string | undefined,
+  NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com',
+}));
 
-vi.mock('next/headers', () => ({ cookies: async () => ({ get: () => (cookieValue.current ? { value: cookieValue.current } : undefined) }) }));
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: () => (cookieValue.current ? { value: cookieValue.current } : undefined),
+  }),
+}));
 vi.mock('next/server', () => ({ after: (task: () => unknown) => void task() }));
-vi.mock('posthog-node', () => ({ PostHog: class { capture = capture; shutdown = shutdown; } }));
+vi.mock('posthog-node', () => ({
+  PostHog: class {
+    capture = capture;
+    shutdown = shutdown;
+  },
+}));
 vi.mock('@/libs/Env', () => ({ Env: env }));
 
 import { serializeConsent } from '@/libs/consent';
@@ -3287,7 +3935,11 @@ describe('trackServer', () => {
   it('sends the event once the visitor consented', async () => {
     cookieValue.current = serializeConsent({ analytics: true, replay: false });
     await trackServer('u1', 'project_created', { status: 'active' });
-    expect(capture).toHaveBeenCalledWith({ distinctId: 'u1', event: 'project_created', properties: { status: 'active' } });
+    expect(capture).toHaveBeenCalledWith({
+      distinctId: 'u1',
+      event: 'project_created',
+      properties: { status: 'active' },
+    });
   });
 });
 ```
@@ -3295,6 +3947,7 @@ describe('trackServer', () => {
 ### 5. E2E: the network tells the truth
 
 📄 **Create `e2e/analytics.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 import { consentCookie } from './helpers/consent';
@@ -3326,7 +3979,9 @@ test('rejecting keeps it that way', async ({ page, context }) => {
 
 test('accepting starts analytics through our own /ingest path', async ({ page, context }) => {
   await context.clearCookies();
-  const ingest = page.waitForRequest((request) => request.url().includes('/ingest'), { timeout: 15_000 });
+  const ingest = page.waitForRequest((request) => request.url().includes('/ingest'), {
+    timeout: 15_000,
+  });
 
   await page.goto('/');
   await page.getByRole('button', { name: 'Accept all' }).click();
@@ -3334,7 +3989,11 @@ test('accepting starts analytics through our own /ingest path', async ({ page, c
   expect(new URL((await ingest).url()).pathname.startsWith('/ingest')).toBe(true); // first-party path, not posthog.com
 });
 
-test('with consent already stored, analytics starts on load; withdrawing stops new captures', async ({ page, context, baseURL }) => {
+test('with consent already stored, analytics starts on load; withdrawing stops new captures', async ({
+  page,
+  context,
+  baseURL,
+}) => {
   await context.addCookies([consentCookie(baseURL!, { analytics: true, replay: false })]);
   await page.goto('/');
   await page.waitForRequest((request) => request.url().includes('/ingest'), { timeout: 15_000 });
@@ -3344,19 +4003,25 @@ test('with consent already stored, analytics starts on load; withdrawing stops n
   await page.getByRole('button', { name: 'Save choices' }).click();
 
   const afterWithdrawal: string[] = [];
-  page.on('request', (request) => request.url().includes('/ingest/e') && afterWithdrawal.push(request.url()));
+  page.on(
+    'request',
+    (request) => request.url().includes('/ingest/e') && afterWithdrawal.push(request.url()),
+  );
   await page.goto('/contact');
   await page.waitForLoadState('networkidle');
   expect(afterWithdrawal).toEqual([]);
 });
 ```
+
 > These assertions are **the** proof of the sprint's promise. If one fails, you are tracking people who said no.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check && pnpm e2e
 ```
-1. With a real PostHog key and the dev server: DevTools → Network, filter `ingest`. **Before** clicking anything: nothing. **Accept all** → requests to `/ingest/...` (same origin) and events in PostHog's *Live events* (pageviews with **paths only**).
+
+1. With a real PostHog key and the dev server: DevTools → Network, filter `ingest`. **Before** clicking anything: nothing. **Accept all** → requests to `/ingest/...` (same origin) and events in PostHog's _Live events_ (pageviews with **paths only**).
 2. Navigate to `/reset-password?token=abc` → in PostHog the pageview URL has **no** `?token=`.
 3. **Cookie settings → untick Analytics → Save** → no more `/ingest/e/` requests; `localStorage`/cookies named `ph_*` are cleared by `reset()`.
 4. `NEXT_PUBLIC_POSTHOG_KEY` unset → the app behaves identically, banner still works.
@@ -3377,6 +4042,7 @@ git switch main && git pull && git switch -c feat/s6-t14-events-identify
 ### 1. Identify (when allowed) and reset (always)
 
 📄 **Create `src/components/analytics/analytics-identity.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3398,24 +4064,27 @@ export function AnalyticsIdentity({ userId, orgId }: { userId: string; orgId?: s
   return null;
 }
 ```
+
 📄 **Render it** — `(app)/layout.tsx`: `<AnalyticsIdentity userId={user.id} />` (inside the layout's root fragment) and `[orgSlug]/layout.tsx`: `<AnalyticsIdentity userId={session.user.id} orgId={org.id} />` (use `session` from `requireOrgMember`).
 
 📄 **Reset on sign-out** — `src/components/layout/user-menu.tsx`:
+
 ```tsx
 import { resetAnalytics } from '@/libs/analytics/client';
 
-  async function signOut() {
-    resetAnalytics(); // the next person on this browser must not inherit this identity
-    await authClient.signOut();
-    // …unchanged…
-  }
+async function signOut() {
+  resetAnalytics(); // the next person on this browser must not inherit this identity
+  await authClient.signOut();
+  // …unchanged…
+}
 ```
+
 (the same one-liner belongs in the "impersonation stop" button — an impersonated session must never be attributed to the admin or the user in analytics: **do not identify while impersonating**; pass `userId` only when `!session.session.impersonatedBy` in `(app)/layout.tsx`).
 
 ### 2. Send the typed events where they happen
 
 | Event | Where (success branch) |
-|---|---|
+| --- | --- |
 | `user_signed_up` `{ method: 'password' }` | `SignUpForm` after `authClient.signUp.email` succeeds |
 | `user_signed_in` `{ method: 'password' }` | `SignInForm` right before navigating (and `'two_factor'` in `TotpForm`/`BackupForm`, `'passkey'` in `PasskeyButton`) |
 | `org_created` `{ via: 'form' }` | `CreateOrganizationForm` after `organization.create` |
@@ -3423,29 +4092,37 @@ import { resetAnalytics } from '@/libs/analytics/client';
 | `project_created` `{ status }` | **server-side**, in the `createProject` action |
 
 Client example (`sign-up-form.tsx`):
+
 ```tsx
 import { trackEvent } from '@/libs/analytics/client';
 // after the success check:
-    trackEvent('user_signed_up', { method: 'password' });
+trackEvent('user_signed_up', { method: 'password' });
 ```
+
 Server example — `src/actions/projects.ts`:
+
 ```ts
 import { trackServer } from '@/libs/analytics/server';
 // in handleCreate, after tenantDb(org.id).projects.create(...) succeeds:
-    await trackServer(session.user.id, 'project_created', { status: input.status });
+await trackServer(session.user.id, 'project_created', { status: input.status });
 ```
+
 > `trackServer` checks the **visitor's consent cookie**, so the server-side event respects the same choice. It's also skipped for impersonation sessions? — add `if (session.session.impersonatedBy) return` before calling it: an admin's actions aren't the user's behaviour.
 
 ### 3. A guard against "creative" tracking
 
 📄 **Create `src/libs/analytics/no-direct-posthog.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { expect, it } from 'vitest';
 
-const ALLOWED = new Set([path.join('src', 'libs', 'analytics', 'client.ts'), path.join('src', 'libs', 'analytics', 'server.ts')]);
+const ALLOWED = new Set([
+  path.join('src', 'libs', 'analytics', 'client.ts'),
+  path.join('src', 'libs', 'analytics', 'server.ts'),
+]);
 
 function files(dir: string): string[] {
   return (readdirSync(dir, { recursive: true }) as string[])
@@ -3454,7 +4131,10 @@ function files(dir: string): string[] {
 }
 
 it('only the two analytics wrappers import posthog directly', () => {
-  const offenders = files('src').filter((file) => !ALLOWED.has(file) && /from ['"]posthog-(js|node)['"]/.test(readFileSync(file, 'utf8')));
+  const offenders = files('src').filter(
+    (file) =>
+      !ALLOWED.has(file) && /from ['"]posthog-(js|node)['"]/.test(readFileSync(file, 'utf8')),
+  );
   expect(offenders, `Use src/libs/analytics/* instead:\n${offenders.join('\n')}`).toEqual([]);
 });
 ```
@@ -3462,16 +4142,18 @@ it('only the two analytics wrappers import posthog directly', () => {
 ### 4. Privacy documentation
 
 📄 **Create `docs/guides/privacy.md`:**
-````markdown
+
+```markdown
 # Privacy & analytics
 
 | Category | Tool | Default | What is sent |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Essential | session cookie, language, `consent` cookie | always | nothing leaves our origin |
 | Analytics | PostHog (via `/ingest`) | **off** | pageviews (path only), the typed events in `src/libs/analytics/events.ts`, internal user/org ids |
 | Error recordings | Sentry Replay (lazy-loaded) | **off** | short recordings around errors, text/media masked |
 
 Rules
+
 - **Nothing** non-essential runs before consent. A Global Privacy Control signal = "no".
 - Never send emails, names or free text. Ids are internal. Events are typed (`pnpm typecheck` enforces it).
 - Only `src/libs/analytics/{client,server}.ts` may import posthog (a test enforces it).
@@ -3480,16 +4162,19 @@ Rules
 - Changing purposes or categories? Bump `CONSENT_VERSION` (src/libs/consent.ts) → everyone is asked again.
 
 ## Adding an event
+
 1. Add it to `AnalyticsEvents` (properties: categories, counts, booleans).
 2. `trackEvent('…', {…})` in the client success branch, or `trackServer(userId, '…', {…})` in the action.
 3. Mention it in this table if it introduces a new kind of data.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm check && pnpm e2e
 ```
-1. Accept analytics → sign up, sign in, create an organization, invite someone, create a project → PostHog *Live events* shows `user_signed_up`, `user_signed_in`, `org_created`, `member_invited`, `project_created`, linked to a **user id** (no email anywhere in the properties).
+
+1. Accept analytics → sign up, sign in, create an organization, invite someone, create a project → PostHog _Live events_ shows `user_signed_up`, `user_signed_in`, `org_created`, `member_invited`, `project_created`, linked to a **user id** (no email anywhere in the properties).
 2. Sign out → the next action in the same browser is anonymous again (new distinct id).
 3. Decline analytics → none of these appear, **including** the server-side `project_created`.
 4. Impersonate someone (S4) → no events attributed to either person.
@@ -3502,6 +4187,7 @@ pnpm test && pnpm typecheck && pnpm check && pnpm e2e
 ## 🧾 Sprint 6 wrap-up
 
 **Branch:** `docs/s6-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s6-wrap-up
 ```
@@ -3511,11 +4197,14 @@ git switch main && git pull && git switch -c docs/s6-wrap-up
 Run both **manually once**, record the result in `06-project-state.md`:
 
 **A. Zero configuration** — comment out every Sprint 6 variable (no Sentry, Better Stack, Arcjet, PostHog, Checkly; `CSP_MODE` default):
+
 ```bash
 pnpm build && pnpm start      # boots; no warnings except the optional-integration notes
 CI=1 pnpm e2e                 # green
 ```
+
 **B. Everything on** — dummy values in `.env.local`:
+
 ```dotenv
 NEXT_PUBLIC_SENTRY_DSN=https://public@o0.ingest.sentry.io/0
 NEXT_PUBLIC_SENTRY_SPOTLIGHT=true
@@ -3526,30 +4215,37 @@ ARCJET_MODE=DRY_RUN
 NEXT_PUBLIC_POSTHOG_KEY=phc_dummy
 CSP_MODE=enforce
 ```
+
 ```bash
 pnpm build && pnpm start      # boots; failing vendors are logged and ignored (fail-open / bounded queues)
 ```
-Browse: sign up, sign in, create an org, a project. **Nothing breaks, no CSP violation, no unhandled error.** (Vendors rejecting the dummy credentials is expected and harmless — that *is* the test.)
+
+Browse: sign up, sign in, create an org, a project. **Nothing breaks, no CSP violation, no unhandled error.** (Vendors rejecting the dummy credentials is expected and harmless — that _is_ the test.)
 
 ### 2. Docs
 
 📄 **Append to `docs/guides/observability.md`:**
-````markdown
+
+```markdown
 ## Logs (Better Stack)
-Set `BETTER_STACK_SOURCE_TOKEN` + `BETTER_STACK_INGESTING_HOST`. Logs are redacted, batched, bounded and never block requests.
-Serverless caveat: prefer Better Stack's Vercel integration (log drain) in production.
+
+Set `BETTER_STACK_SOURCE_TOKEN` + `BETTER_STACK_INGESTING_HOST`. Logs are redacted, batched, bounded and never block requests. Serverless caveat: prefer Better Stack's Vercel integration (log drain) in production.
 
 ## Health & monitoring
+
 `GET /api/health` → `{ status, version, db, time }` (503 when the database is down). `pnpm checkly:test` / `checkly:deploy`.
 
 ## Arcjet
-Optional. `ARCJET_MODE=DRY_RUN` logs would-be blocks; `LIVE` blocks. Fails open if Arcjet is unreachable.
-Per-IP limits on auth endpoints, per-address limits and disposable-email rejection on sign-up / reset / magic-link.
-````
+
+Optional. `ARCJET_MODE=DRY_RUN` logs would-be blocks; `LIVE` blocks. Fails open if Arcjet is unreachable. Per-IP limits on auth endpoints, per-address limits and disposable-email rejection on sign-up / reset / magic-link.
+```
+
 `docs/guides/security.md` (headers, CSP rollout, secrets) and `docs/guides/privacy.md` were created in their tickets.
 
 ### 3. Update `AGENTS.md`
+
 **Conventions:**
+
 ```markdown
 - Every third-party integration lives behind an adapter that no-ops without its env vars. Never import vendor SDKs from components/pages: use `src/libs/Sentry.ts`, `Arcjet.ts`, `analytics/client.ts|server.ts`.
 - Report only UNEXPECTED errors (`reportError`); never log or report secrets, tokens, codes or personal data (redaction + scrubbing exist, don't rely on them).
@@ -3558,12 +4254,15 @@ Per-IP limits on auth endpoints, per-address limits and disposable-email rejecti
 - Static marketing pages must keep working under the relaxed CSP tier; new dynamic areas go in `STRICT_PREFIXES`.
 - New public API route → decide: inside the proxy matcher (protected by Arcjet) or deliberately outside (health, csp-report).
 ```
+
 **Commands:** `pnpm spotlight`, `pnpm checkly:test`, `pnpm checkly:deploy`.
+
 ```bash
 pnpm check:agents
 ```
 
 ### 4. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 6 · **Current sprint:** Sprint 7
 - **New env vars:** Sentry (4), Better Stack (2), Arcjet (2), `APP_VERSION`, `CSP_MODE`, PostHog (2)
 - **New routes:** `/api/health`, `/api/csp-report`, `/ingest/*` (rewrite); proxy matcher now also covers `/api/auth/*`
@@ -3572,6 +4271,7 @@ pnpm check:agents
 - **Debt:** `TD-14` (log loss on serverless), CSP report endpoint is unauthenticated/unthrottled, visual baselines re-generated after the footer link
 
 Tick the checkboxes in `docs/roadmap/sprint-06-observability-security.md`, then:
+
 ```bash
 pnpm check
 git add -A
@@ -3604,7 +4304,7 @@ git push origin v0.6.0
 ### 🎬 Sprint review — measurable acceptance
 
 | Check | Expected |
-|---|---|
+| --- | --- |
 | Throw an unexpected error | appears in Sentry with `requestId`, no cookies/emails/tokens |
 | Search `requestId:<id>` | finds the log lines **and** the Sentry event |
 | Bot-like request (`curl -A python-requests`) | `DRY_RUN`: allowed + logged · `LIVE`: 403 |
@@ -3619,7 +4319,7 @@ git push origin v0.6.0
 ## 🧯 Troubleshooting (Sprint 6)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | Build warns "no auth token" from Sentry | Expected without `SENTRY_AUTH_TOKEN`; source maps are only uploaded in real builds |
 | Sentry gets nothing | No DSN, DSN malformed, ad-blocker, or `beforeSend` dropping the event (scrubber returns the event — never `null`) |
 | Spotlight UI empty | Sidecar not running (`pnpm spotlight`), or `NEXT_PUBLIC_SENTRY_SPOTLIGHT` not `true` at **build/start** time (it's inlined) |
@@ -3629,7 +4329,7 @@ git push origin v0.6.0
 | Everything is slow after enabling Arcjet | It runs on **every page request**; keep rules lean, consider limiting `matcher` to auth/dynamic areas |
 | `/api/health` 503 but the DB is fine | The pooled connection is exhausted/idle-timeout (PGlite allows one connection) → retry; check `checkDatabase` timeout |
 | Page blank + CSP errors in the console | A new third-party origin or inline script → add it deliberately (`csp.ts` + test) or run `CSP_MODE=report-only` while investigating |
-| Scripts without `nonce` on strict pages | The nonce didn't survive the next-intl rewrite → follow the Next CSP guide for passing `x-nonce`/`content-security-policy` on the *request*; the nonce E2E test catches it |
+| Scripts without `nonce` on strict pages | The nonce didn't survive the next-intl rewrite → follow the Next CSP guide for passing `x-nonce`/`content-security-policy` on the _request_; the nonce E2E test catches it |
 | Static marketing pages became dynamic | A strict policy (nonce) leaked onto them → check `usesStrictCsp` and that those routes don't read `headers()` |
 | Hydration warning around the banner | The provider must render nothing until `status !== 'unknown'` (don't read cookies during SSR) |
 | E2E clicks blocked by the consent banner | The `consent` cookie wasn't added to that context (`openAs` / the auto fixture) |

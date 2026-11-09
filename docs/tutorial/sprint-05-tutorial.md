@@ -2,8 +2,7 @@
 
 ## Sprint 5 — Quality & Testing Maturity
 
-> Companion to `docs/roadmap/sprint-05-quality-testing.md`. Every `S5-Txx` section is one ticket. Tickets follow the sprint file's order.
-> This sprint adds **no product features**. It turns a working MVP into a **regression-proof** codebase: Storybook, visual regression, coverage gates, a fast parallel CI, reusable test infrastructure and a security regression suite.
+> Companion to `docs/roadmap/sprint-05-quality-testing.md`. Every `S5-Txx` section is one ticket. Tickets follow the sprint file's order. This sprint adds **no product features**. It turns a working MVP into a **regression-proof** codebase: Storybook, visual regression, coverage gates, a fast parallel CI, reusable test infrastructure and a security regression suite.
 
 🪟 **Windows + Cmder:** use the **Git Bash tab**. One rule matters more than ever this sprint: **visual baselines are never generated on Windows** (see the decisions table). Windows-specific notes are marked 🪟.
 
@@ -19,18 +18,18 @@
 - **Coverage thresholds** enforced + **Codecov**
 - **CI in parallel jobs** with caches, E2E sharding, build-artifact reuse, a bundle-size budget and a single required check (`CI OK`)
 - **i18n-check** (missing / invalid keys) as a gate
-- An **authorization matrix test** that runs the *real* Server Actions against a real (in-memory) database for every role — and **fails when a new action isn't covered**
+- An **authorization matrix test** that runs the _real_ Server Actions against a real (in-memory) database for every role — and **fails when a new action isn't covered**
 - IDOR / injection / mass-assignment regression tests, and component tests that raise coverage on forms, auth, org and account UI
 
 ## 🧭 Decisions & deviations (made once, here)
 
 | Topic | Decision | Why |
-|---|---|---|
+| --- | --- | --- |
 | Visual baselines | Generated **only by CI** (Linux) through a manual workflow | Fonts/anti-aliasing differ between Windows, macOS and Linux → diffs on every machine (risk **R-09**). A Docker recipe is given for Linux/macOS developers |
 | E2E stack | Dedicated ports **3100 / 5434**, data dir `./local.e2e.db`, started by Playwright in **local and CI alike** | Tests can't pollute your dev database, and "works locally" == "works in CI". Local runs use a production build (`E2E_DEV=1` switches to the dev server) |
 | Authz matrix | A **real integration test**: the global DB module is swapped for an in-memory database, then the real actions and real Better Auth run | Mocks would test the mocks; this tests the wiring |
 | Coverage thresholds | **Ratchet**: measure first, set just below, raise in S5-T13 | A threshold nobody can meet gets disabled |
-| Bundle budget | Total **gzipped JS + CSS** from `.next/static`, compared with a committed budget | Next 16's build output no longer lists per-route *First Load JS* 🔍 |
+| Bundle budget | Total **gzipped JS + CSS** from `.next/static`, compared with a committed budget | Next 16's build output no longer lists per-route _First Load JS_ 🔍 |
 | Unused translation keys | `i18n-check` **missing + invalid** keys block; **unused** keys are report-only | We build keys dynamically (`t(\`strength.${x}\`)`, Zod messages, error maps) — static analysis can't see them |
 | Schema drift | Weekly scheduled workflow, not on every PR | Needs the Better Auth CLI download; flaky networks shouldn't block merges |
 | Storybook | `@storybook/nextjs-vite`; Server Actions and the auth client are **stubbed** | Stories must not hit servers; `'use server'` modules don't belong in a browser bundle |
@@ -52,6 +51,7 @@ gh pr checks --watch
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line. Run `pnpm pin` after adding dependencies. **S5-T08 rewrites the CI workflow** — if you open its PR while others are in flight, expect to rebase.
 
 ---
@@ -64,6 +64,7 @@ pnpm install
 pnpm check              # Sprint 4 must be green
 CI=1 pnpm e2e           # 🪟 cmd.exe: set CI=1&& pnpm e2e  — also green (stop `pnpm dev` first)
 ```
+
 Set **Current sprint: Sprint 5** in `docs/roadmap/06-project-state.md` and **write down the baselines you will improve**: total `pnpm e2e` time, PR CI time (GitHub → Actions), `pnpm test:coverage` totals (you'll have them after S5-T07).
 
 ---
@@ -77,11 +78,13 @@ git switch -c chore/s5-t01-storybook
 pnpm add -D storybook @storybook/nextjs-vite @storybook/addon-a11y @storybook/addon-themes
 mkdir -p .storybook/stubs
 ```
+
 > 🔎 We write the config by hand instead of running `storybook init`: the wizard edits many files (and may re-add scripts/ESLint pieces we removed in Sprint 0). If you prefer the wizard, run it on a throw-away branch and copy the result.
 
 ### 1. Main config
 
 📄 **Create `.storybook/main.ts`:**
+
 ```ts
 import path from 'node:path';
 
@@ -117,6 +120,7 @@ export default config;
 ### 2. Stubs
 
 📄 **Create `.storybook/stubs/auth-client.ts`:**
+
 ```ts
 // A permissive fake: any call such as authClient.signIn.email(...) resolves to "nothing happened".
 const noop = async () => ({ data: null, error: null });
@@ -128,7 +132,9 @@ const deep: object = new Proxy(noop, {
 
 export const authClient = deep;
 ```
+
 📄 **Create `.storybook/stubs/actions.ts`** — one stub per Server Action name that components import:
+
 ```ts
 const ok = async () => ({ ok: true as const, data: {} });
 
@@ -152,11 +158,13 @@ export const setUserRole = ok;
 export const startImpersonation = ok;
 export const stopImpersonation = ok;
 ```
+
 > When you add a Server Action, add its name here — the authz-matrix meta-test in S5-T11 will remind you for the real registry; Storybook will simply fail to build if a story imports a missing name.
 
 ### 3. Preview: global CSS, theme, language
 
 📄 **Create `.storybook/preview.tsx`:**
+
 ```tsx
 import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
@@ -164,6 +172,7 @@ import { NextIntlClientProvider } from 'next-intl';
 
 import en from '../src/locales/en.json';
 import fr from '../src/locales/fr.json';
+
 import '../src/styles/global.css';
 
 const messages = { en, fr } as const;
@@ -212,31 +221,38 @@ export default preview;
 ### 4. Scripts and tool config
 
 📄 **Edit `package.json`:**
+
 ```json
 "storybook": "storybook dev -p 6006",
 "build-storybook": "storybook build"
 ```
+
 📄 **Edit `.oxlintrc.json`** — Storybook files use default exports by convention; extend the overrides block:
+
 ```json
 {
   "files": ["**/*.stories.tsx", ".storybook/**"],
   "rules": {}
 }
 ```
+
 (Add whatever rule names your Ultracite version flags for default exports/`any`-free stubs — **never** relax `no-explicit-any`.)
 
 📄 **Edit `knip.config.ts`** — the stubs are referenced by alias strings, which Knip can't see:
+
 ```ts
   entry: [
     // …existing…
     '.storybook/stubs/*.ts',
   ],
 ```
+
 📄 **Edit `.gitignore`:** add `storybook-static`.
 
 ### 5. A first story to prove the pipeline
 
 📄 **Create `src/components/ui/button.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
@@ -259,15 +275,19 @@ export const Disabled: Story = { args: { disabled: true } };
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm storybook                 # http://localhost:6006
 ```
+
 - The Button stories render with Tailwind styles. **Theme** and **Language** switchers appear in the toolbar.
 - Open the **Accessibility** panel: no violations.
+
 ```bash
 pnpm build-storybook           # must succeed (also run by CI in S5-T08)
 pnpm check                     # lint, knip, types still green
 ```
+
 🪟 If port 6006 is busy: `pnpm storybook -- -p 6010`.
 
 **🚢 Ship** — branch `chore/s5-t01-storybook` · message: `chore(ui): add storybook with a11y, theme and locale switchers`
@@ -287,6 +307,7 @@ git switch main && git pull && git switch -c test/s5-t02-stories
 ### 1. Forms
 
 📄 **Create `src/components/forms/forms.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, type ReactNode } from 'react';
@@ -298,7 +319,13 @@ import { TextField } from '@/components/forms/text-field';
 import { Form } from '@/components/ui/form';
 
 /** Fields need an RHF context: this shell provides one (and can pre-set an error). */
-function FormShell({ children, error }: { children: ReactNode; error?: { field: string; message: string } }) {
+function FormShell({
+  children,
+  error,
+}: {
+  children: ReactNode;
+  error?: { field: string; message: string };
+}) {
   const form = useForm({ defaultValues: { email: '', password: '' } });
   useEffect(() => {
     if (error) form.setError(error.field as 'email', { message: error.message });
@@ -359,6 +386,7 @@ export const Submit: Story = {
 ### 2. Auth widgets
 
 📄 **Create `src/components/auth/auth.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect } from 'react';
@@ -404,7 +432,11 @@ export const SocialAll: Story = {
 export const SocialGithubOnly: Story = {
   render: () => (
     <div className="w-72">
-      <SocialButtons providers={providers.slice(1, 2)} callbackUrl="/dashboard" errorCallbackUrl="/sign-in" />
+      <SocialButtons
+        providers={providers.slice(1, 2)}
+        callbackUrl="/dashboard"
+        errorCallbackUrl="/sign-in"
+      />
     </div>
   ),
 };
@@ -413,26 +445,42 @@ export const SocialGithubOnly: Story = {
 ### 3. Account and security
 
 📄 **Create `src/components/account/account.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
 import { BackupCodes } from '@/components/account/backup-codes';
 import { SecurityScore } from '@/components/account/security-score';
 
-const meta = { title: 'Account/Security', component: SecurityScore } satisfies Meta<typeof SecurityScore>;
+const meta = { title: 'Account/Security', component: SecurityScore } satisfies Meta<
+  typeof SecurityScore
+>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const ScoreOneOfThree: Story = { args: { emailVerified: true, twoFactorEnabled: false, passkeyCount: 0 } };
-export const ScoreTwoOfThree: Story = { args: { emailVerified: true, twoFactorEnabled: true, passkeyCount: 0 } };
-export const ScoreAll: Story = { args: { emailVerified: true, twoFactorEnabled: true, passkeyCount: 2 } };
+export const ScoreOneOfThree: Story = {
+  args: { emailVerified: true, twoFactorEnabled: false, passkeyCount: 0 },
+};
+export const ScoreTwoOfThree: Story = {
+  args: { emailVerified: true, twoFactorEnabled: true, passkeyCount: 0 },
+};
+export const ScoreAll: Story = {
+  args: { emailVerified: true, twoFactorEnabled: true, passkeyCount: 2 },
+};
 
 export const BackupCodesList: Story = {
   render: () => (
     <div className="w-96">
       <BackupCodes
         onDone={() => undefined}
-        codes={['a1b2c-d3e4f', 'g5h6i-j7k8l', 'm9n0o-p1q2r', 's3t4u-v5w6x', 'y7z8a-b9c0d', 'e1f2g-h3i4j']}
+        codes={[
+          'a1b2c-d3e4f',
+          'g5h6i-j7k8l',
+          'm9n0o-p1q2r',
+          's3t4u-v5w6x',
+          'y7z8a-b9c0d',
+          'e1f2g-h3i4j',
+        ]}
       />
     </div>
   ),
@@ -442,6 +490,7 @@ export const BackupCodesList: Story = {
 ### 4. Layout
 
 📄 **Create `src/components/layout/layout.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
@@ -455,17 +504,24 @@ const meta = { title: 'Layout/Pieces', component: PageHeader } satisfies Meta<ty
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Header: Story = { args: { title: 'Projects', description: 'Work in this organization.' } };
+export const Header: Story = {
+  args: { title: 'Projects', description: 'Work in this organization.' },
+};
 
 export const HeaderWithActions: Story = {
-  args: { title: 'Projects', description: 'Work in this organization.', actions: <Button>New project</Button> },
+  args: {
+    title: 'Projects',
+    description: 'Work in this organization.',
+    actions: <Button>New project</Button>,
+  },
   parameters: { layout: 'padded' },
 };
 
 export const HeaderLongText: Story = {
   args: {
     title: 'A really long organization name that keeps going and going and going',
-    description: 'Long descriptions must wrap instead of overflowing the layout, even on small screens.',
+    description:
+      'Long descriptions must wrap instead of overflowing the layout, even on small screens.',
   },
   parameters: { layout: 'padded' },
 };
@@ -473,13 +529,16 @@ export const HeaderLongText: Story = {
 export const Theme: Story = { render: () => <ThemeToggle /> };
 export const Locales: Story = { render: () => <LocaleSwitcher /> };
 
-export const ErrorWithReference: Story = { render: () => <ErrorView digest="abc123" onRetry={() => undefined} /> };
+export const ErrorWithReference: Story = {
+  render: () => <ErrorView digest="abc123" onRetry={() => undefined} />,
+};
 export const ErrorPlain: Story = { render: () => <ErrorView /> };
 ```
 
 ### 5. Organizations
 
 📄 **Create `src/components/org/org.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
@@ -488,19 +547,47 @@ import { OrgSwitcher } from '@/components/org/org-switcher';
 import { PendingInvitations } from '@/components/org/pending-invitations';
 
 const members = [
-  { memberId: 'm1', name: 'Olivia Owner', email: 'olivia@example.com', role: 'owner', joinedAt: '2026-01-10T10:00:00Z' },
-  { memberId: 'm2', name: 'Adam Admin', email: 'adam@example.com', role: 'admin', joinedAt: '2026-02-01T10:00:00Z' },
-  { memberId: 'm3', name: 'Mia Member', email: 'mia@example.com', role: 'member', joinedAt: '2026-03-15T10:00:00Z' },
+  {
+    memberId: 'm1',
+    name: 'Olivia Owner',
+    email: 'olivia@example.com',
+    role: 'owner',
+    joinedAt: '2026-01-10T10:00:00Z',
+  },
+  {
+    memberId: 'm2',
+    name: 'Adam Admin',
+    email: 'adam@example.com',
+    role: 'admin',
+    joinedAt: '2026-02-01T10:00:00Z',
+  },
+  {
+    memberId: 'm3',
+    name: 'Mia Member',
+    email: 'mia@example.com',
+    role: 'member',
+    joinedAt: '2026-03-15T10:00:00Z',
+  },
 ];
 
-const meta = { title: 'Org/Members', component: MembersTable, parameters: { layout: 'padded' } } satisfies Meta<typeof MembersTable>;
+const meta = {
+  title: 'Org/Members',
+  component: MembersTable,
+  parameters: { layout: 'padded' },
+} satisfies Meta<typeof MembersTable>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The same table, three viewpoints: what each role is allowed to do changes the controls. */
-export const AsOwner: Story = { args: { orgSlug: 'acme', members, currentMemberId: 'm1', actorRole: 'owner' } };
-export const AsAdmin: Story = { args: { orgSlug: 'acme', members, currentMemberId: 'm2', actorRole: 'admin' } };
-export const AsMember: Story = { args: { orgSlug: 'acme', members, currentMemberId: 'm3', actorRole: 'member' } };
+export const AsOwner: Story = {
+  args: { orgSlug: 'acme', members, currentMemberId: 'm1', actorRole: 'owner' },
+};
+export const AsAdmin: Story = {
+  args: { orgSlug: 'acme', members, currentMemberId: 'm2', actorRole: 'admin' },
+};
+export const AsMember: Story = {
+  args: { orgSlug: 'acme', members, currentMemberId: 'm3', actorRole: 'member' },
+};
 
 export const Switcher: Story = {
   render: () => (
@@ -534,12 +621,15 @@ export const InvitationsPending: Story = {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm storybook
 ```
+
 - Count them: **Button 5 + Fields 5 + Auth 5 + Account 4 + Layout 7 + Org 7 = 33 stories** (≥ 15 ✓).
 - Click through **dark** and **Français** on each; long text must wrap; no horizontal overflow at the "Mobile" viewport.
 - The **Accessibility** panel shows **0 violations**. If a violation is real (e.g. low contrast in dark mode), **fix the component or theme token** — only downgrade a story with `parameters: { a11y: { test: 'todo' } }` plus a comment and a `TD-` entry.
+
 ```bash
 pnpm build-storybook && pnpm check
 ```
@@ -561,6 +651,7 @@ git switch main && git pull && git switch -c test/s5-t03-factories-world
 ### 1. Factories
 
 📄 **Create `tests/factories/org.factory.ts`:**
+
 ```ts
 import { randomUUID } from 'node:crypto';
 
@@ -575,14 +666,18 @@ export const orgFactory = defineFactory<typeof organization.$inferInsert>((n) =>
 }));
 
 type MemberInsert = typeof member.$inferInsert;
-export const memberFactory = (input: Pick<MemberInsert, 'organizationId' | 'userId'> & Partial<MemberInsert>): MemberInsert => ({
+export const memberFactory = (
+  input: Pick<MemberInsert, 'organizationId' | 'userId'> & Partial<MemberInsert>,
+): MemberInsert => ({
   id: randomUUID(),
   role: 'member',
   ...input,
 });
 
 type ProjectInsert = typeof project.$inferInsert;
-export const projectFactory = (input: Pick<ProjectInsert, 'organizationId'> & Partial<ProjectInsert>): ProjectInsert => ({
+export const projectFactory = (
+  input: Pick<ProjectInsert, 'organizationId'> & Partial<ProjectInsert>,
+): ProjectInsert => ({
   id: randomUUID(),
   name: faker.commerce.productName(),
   ...input,
@@ -604,6 +699,7 @@ export const invitationFactory = (
 ### 2. Session helpers
 
 📄 **Append to `tests/utils/auth.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 
@@ -612,7 +708,8 @@ import { user } from '@/db/schema';
 import type { TestDb } from './test-db';
 
 let counter = 0;
-export const uniqueTestEmail = (prefix = 'user') => `${prefix}-${Date.now()}-${++counter}@example.com`;
+export const uniqueTestEmail = (prefix = 'user') =>
+  `${prefix}-${Date.now()}-${++counter}@example.com`;
 
 /** A verified user with a live session. `headers` carry its cookies. */
 export async function createUserWithSession(
@@ -629,6 +726,7 @@ export async function createUserWithSession(
 ### 3. The standard world
 
 📄 **Create `tests/utils/world.ts`:**
+
 ```ts
 import { randomUUID } from 'node:crypto';
 
@@ -640,7 +738,6 @@ import { member, user } from '@/db/schema';
 import type { MemoryTransport } from '@/libs/email/memory-transport';
 
 import { memberFactory } from '../factories/org.factory';
-
 import { createUserWithSession, signIn, type TestAuth } from './auth';
 import type { TestDb } from './test-db';
 
@@ -653,15 +750,29 @@ import type { TestDb } from './test-db';
  *
  * Every person has real cookies (`headers`) so tests can call the real auth/actions.
  */
-export const WORLD_ROLES = ['ownerA', 'adminA', 'memberA', 'ownerB', 'outsider', 'platformAdmin'] as const;
+export const WORLD_ROLES = [
+  'ownerA',
+  'adminA',
+  'memberA',
+  'ownerB',
+  'outsider',
+  'platformAdmin',
+] as const;
 export type WorldRole = (typeof WORLD_ROLES)[number];
 
-export async function buildWorld(context: { db: TestDb; auth: TestAuth; transport: MemoryTransport }) {
+export async function buildWorld(context: {
+  db: TestDb;
+  auth: TestAuth;
+  transport: MemoryTransport;
+}) {
   const { db } = context;
 
   const people = {} as Record<WorldRole, Awaited<ReturnType<typeof createUserWithSession>>>;
   for (const role of WORLD_ROLES) {
-    people[role] = await createUserWithSession(context, `${role.toLowerCase()}-${randomUUID().slice(0, 6)}@example.com`);
+    people[role] = await createUserWithSession(
+      context,
+      `${role.toLowerCase()}-${randomUUID().slice(0, 6)}@example.com`,
+    );
   }
   // The role must exist BEFORE the session is created: Better Auth's cookie cache would keep serving the
   // old role. So: promote, then sign in again to obtain fresh cookies.
@@ -671,17 +782,30 @@ export async function buildWorld(context: { db: TestDb; auth: TestAuth; transpor
     headers: (await signIn(context.auth, people.platformAdmin.email)).headers,
   };
 
-  const orgA = await createOrganizationWithOwner(db, { name: 'Org A', slug: 'org-a', ownerId: people.ownerA.id });
-  const orgB = await createOrganizationWithOwner(db, { name: 'Org B', slug: 'org-b', ownerId: people.ownerB.id });
-  await db.insert(member).values([
-    memberFactory({ organizationId: orgA.id, userId: people.adminA.id, role: 'admin' }),
-    memberFactory({ organizationId: orgA.id, userId: people.memberA.id, role: 'member' }),
-  ]);
+  const orgA = await createOrganizationWithOwner(db, {
+    name: 'Org A',
+    slug: 'org-a',
+    ownerId: people.ownerA.id,
+  });
+  const orgB = await createOrganizationWithOwner(db, {
+    name: 'Org B',
+    slug: 'org-b',
+    ownerId: people.ownerB.id,
+  });
+  await db
+    .insert(member)
+    .values([
+      memberFactory({ organizationId: orgA.id, userId: people.adminA.id, role: 'admin' }),
+      memberFactory({ organizationId: orgA.id, userId: people.memberA.id, role: 'member' }),
+    ]);
 
   const repoA = createTenantDb(db, orgA.id).projects;
   const repoB = createTenantDb(db, orgB.id).projects;
   const projects = {
-    a: [await repoA.create({ name: 'A one' }, people.ownerA.id), await repoA.create({ name: 'A two' }, people.ownerA.id)],
+    a: [
+      await repoA.create({ name: 'A one' }, people.ownerA.id),
+      await repoA.create({ name: 'A two' }, people.ownerA.id),
+    ],
     b: [await repoB.create({ name: 'B secret' }, people.ownerB.id)],
   };
 
@@ -690,11 +814,13 @@ export async function buildWorld(context: { db: TestDb; auth: TestAuth; transpor
 
 export type World = Awaited<ReturnType<typeof buildWorld>>;
 ```
+
 > Personal workspaces are also created for these users (the Better Auth hook runs). That's fine — the world's two named organizations are what the security tests target.
 
 ### 4. A test using the world (and proving it works)
 
 📄 **Create `tests/utils/world.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
@@ -723,7 +849,8 @@ afterAll(async () => {
 
 it('builds a complete cast: real sessions, two tenants, projects', async () => {
   expect(Object.keys(world.people)).toHaveLength(6);
-  for (const person of Object.values(world.people)) expect(person.headers.get('cookie')).toContain('session_token');
+  for (const person of Object.values(world.people))
+    expect(person.headers.get('cookie')).toContain('session_token');
   expect(world.projects.a).toHaveLength(2);
   expect(world.projects.b).toHaveLength(1);
   expect(world.orgA.slug).toBe('org-a');
@@ -733,19 +860,21 @@ it('builds a complete cast: real sessions, two tenants, projects', async () => {
 ### 5. Document it
 
 📄 **Replace `docs/guides/testing.md`:**
-````markdown
+
+```markdown
 # Testing
 
-| Command | What it runs |
-|---|---|
-| `pnpm test` | Unit + integration tests (node, in-memory PGlite) |
-| `pnpm test:browser` | Component tests in real Chromium |
-| `pnpm test:coverage` | Both, with coverage thresholds |
-| `pnpm e2e` | End-to-end (own database + own app, ports 5434/3100) |
-| `pnpm e2e:visual` | Screenshot comparison against committed baselines |
-| `pnpm storybook` | Component workshop (a11y checks included) |
+| Command              | What it runs                                         |
+| -------------------- | ---------------------------------------------------- |
+| `pnpm test`          | Unit + integration tests (node, in-memory PGlite)    |
+| `pnpm test:browser`  | Component tests in real Chromium                     |
+| `pnpm test:coverage` | Both, with coverage thresholds                       |
+| `pnpm e2e`           | End-to-end (own database + own app, ports 5434/3100) |
+| `pnpm e2e:visual`    | Screenshot comparison against committed baselines    |
+| `pnpm storybook`     | Component workshop (a11y checks included)            |
 
 ## Building blocks
+
 - **Factories** `tests/factories/*` — `userFactory`, `orgFactory`, `memberFactory`, `projectFactory`, `invitationFactory`.
 - **`createTestDb()`** — fresh in-memory Postgres with all migrations.
 - **`createUserWithSession()` / `signIn()`** — real users with real cookies.
@@ -753,16 +882,19 @@ it('builds a complete cast: real sessions, two tenants, projects', async () => {
 - **E2E personas** — `ownerPage`, `adminPage`, `memberPage`, `platformAdminPage` fixtures start already signed in.
 
 ## Rules
+
 - A new permission/action/route that touches tenant data → extend the world-based suites (`tests/security/*`).
 - No arbitrary sleeps. Wait for a condition (`expect.poll`, `vi.waitFor`, Playwright auto-waiting).
 - UI sign-in happens **only** in `e2e/auth*.spec.ts`; every other spec uses persona fixtures.
 - Visual baselines come from CI — never commit screenshots made on your own machine.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 ```
+
 `world.test.ts` takes a few seconds (six sign-ups + sign-ins with real password hashing). Note the duration in `06-project-state.md`.
 
 **🚢 Ship** — branch `test/s5-t03-factories-world` · message: `test: add organization factories, session helper and a standard multi-tenant world`
@@ -774,6 +906,7 @@ pnpm test && pnpm check
 **Branch:** `test/s5-t04-e2e-personas` · **Story:** US-054 · **2 SP**
 
 > 🎯 Two improvements in one ticket, both about **speed and trust**:
+>
 > 1. E2E runs against **its own database and app** (never your dev data), identically locally and in CI.
 > 2. A global setup creates one user per role **through the app's API** and saves their cookies; specs start already signed in.
 
@@ -785,12 +918,15 @@ mkdir -p e2e/.auth
 ### 1. The database server learns where to keep its data
 
 📄 **Edit `scripts/db-server.ts`:**
+
 ```ts
 const dataDir = process.env.DB_DATA_DIR ?? './local.db';
 ```
+
 📄 **Edit `.gitignore`:** add `local.e2e.db` and `local.e2e.db-*`.
 
 📄 **Create `scripts/e2e-reset.mjs`:**
+
 ```js
 // Deletes the E2E database so the next run starts empty. Safe: it never touches ./local.db
 import { rmSync } from 'node:fs';
@@ -800,11 +936,13 @@ rmSync('e2e/.auth', { recursive: true, force: true });
 rmSync('.emails', { recursive: true, force: true });
 console.log('🧹 E2E state cleared');
 ```
+
 📄 **Edit `package.json`:** `"e2e:reset": "node scripts/e2e-reset.mjs"`
 
 ### 2. One config for local and CI
 
 📄 **Rewrite `playwright.config.ts`:**
+
 ```ts
 import { defineConfig, devices } from '@playwright/test';
 
@@ -829,7 +967,11 @@ const appEnv = {
 // Local default: production build (identical to CI). `E2E_DEV=1` uses the dev server for quick iterations.
 // CI sets E2E_PREBUILT=1 once a build artifact is available (S5-T09).
 const useDevServer = !isCI && process.env.E2E_DEV === '1';
-const appCommand = useDevServer ? 'pnpm dev:web' : process.env.E2E_PREBUILT ? 'pnpm start' : 'pnpm build && pnpm start';
+const appCommand = useDevServer
+  ? 'pnpm dev:web'
+  : process.env.E2E_PREBUILT
+    ? 'pnpm start'
+    : 'pnpm build && pnpm start';
 
 export default defineConfig({
   testDir: 'e2e',
@@ -849,37 +991,48 @@ export default defineConfig({
       timeout: 120_000,
       env: { DB_SERVER_PORT: String(E2E_DB_PORT), DB_DATA_DIR: './local.e2e.db' },
     },
-    { command: appCommand, url: baseURL, reuseExistingServer: false, timeout: 300_000, env: appEnv },
+    {
+      command: appCommand,
+      url: baseURL,
+      reuseExistingServer: false,
+      timeout: 300_000,
+      env: appEnv,
+    },
   ],
 });
 ```
-> 🔎 `reuseExistingServer: false` for the app is deliberate: a leftover server with the wrong environment is the #1 cause of confusing E2E failures. If port 3100 is busy, stop that process.
-> 🪟 The first run on Windows builds the app (~1–2 minutes). Use `E2E_DEV=1 pnpm e2e` while iterating (🪟 cmd.exe: `set E2E_DEV=1&& pnpm e2e`).
+
+> 🔎 `reuseExistingServer: false` for the app is deliberate: a leftover server with the wrong environment is the #1 cause of confusing E2E failures. If port 3100 is busy, stop that process. 🪟 The first run on Windows builds the app (~1–2 minutes). Use `E2E_DEV=1 pnpm e2e` while iterating (🪟 cmd.exe: `set E2E_DEV=1&& pnpm e2e`).
 
 ### 3. Update the helpers that knew about the old ports
 
 📄 **Edit `e2e/helpers/db.ts`:** use port **5434**:
+
 ```ts
 const connectionString = 'postgres://postgres:postgres@127.0.0.1:5434/postgres';
 // …and in the Pool: new Pool({ connectionString, max: 1 })
 // Also fix the doc comment: "global setup may INSERT fixture rows; specs should only read."
 ```
+
 📄 **Edit `e2e/helpers/admin.ts`:**
+
 ```ts
 execSync('pnpm admin:grant', {
   env: { ...process.env, ADMIN_EMAILS: email, DB_SERVER_PORT: '5434' },
   stdio: 'pipe',
 });
 ```
+
 📄 **Remove the "only with CI=1" skips** — the E2E server now **always** has rate limiting on and the GitHub dummy credentials:
-- `e2e/auth.spec.ts` → in *"repeated failed sign-ins are rate limited"* delete the `test.skip(!process.env.CI, …)` call.
+
+- `e2e/auth.spec.ts` → in _"repeated failed sign-ins are rate limited"_ delete the `test.skip(!process.env.CI, …)` call.
 - `e2e/auth-advanced.spec.ts` → in `test.describe('social sign-in')` delete the `test.skip(!process.env.CI, …)` line.
-- Replace hard-coded `http://localhost:3000` in specs with the `baseURL` fixture or `new URL(page.url()).origin`:
-  `expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3100/api/auth/callback/github');` and the open-redirect test's `toHaveURL(/localhost:3100\/dashboard$/)`.
+- Replace hard-coded `http://localhost:3000` in specs with the `baseURL` fixture or `new URL(page.url()).origin`: `expect(url.searchParams.get('redirect_uri')).toBe('http://localhost:3100/api/auth/callback/github');` and the open-redirect test's `toHaveURL(/localhost:3100\/dashboard$/)`.
 
 ### 4. The global setup: one user per role, created through the app
 
 📄 **Create `e2e/helpers/api.ts`:**
+
 ```ts
 import { expect, request } from '@playwright/test';
 
@@ -893,12 +1046,18 @@ export async function apiContext(baseURL: string) {
   });
 }
 
-export async function signInApi(context: Awaited<ReturnType<typeof apiContext>>, email: string, password: string) {
+export async function signInApi(
+  context: Awaited<ReturnType<typeof apiContext>>,
+  email: string,
+  password: string,
+) {
   const response = await context.post('/api/auth/sign-in/email', { data: { email, password } });
   expect(response.ok(), `sign-in failed for ${email}`).toBeTruthy();
 }
 ```
+
 📄 **Create `e2e/global-setup.ts`:**
+
 ```ts
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -967,7 +1126,9 @@ export default async function globalSetup(config: FullConfig) {
     const invitationId = /accept-invitation\/([^/?#\s]+)/.exec(mail.links[0] ?? '')?.[1];
     expect(invitationId, 'invitation link').toBeTruthy();
 
-    const accepted = await sessions[key].post('/api/auth/organization/accept-invitation', { data: { invitationId } });
+    const accepted = await sessions[key].post('/api/auth/organization/accept-invitation', {
+      data: { invitationId },
+    });
     expect(accepted.ok(), `accept ${key}`).toBeTruthy();
   }
 
@@ -982,10 +1143,10 @@ export default async function globalSetup(config: FullConfig) {
 
   // One deterministic project for visual and permission tests
   const projectId = crypto.randomUUID();
-  await queryDb(`insert into project (id, organization_id, name, status) values ($1, $2, 'Launch plan', 'active')`, [
-    projectId,
-    org!.id,
-  ]);
+  await queryDb(
+    `insert into project (id, organization_id, name, status) values ($1, $2, 'Launch plan', 'active')`,
+    [projectId, org!.id],
+  );
 
   const personas = {} as Record<keyof typeof people, Persona>;
   for (const key of Object.keys(people) as (keyof typeof people)[]) {
@@ -995,15 +1156,22 @@ export default async function globalSetup(config: FullConfig) {
     await sessions[key].dispose();
   }
 
-  const world: World = { orgSlug: org!.slug, orgId: org!.id, ...personas, project: { id: projectId, name: 'Launch plan' } };
+  const world: World = {
+    orgSlug: org!.slug,
+    orgId: org!.id,
+    ...personas,
+    project: { id: projectId, name: 'Launch plan' },
+  };
   writeFileSync(`${AUTH_DIR}/world.json`, JSON.stringify(world, null, 2));
 }
 ```
+
 > 🔍 The three `/api/auth/organization/*` endpoint names follow the plugin's current routes — confirm them in your version (the integration tests in S4-T15 use the same operations through `auth.api`).
 
 ### 5. Persona fixtures
 
 📄 **Rewrite `e2e/fixtures.ts`:**
+
 ```ts
 import { readFileSync } from 'node:fs';
 
@@ -1070,13 +1238,17 @@ export { expect } from '@playwright/test';
 ### 6. A fast spec built on personas
 
 📄 **Create `e2e/rbac-ui.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 
 // No UI sign-in anywhere in this file: each persona starts with a live session.
 
 test.describe('role-dependent UI', () => {
-  test('owner: settings with a danger zone, project deletion, member management', async ({ ownerPage, world }) => {
+  test('owner: settings with a danger zone, project deletion, member management', async ({
+    ownerPage,
+    world,
+  }) => {
     await ownerPage.goto(`/dashboard/${world.orgSlug}/settings`);
     await expect(ownerPage.getByRole('heading', { name: 'Organization settings' })).toBeVisible();
     await expect(ownerPage.getByRole('button', { name: 'Delete organization' })).toBeVisible();
@@ -1088,7 +1260,10 @@ test.describe('role-dependent UI', () => {
     await expect(ownerPage.getByRole('button', { name: 'Transfer ownership' })).toBeVisible();
   });
 
-  test('org admin: settings yes, danger zone no, project deletion yes', async ({ adminPage, world }) => {
+  test('org admin: settings yes, danger zone no, project deletion yes', async ({
+    adminPage,
+    world,
+  }) => {
     await adminPage.goto(`/dashboard/${world.orgSlug}/settings`);
     await expect(adminPage.getByRole('heading', { name: 'Organization settings' })).toBeVisible();
     await expect(adminPage.getByRole('button', { name: 'Delete organization' })).toHaveCount(0);
@@ -1097,7 +1272,10 @@ test.describe('role-dependent UI', () => {
     await expect(adminPage.getByRole('button', { name: 'Delete' })).toBeVisible();
   });
 
-  test('member: no settings, no deletion, no invitations — but can read and edit', async ({ memberPage, world }) => {
+  test('member: no settings, no deletion, no invitations — but can read and edit', async ({
+    memberPage,
+    world,
+  }) => {
     await memberPage.goto(`/dashboard/${world.orgSlug}/settings`);
     await expect(memberPage).toHaveURL(new RegExp(`/dashboard/${world.orgSlug}$`)); // bounced to the overview
 
@@ -1110,7 +1288,10 @@ test.describe('role-dependent UI', () => {
     await expect(memberPage.getByRole('button', { name: 'Send invitation' })).toHaveCount(0);
   });
 
-  test('platform admin reaches the console; an organization owner does not', async ({ platformAdminPage, ownerPage }) => {
+  test('platform admin reaches the console; an organization owner does not', async ({
+    platformAdminPage,
+    ownerPage,
+  }) => {
     await platformAdminPage.goto('/admin/users');
     await expect(platformAdminPage.getByRole('heading', { name: 'Users' })).toBeVisible();
 
@@ -1121,10 +1302,12 @@ test.describe('role-dependent UI', () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm e2e:reset
 pnpm e2e                      # 🪟 first run builds the app; then runs setup + every spec
 ```
+
 1. Terminal shows two servers starting (`db:server` on **5434**, the app on **3100**) — your own `pnpm dev` on 3000/5433 can keep running.
 2. `e2e/.auth/` now contains `owner.json`, `orgAdmin.json`, `member.json`, `platformAdmin.json`, `world.json` (git-ignored — double-check with `git status`).
 3. `e2e/rbac-ui.spec.ts` passes in a few seconds (no sign-in UI).
@@ -1132,7 +1315,7 @@ pnpm e2e                      # 🪟 first run builds the app; then runs setup +
 5. **Measure**: total `pnpm e2e` time vs your pre-sprint number; the persona spec should be ≥ 5× faster than the equivalent UI-sign-in flow. Record both in `06-project-state.md` (target: suite ≥ 40 % faster once the older specs migrate).
 6. `CI=1 pnpm e2e` also works (same servers; retries on).
 
-> 🧭 **Migrating older specs:** `tenancy.spec.ts` and `admin.spec.ts` keep UI sign-in on purpose for the *flows under test*, but their *setup* can use personas. Convert them opportunistically; `auth*.spec.ts` stay UI-driven.
+> 🧭 **Migrating older specs:** `tenancy.spec.ts` and `admin.spec.ts` keep UI sign-in on purpose for the _flows under test_, but their _setup_ can use personas. Convert them opportunistically; `auth*.spec.ts` stay UI-driven.
 
 **🚢 Ship** — branch `test/s5-t04-e2e-personas` · message: `test(e2e): add isolated e2e stack, per-role sessions and persona fixtures`
 
@@ -1142,7 +1325,7 @@ pnpm e2e                      # 🪟 first run builds the app; then runs setup +
 
 **Branch:** `test/s5-t05-visual-harness` · **Story:** US-051 · **3 SP** · risk **R-09** (cross-OS pixel noise)
 
-> 🎯 A screenshot suite that catches *unintended* visual changes: **8 pages × light/dark × en/fr × desktop/mobile = 64 images**. This ticket builds the harness; **S5-T06 generates the official baselines in CI** (never on your Windows machine).
+> 🎯 A screenshot suite that catches _unintended_ visual changes: **8 pages × light/dark × en/fr × desktop/mobile = 64 images**. This ticket builds the harness; **S5-T06 generates the official baselines in CI** (never on your Windows machine).
 
 ```bash
 git switch main && git pull && git switch -c test/s5-t05-visual-harness
@@ -1151,9 +1334,10 @@ mkdir -p e2e/visual
 
 ### 1. A dedicated Playwright config
 
-It reuses the E2E stack from S5-T04 (own database and app, personas) — only the *what* and the *how it compares* change.
+It reuses the E2E stack from S5-T04 (own database and app, personas) — only the _what_ and the _how it compares_ change.
 
 📄 **Create `playwright.visual.config.ts`:**
+
 ```ts
 import { defineConfig, devices } from '@playwright/test';
 
@@ -1176,13 +1360,21 @@ export default defineConfig({
     },
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
     // A narrow desktop browser (not a device emulation): small, deterministic images
-    { name: 'mobile', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } },
+    {
+      name: 'mobile',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } },
+    },
   ],
 });
 ```
+
 📄 **Edit `package.json`:**
+
 ```json
 "e2e:visual": "playwright test -c playwright.visual.config.ts",
 "e2e:visual:update": "playwright test -c playwright.visual.config.ts --update-snapshots"
@@ -1193,10 +1385,13 @@ export default defineConfig({
 Anything that changes between runs must be frozen or hidden. Our one offender: the footer prints the current year.
 
 📄 **Edit `src/components/layout/site-footer.tsx`:** add `data-visual-mask` to the element that prints the year:
+
 ```tsx
       <div data-visual-mask className="text-muted-foreground mx-auto max-w-6xl px-4 py-6 text-sm">
 ```
+
 📄 **Create `e2e/visual/helpers.ts`:**
+
 ```ts
 import type { Page } from '@playwright/test';
 
@@ -1214,9 +1409,9 @@ export const masks = (page: Page) => [page.locator('[data-visual-mask]')];
 ### 3. The matrix
 
 📄 **Create `e2e/visual/pages.visual.ts`:**
+
 ```ts
 import { expect, test } from '../fixtures';
-
 import { masks, settle } from './helpers';
 
 const LOCALES = ['en', 'fr'] as const;
@@ -1255,32 +1450,44 @@ for (const locale of LOCALES) {
       test('overview', async ({ page, world }) => {
         await page.goto(`${prefix(locale)}/dashboard/${world.orgSlug}`);
         await settle(page);
-        await expect(page).toHaveScreenshot(`overview-${locale}-${scheme}.png`, { fullPage: true, mask: masks(page) });
+        await expect(page).toHaveScreenshot(`overview-${locale}-${scheme}.png`, {
+          fullPage: true,
+          mask: masks(page),
+        });
       });
 
       test('projects', async ({ page, world }) => {
         await page.goto(`${prefix(locale)}/dashboard/${world.orgSlug}/projects`);
         await settle(page);
-        await expect(page).toHaveScreenshot(`projects-${locale}-${scheme}.png`, { fullPage: true, mask: masks(page) });
+        await expect(page).toHaveScreenshot(`projects-${locale}-${scheme}.png`, {
+          fullPage: true,
+          mask: masks(page),
+        });
       });
     });
   }
 }
 ```
+
 > 🔎 The owner's organization is called "E2E User's workspace" and the single project "Launch plan" — fixed by the global setup, so these pages are stable. Pages that show **emails or random slugs** (members, settings) are deliberately **not** in the matrix.
 
 ### ✅ Verify (harness only — do **not** commit the images)
+
 ```bash
 pnpm e2e:reset
 pnpm e2e:visual:update          # writes e2e/visual/__screenshots__/{desktop,mobile}/…  (64 PNG files)
 ```
+
 1. Open a few PNGs: `home-fr-dark.png` should be French on a dark background; `projects-en-light.png` shows "Launch plan".
 2. Run again **without** `:update`:
+
 ```bash
 pnpm e2e:visual                 # all green on the machine that made them
 ```
+
 3. Break something visible (e.g. change a button label in `en.json`), rerun → the affected tests **fail** and `test-results/` contains `*-expected.png`, `*-actual.png`, `*-diff.png`. Revert.
 4. **Delete the generated images** (`rm -rf e2e/visual/__screenshots__`) — the official baselines come from CI in the next ticket. 🪟 A Windows-made baseline would fail on every Linux run (and vice versa).
+
 ```bash
 pnpm check
 ```
@@ -1302,6 +1509,7 @@ git switch main && git pull && git switch -c ci/s5-t06-visual-baselines
 ### 1. The workflow
 
 📄 **Create `.github/workflows/visual-update.yml`:**
+
 ```yaml
 name: Update visual snapshots
 
@@ -1323,8 +1531,7 @@ jobs:
     name: Regenerate baselines
     # Same-repo PRs only (forks have no write access), and only for our label
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.label.name == 'update-snapshots' &&
+      github.event_name == 'workflow_dispatch' || (github.event.label.name == 'update-snapshots' &&
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -1370,32 +1577,35 @@ jobs:
             test-results
           retention-days: 7
 ```
+
 > 🔒 Why this is safe: it runs **only** for same-repository branches (no secrets are exposed to fork code), and the only thing it writes is the screenshots folder.
 
 ### 2. A guard against accidentally committing local screenshots
 
 📄 **Edit `lefthook.yml`** — under `pre-commit.commands` add:
+
 ```yaml
-    visual-baselines:
-      glob: 'e2e/visual/__screenshots__/**'
-      run: >-
-        echo "❌ Visual baselines must come from CI. Add the 'update-snapshots' label to your PR instead." && exit 1
+visual-baselines:
+  glob: 'e2e/visual/__screenshots__/**'
+  run: >-
+    echo "❌ Visual baselines must come from CI. Add the 'update-snapshots' label to your PR instead." && exit 1
 ```
+
 (`glob` limits the command to commits that actually stage files in that folder.)
 
 ### 3. How to review baseline changes
 
 📄 **Create `docs/guides/visual-testing.md`:**
+
 ````markdown
 # Visual regression testing
 
-`pnpm e2e:visual` compares screenshots (8 pages × light/dark × en/fr × desktop/mobile = 64) with the baselines
-in `e2e/visual/__screenshots__/`.
+`pnpm e2e:visual` compares screenshots (8 pages × light/dark × en/fr × desktop/mobile = 64) with the baselines in `e2e/visual/__screenshots__/`.
 
 ## When a visual test fails
+
 1. Download the **playwright-report** artifact of the failed `Visual` job (or open `test-results/*-diff.png` locally).
-2. **Intended change?** → add the **`update-snapshots`** label to the PR. A workflow regenerates the baselines on
-   Linux and pushes a commit `test(visual): update snapshots`. Then:
+2. **Intended change?** → add the **`update-snapshots`** label to the PR. A workflow regenerates the baselines on Linux and pushes a commit `test(visual): update snapshots`. Then:
    ```bash
    git pull
    git commit --allow-empty -m "ci: re-run checks" && git push   # pushes made by the bot don't trigger CI themselves
@@ -1403,20 +1613,20 @@ in `e2e/visual/__screenshots__/`.
 3. **Unintended change?** → fix the code, not the baseline.
 
 ## Reviewing a baseline commit
-GitHub renders PNG diffs in the *Files changed* tab (2-up / swipe / onion skin). Check: spacing, truncated text,
-dark-mode contrast, French text overflow, mobile layout. A baseline PR is a design review.
+
+GitHub renders PNG diffs in the _Files changed_ tab (2-up / swipe / onion skin). Check: spacing, truncated text, dark-mode contrast, French text overflow, mobile layout. A baseline PR is a design review.
 
 ## Rules
+
 - **Never** generate or commit baselines from your own machine (fonts and anti-aliasing differ per OS).
 - Pages with emails, random slugs, relative dates must be **masked** (`data-visual-mask`) or left out.
-- Linux/macOS developers who want local baselines can run the Playwright Docker image **in a clean clone**
-  (a container that shares your `node_modules` would overwrite it with Linux binaries):
-  `docker run --rm -v "$PWD":/work -w /work -e CI=1 mcr.microsoft.com/playwright:v<VERSION>-noble bash -c "corepack enable && pnpm install --frozen-lockfile && pnpm e2e:visual:update"`
-  (`<VERSION>` = `pnpm exec playwright --version`).
+- Linux/macOS developers who want local baselines can run the Playwright Docker image **in a clean clone** (a container that shares your `node_modules` would overwrite it with Linux binaries): `docker run --rm -v "$PWD":/work -w /work -e CI=1 mcr.microsoft.com/playwright:v<VERSION>-noble bash -c "corepack enable && pnpm install --frozen-lockfile && pnpm e2e:visual:update"` (`<VERSION>` = `pnpm exec playwright --version`).
 ````
 
 ### ✅ Verify
+
 1. Merge the **S5-T05** PR first. Then, in **this** PR: push the branch, open the PR, and add the label:
+
 ```bash
 git add -A && git commit -m "ci(visual): add workflow to regenerate baselines and a guard against local screenshots"
 git push -u origin ci/s5-t06-visual-baselines
@@ -1424,8 +1634,9 @@ gh pr create --fill --base main
 gh label create update-snapshots --description "Regenerate visual baselines in CI" --color BFD4F2   # once
 gh pr edit --add-label update-snapshots
 ```
-2. In the **Actions** tab, *Update visual snapshots* runs (≈ 6–10 min) and pushes `test(visual): update snapshots` with **64 PNGs** (32 per project).
-3. Locally: `git pull`, then **review the images** in the PR's *Files changed* (swipe through a few: dark mode, French, mobile).
+
+2. In the **Actions** tab, _Update visual snapshots_ runs (≈ 6–10 min) and pushes `test(visual): update snapshots` with **64 PNGs** (32 per project).
+3. Locally: `git pull`, then **review the images** in the PR's _Files changed_ (swipe through a few: dark mode, French, mobile).
 4. Re-trigger the normal checks: `git commit --allow-empty -m "ci: re-run checks" && git push`; wait for green (the visual job itself arrives in S5-T09).
 5. **Guard test:** `git add` any file under `e2e/visual/__screenshots__` locally and try to commit → blocked by the hook ("Visual baselines must come from CI").
 6. Merge the PR.
@@ -1438,7 +1649,7 @@ gh pr edit --add-label update-snapshots
 
 **Branch:** `test/s5-t07-coverage` · **Story:** US-052 · **3 SP**
 
-> 🎯 Coverage is a **smoke alarm**, not a goal: it must be trusted (measured on code that matters), enforced (CI fails below the threshold) and **visible** (Codecov comments, badge). We use a *ratchet*: measure first, set the floor just below, raise it in S5-T13.
+> 🎯 Coverage is a **smoke alarm**, not a goal: it must be trusted (measured on code that matters), enforced (CI fails below the threshold) and **visible** (Codecov comments, badge). We use a _ratchet_: measure first, set the floor just below, raise it in S5-T13.
 
 ```bash
 git switch main && git pull && git switch -c test/s5-t07-coverage
@@ -1449,6 +1660,7 @@ git switch main && git pull && git switch -c test/s5-t07-coverage
 Pages, layouts and other route files are server-rendered glue covered by E2E; counting them in unit coverage only adds noise.
 
 📄 **Edit the `coverage` block in `vitest.config.ts`:**
+
 ```ts
     coverage: {
       provider: 'v8',
@@ -1474,11 +1686,13 @@ Pages, layouts and other route files are server-rendered glue covered by E2E; co
 ```bash
 pnpm test:coverage
 ```
+
 (runs the unit **and** browser projects and merges their coverage; the browser project needs Chromium — `pnpm exec playwright install chromium` if missing)
 
 Note the **text summary** and open `coverage/index.html` for the per-file view. A helper prints the per-folder picture:
 
 📄 **Create `scripts/coverage-summary.mjs`:**
+
 ```js
 // Usage: pnpm coverage:summary  (after pnpm test:coverage) — lines % per top-level folder under src/
 import { readFileSync } from 'node:fs';
@@ -1499,18 +1713,24 @@ for (const [file, data] of Object.entries(summary)) {
 
 console.log(`TOTAL lines: ${summary.total.lines.pct}%  branches: ${summary.total.branches.pct}%\n`);
 for (const [folder, { covered, total }] of [...folders].sort()) {
-  console.log(`${String(total ? ((covered / total) * 100).toFixed(0) : 100).padStart(3)}%  ${folder}  (${covered}/${total})`);
+  console.log(
+    `${String(total ? ((covered / total) * 100).toFixed(0) : 100).padStart(3)}%  ${folder}  (${covered}/${total})`,
+  );
 }
 ```
+
 📄 **Edit `package.json`:** `"coverage:summary": "node scripts/coverage-summary.mjs"`
+
 ```bash
 pnpm coverage:summary
 ```
+
 Write the numbers into `06-project-state.md` — they are your **baseline**.
 
 ### 3. Set the floor (just below what you measured)
 
-📄 **Add to the `coverage` block** — replace the example numbers with *your measured values minus 2 points* (rounded down):
+📄 **Add to the `coverage` block** — replace the example numbers with _your measured values minus 2 points_ (rounded down):
+
 ```ts
       thresholds: {
         lines: 60, // ← your measured total − 2
@@ -1522,16 +1742,19 @@ Write the numbers into `06-project-state.md` — they are your **baseline**.
         'src/libs/**': { lines: 80 },
       },
 ```
+
 > 🔎 S5-T13 raises the totals to **80 / 80 / 70** and the two folders to **85**.
 
 ```bash
 pnpm test:coverage              # must now pass (exit code 0)
 ```
+
 Sabotage check: set `lines: 99` temporarily → the command **fails** with a threshold error. Revert.
 
 ### 4. Codecov configuration
 
 📄 **Create `codecov.yml`:**
+
 ```yaml
 coverage:
   status:
@@ -1556,28 +1779,36 @@ comment:
   layout: 'diff, files'
   require_changes: true
 ```
+
 One-time account setup (outside the repo):
+
 1. Sign in at <https://about.codecov.io> with GitHub, add the repository, copy its **upload token**.
 2. ```bash
    gh secret set CODECOV_TOKEN        # paste the token
    ```
 3. Add the badge to `README.md` (replace `OWNER`):
+
 ```markdown
 [![codecov](https://codecov.io/gh/OWNER/saas-boilerplate/graph/badge.svg)](https://codecov.io/gh/OWNER/saas-boilerplate)
 ```
+
 The **upload step** lives in the CI rewrite (S5-T08).
 
 📄 **Document the exclusions** — append to `docs/roadmap/04-dependencies-risks.md` under the debt register:
+
 ```markdown
 | TD-08 | Coverage excludes shadcn primitives and Next route files (pages/layouts) | Vendor-style/glue code; E2E + guard tests cover them | Reassess v1.1 |
 ```
+
 (if the row already exists, just confirm the wording)
 
 ### ✅ Verify
+
 ```bash
 pnpm test:coverage && pnpm coverage:summary && pnpm check
 ```
-`coverage/` is git-ignored (S0). Put the *before* numbers next to the *floor* you chose in `06-project-state.md`.
+
+`coverage/` is git-ignored (S0). Put the _before_ numbers next to the _floor_ you chose in `06-project-state.md`.
 
 **🚢 Ship** — branch `test/s5-t07-coverage` · message: `test: enforce coverage thresholds with a ratchet and add codecov configuration`
 
@@ -1597,6 +1828,7 @@ mkdir -p .github/actions/setup
 ### 1. A reusable setup step
 
 📄 **Create `.github/actions/setup/action.yml`:**
+
 ```yaml
 name: Setup
 description: pnpm + Node (cached) + frozen install
@@ -1616,6 +1848,7 @@ runs:
 ### 2. The workflow
 
 📄 **Rewrite `.github/workflows/ci.yml`** (the E2E and Visual jobs are added in S5-T09):
+
 ```yaml
 name: CI
 
@@ -1750,18 +1983,20 @@ jobs:
           fi
           echo "✅ All required jobs passed (or were skipped)"
 ```
+
 > 🔎 Everything runs **in parallel** (only `ci-ok` waits). Caches: the pnpm store (via `setup-node`), Playwright browsers, and Next's build cache.
 
 ### 3. Point branch protection at the single check
 
-GitHub → **Settings → Rules** (or Branches) → the ruleset for `main` → **Required status checks**: remove the old five (*Quality…*, *Tests…*, *Build*, *Commit messages*, *E2E*) and add **`CI OK`** only.
+GitHub → **Settings → Rules** (or Branches) → the ruleset for `main` → **Required status checks**: remove the old five (_Quality…_, _Tests…_, _Build_, _Commit messages_, _E2E_) and add **`CI OK`** only.
 
-> ⚠️ Do this **after** this PR has run once (GitHub only offers a check name it has seen). Until then keep the old names; the job names changed, so the PR itself may show the old required checks as "waiting" — that's expected, use *admin merge* once if needed and switch the rule immediately.
+> ⚠️ Do this **after** this PR has run once (GitHub only offers a check name it has seen). Until then keep the old names; the job names changed, so the PR itself may show the old required checks as "waiting" — that's expected, use _admin merge_ once if needed and switch the rule immediately.
 
 ### ✅ Verify
+
 1. Open the PR and watch the **Actions** tab: `Quality`, `Tests + coverage`, `Build`, `Storybook`, `Commit messages` start **together**. `CI OK` turns green last.
 2. **Time it:** compare against the baseline you noted at the start (goal: whole pipeline < 10 min, typically 5–7 once caches are warm; push an empty commit to see the warm-cache time).
-3. **Docs-only PR:** create a branch that only edits a `.md` file → `Changes` reports `code=false`, the heavy jobs are *skipped*, `CI OK` is green in seconds.
+3. **Docs-only PR:** create a branch that only edits a `.md` file → `Changes` reports `code=false`, the heavy jobs are _skipped_, `CI OK` is green in seconds.
 4. **Break something** (lint error) in a throw-away PR → `Quality` fails → `CI OK` **fails** (so the merge button stays blocked). Close the PR.
 5. Codecov: after merging to `main` (or on the PR), the Codecov comment shows the coverage diff; the badge in the README resolves.
 
@@ -1779,9 +2014,10 @@ git switch main && git pull && git switch -c ci/s5-t09-e2e-visual-jobs
 
 ### 1. A bundle-size budget
 
-Next 16's build log no longer lists per-route *First Load JS* 🔍, so we measure the **gzipped JS + CSS** that browsers download (`.next/static`) and compare it with a committed budget.
+Next 16's build log no longer lists per-route _First Load JS_ 🔍, so we measure the **gzipped JS + CSS** that browsers download (`.next/static`) and compare it with a committed budget.
 
 📄 **Create `scripts/check-bundle-size.mjs`:**
+
 ```js
 // Usage:  pnpm build && pnpm bundle:size            → compare with bundle-budget.json (fails if > +10 %)
 //         pnpm build && pnpm bundle:size --write    → record the current size as the new budget
@@ -1819,7 +2055,10 @@ const current = measure();
 console.log(`Current (gzip): JS ${kb(current.js)} · CSS ${kb(current.css)}`);
 
 if (process.argv.includes('--write')) {
-  writeFileSync(BUDGET_FILE, `${JSON.stringify({ ...current, measuredAt: new Date().toISOString() }, null, 2)}\n`);
+  writeFileSync(
+    BUDGET_FILE,
+    `${JSON.stringify({ ...current, measuredAt: new Date().toISOString() }, null, 2)}\n`,
+  );
   console.log(`✅ Budget written to ${BUDGET_FILE}`);
   process.exit(0);
 }
@@ -1835,104 +2074,114 @@ for (const key of ['js', 'css']) {
   const limit = budget[key] * (1 + TOLERANCE);
   const delta = ((current[key] / budget[key] - 1) * 100).toFixed(1);
   const ok = current[key] <= limit;
-  console.log(`${ok ? '✅' : '❌'} ${key.toUpperCase()}: ${kb(current[key])} vs budget ${kb(budget[key])} (${delta >= 0 ? '+' : ''}${delta} %)`);
+  console.log(
+    `${ok ? '✅' : '❌'} ${key.toUpperCase()}: ${kb(current[key])} vs budget ${kb(budget[key])} (${delta >= 0 ? '+' : ''}${delta} %)`,
+  );
   if (!ok) failed = true;
 }
 if (failed) {
-  console.error('\nThe bundle grew by more than 10 %. Find out why (pnpm analyze) — or, if intended, run `pnpm bundle:size --write` and explain it in the PR.');
+  console.error(
+    '\nThe bundle grew by more than 10 %. Find out why (pnpm analyze) — or, if intended, run `pnpm bundle:size --write` and explain it in the PR.',
+  );
   process.exit(1);
 }
 ```
+
 📄 **Edit `package.json`:** `"bundle:size": "node scripts/check-bundle-size.mjs"`
+
 ```bash
 pnpm build && pnpm bundle:size --write      # creates bundle-budget.json — commit it
 pnpm bundle:size                            # now ✅ (+0.0 %)
 ```
+
 > Numbers made on Windows differ slightly from Linux; the 10 % tolerance absorbs that. Re-record the budget from a CI run if you want it exact.
 
 ### 2. Build once, reuse everywhere
 
 📄 **Edit the `build` job in `.github/workflows/ci.yml`** — after `pnpm build` add:
+
 ```yaml
-      - run: pnpm bundle:size
-      - uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: |
-            .next
-            !.next/cache
-          include-hidden-files: true # .next starts with a dot
-          retention-days: 1
+- run: pnpm bundle:size
+- uses: actions/upload-artifact@v4
+  with:
+    name: next-build
+    path: |
+      .next
+      !.next/cache
+    include-hidden-files: true # .next starts with a dot
+    retention-days: 1
 ```
 
 ### 3. E2E (2 shards) and Visual jobs
 
 📄 **Append to `jobs:` in `ci.yml`:**
-```yaml
-  e2e:
-    name: E2E (shard ${{ matrix.shard }}/2)
-    needs: [changes, build]
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
-    env:
-      E2E_PREBUILT: '1' # use the build artifact instead of building again
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm exec playwright test --shard=${{ matrix.shard }}/2
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-shard-${{ matrix.shard }}
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
 
-  visual:
-    name: Visual regression
-    needs: [changes, build]
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      E2E_PREBUILT: '1'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm e2e:visual
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: visual-diffs
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
+```yaml
+e2e:
+  name: E2E (shard ${{ matrix.shard }}/2)
+  needs: [changes, build]
+  if: needs.changes.outputs.code == 'true'
+  runs-on: ubuntu-latest
+  timeout-minutes: 25
+  strategy:
+    fail-fast: false
+    matrix:
+      shard: [1, 2]
+  env:
+    E2E_PREBUILT: '1' # use the build artifact instead of building again
+  steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/setup
+    - uses: actions/download-artifact@v4
+      with:
+        name: next-build
+        path: .next
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+    - run: pnpm exec playwright install --with-deps chromium
+    - run: pnpm exec playwright test --shard=${{ matrix.shard }}/2
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-report-shard-${{ matrix.shard }}
+        path: |
+          playwright-report
+          test-results
+        retention-days: 7
+
+visual:
+  name: Visual regression
+  needs: [changes, build]
+  if: needs.changes.outputs.code == 'true'
+  runs-on: ubuntu-latest
+  timeout-minutes: 25
+  env:
+    E2E_PREBUILT: '1'
+  steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/setup
+    - uses: actions/download-artifact@v4
+      with:
+        name: next-build
+        path: .next
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+    - run: pnpm exec playwright install --with-deps chromium
+    - run: pnpm e2e:visual
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: visual-diffs
+        path: |
+          playwright-report
+          test-results
+        retention-days: 7
 ```
+
 and extend the aggregate: `needs: [changes, quality, test, build, storybook, e2e, visual, commitlint]`.
 
 > 🔎 Each shard runs on its **own machine** with its **own** database, app and global setup (its own world of users) — shards can't interfere. If one of your specs depends on another's data, sharding will expose it: fix the spec.
@@ -1942,6 +2191,7 @@ and extend the aggregate: `needs: [changes, quality, test, build, storybook, e2e
 When a Better Auth upgrade changes its tables, our hand-adapted `auth.ts`/`org.ts` can silently fall behind.
 
 📄 **Create `scripts/check-auth-schema.mjs`:**
+
 ```js
 // Compares the tables/columns Better Auth GENERATES for our config with the ones we defined.
 // Names are normalised (case and underscores ignored). Advisory: it reports, a human decides.
@@ -1953,15 +2203,23 @@ const normalise = (value) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 function parse(source) {
   const tables = new Map();
-  for (const match of source.matchAll(/pgTable\(\s*["'`]([^"'`]+)["'`]\s*,\s*\{([\s\S]*?)\n\s*\}\s*[,)]/g)) {
-    const columns = [...match[2].matchAll(/(?:text|boolean|timestamp|integer|bigint|jsonb)\(\s*["'`]([^"'`]+)["'`]/g)].map((c) => normalise(c[1]));
+  for (const match of source.matchAll(
+    /pgTable\(\s*["'`]([^"'`]+)["'`]\s*,\s*\{([\s\S]*?)\n\s*\}\s*[,)]/g,
+  )) {
+    const columns = [
+      ...match[2].matchAll(
+        /(?:text|boolean|timestamp|integer|bigint|jsonb)\(\s*["'`]([^"'`]+)["'`]/g,
+      ),
+    ].map((c) => normalise(c[1]));
     tables.set(normalise(match[1]), new Set(columns));
   }
   return tables;
 }
 
 // 🔍 flags (-y to skip the overwrite prompt) follow the current CLI
-execSync(`pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output ${OUT} -y`, { stdio: 'inherit' });
+execSync(`pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output ${OUT} -y`, {
+  stdio: 'inherit',
+});
 const generated = parse(readFileSync(OUT, 'utf8'));
 rmSync(OUT);
 
@@ -1977,7 +2235,8 @@ for (const [table, columns] of generated) {
     problems.push(`Missing table: ${table}`);
     continue;
   }
-  for (const column of columns) if (!mine.has(column)) problems.push(`Missing column: ${table}.${column}`);
+  for (const column of columns)
+    if (!mine.has(column)) problems.push(`Missing column: ${table}.${column}`);
 }
 
 if (problems.length > 0) {
@@ -1986,8 +2245,9 @@ if (problems.length > 0) {
 }
 console.log('✅ Our schema covers everything Better Auth generates.');
 ```
-📄 **Edit `package.json`:** `"auth:schema:check": "node scripts/check-auth-schema.mjs"`
-📄 **Create `.github/workflows/schema-drift.yml`:**
+
+📄 **Edit `package.json`:** `"auth:schema:check": "node scripts/check-auth-schema.mjs"` 📄 **Create `.github/workflows/schema-drift.yml`:**
+
 ```yaml
 name: Auth schema drift
 
@@ -2013,16 +2273,18 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm auth:schema:check
 ```
-> If the CLI can't load our config (path aliases, `server-only`), the job fails *loudly* — which is the point: fix the fallback described in S2-T02 rather than disabling the watch.
+
+> If the CLI can't load our config (path aliases, `server-only`), the job fails _loudly_ — which is the point: fix the fallback described in S2-T02 rather than disabling the watch.
 
 ### ✅ Verify
+
 1. Push the branch, open the PR: jobs `Build` → then `E2E (shard 1/2)`, `E2E (shard 2/2)` and `Visual regression` start in parallel. The shards **download** the build instead of rebuilding.
-2. **Total time** < 10 minutes (look at the *Summary* page's timeline).
+2. **Total time** < 10 minutes (look at the _Summary_ page's timeline).
 3. Fail one on purpose, each in a throw-away commit, and look at the artifact:
    - break a visible style → `Visual regression` fails and `visual-diffs` contains the diff images;
    - break an E2E expectation → the shard fails and `playwright-report-shard-N` has traces.
 4. Increase the bundle (import a big library into the home page) → `Build` fails with "The bundle grew by more than 10 %". Revert.
-5. Run the drift workflow once: *Actions → Auth schema drift → Run workflow* (or `pnpm auth:schema:check` locally) → ✅ (or a readable list of missing columns).
+5. Run the drift workflow once: _Actions → Auth schema drift → Run workflow_ (or `pnpm auth:schema:check` locally) → ✅ (or a readable list of missing columns).
 6. `CI OK` is the only required check and goes green.
 
 **🚢 Ship** — branch `ci/s5-t09-e2e-visual-jobs` · message: `ci: shard e2e, add visual job, reuse build artifact, enforce bundle budget and watch auth schema drift`
@@ -2033,7 +2295,7 @@ jobs:
 
 **Branch:** `ci/s5-t10-i18n-check` · **Story:** US-055 · **3 SP**
 
-> 🎯 Translations rot silently: a key added to `en.json` and forgotten in `fr.json` shows raw keys to French users. Our Sprint-1 parity test catches *that*; `i18n-check` also catches **invalid ICU syntax** and gives a readable report. Knip has been a blocking CI gate since Sprint 0 — nothing to add there.
+> 🎯 Translations rot silently: a key added to `en.json` and forgotten in `fr.json` shows raw keys to French users. Our Sprint-1 parity test catches _that_; `i18n-check` also catches **invalid ICU syntax** and gives a readable report. Knip has been a blocking CI gate since Sprint 0 — nothing to add there.
 
 ```bash
 git switch main && git pull && git switch -c ci/s5-t10-i18n-check
@@ -2043,13 +2305,16 @@ pnpm add -D @lingual/i18n-check
 ### 1. Scripts
 
 📄 **Edit `package.json`:**
+
 ```json
 "i18n:check": "i18n-check --locales src/locales --source en --format next-intl",
 "i18n:unused": "i18n-check --locales src/locales --source en --format next-intl --unused src"
 ```
+
 > 🔍 Flag names (`--locales`, `--source`, `--format`, `--unused`) follow the tool's README at the time of writing — check `pnpm exec i18n-check --help`.
 
 Add the check to the aggregate script (after `check:agents`):
+
 ```json
 "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm check:env && pnpm check:agents && pnpm i18n:check && pnpm db:check && pnpm test && pnpm test:browser"
 ```
@@ -2059,10 +2324,11 @@ Add the check to the aggregate script (after `check:agents`):
 ```bash
 pnpm i18n:check
 ```
+
 Typical findings and the right fix:
 
 | Finding | Fix |
-|---|---|
+| --- | --- |
 | **Missing key** in `fr.json` | Translate it (never copy the English text "to make the check pass") |
 | **Invalid ICU message** (unbalanced `{}`) | Fix the braces. Apostrophes are special in ICU: `l'{org}` swallows the placeholder — write `l’{org}` (typographic apostrophe) or `l''{org}` |
 | Placeholder names differ between languages (`{name}` vs `{nom}`) | Placeholders are code: keep identical names |
@@ -2070,10 +2336,12 @@ Typical findings and the right fix:
 ### 3. Where it runs
 
 - **Pre-push** — 📄 **edit `lefthook.yml`**, under `pre-push.commands`:
+
 ```yaml
-    i18n:
-      run: pnpm i18n:check
+i18n:
+  run: pnpm i18n:check
 ```
+
 - **CI** — 📄 **edit the `quality` job in `.github/workflows/ci.yml`**: add `- run: pnpm i18n:check` after `check:agents`.
 
 ### 4. Unused keys: report, don't block
@@ -2081,34 +2349,41 @@ Typical findings and the right fix:
 ```bash
 pnpm i18n:unused
 ```
+
 You will see **many** "unused" keys — and most are **false positives**, because we build keys dynamically:
+
 - `t(\`strength.${label}\`)`, `tRoles(role)`, `t(item.key)` (computed at runtime)
 - Zod messages like `'validation.email'` and error maps like `'auth.errors.invalidCredentials'` (strings in code, not `t()` calls)
 
 📄 **Append to `docs/guides/i18n.md`:**
-````markdown
+
+```markdown
 ## Checks
+
 - `pnpm i18n:check` (blocking, in CI and pre-push): every key exists in **both** languages, ICU syntax is valid.
-- `pnpm i18n:unused` (report only): lists keys no `t('…')` call references. **Read it, don't trust it blindly** —
-  these prefixes are built dynamically and always show up: `validation.*`, `errors.*`, `auth.errors.*`, `org.roles.*`,
-  `org.errors.*`, `security.score.*`, `auth.signUp.strength.*`, `emails.*`.
-  Anything else in the list is a candidate for deletion.
+- `pnpm i18n:unused` (report only): lists keys no `t('…')` call references. **Read it, don't trust it blindly** — these prefixes are built dynamically and always show up: `validation.*`, `errors.*`, `auth.errors.*`, `org.roles.*`, `org.errors.*`, `security.score.*`, `auth.signUp.strength.*`, `emails.*`. Anything else in the list is a candidate for deletion.
 
 ## Adding a string (the whole workflow)
+
 1. Add the key to `src/locales/en.json` **and** `fr.json` (same structure, same placeholders).
 2. Use it via `useTranslations` / `getTranslations` (typed: a typo is a TypeScript error).
 3. `pnpm i18n:check`.
-````
-📄 **Update `AGENTS.md`** (Conventions → i18n): *"Run `pnpm i18n:check` after touching locale files; both languages in the same commit."*
+```
+
+📄 **Update `AGENTS.md`** (Conventions → i18n): _"Run `pnpm i18n:check` after touching locale files; both languages in the same commit."_
 
 ### ✅ Verify
+
 ```bash
 pnpm i18n:check                # ✅
 ```
+
 **Mutation checks (revert after each):**
+
 1. Delete one key from `fr.json` → `pnpm i18n:check` **fails** naming the key; the Sprint-1 parity test fails too.
 2. Break a message: `"Hello {name"` → fails with an ICU syntax error.
 3. Push with the key missing → the **pre-push hook** blocks it. Push the same commit to a PR with the hook bypassed (`LEFTHOOK=0`) → CI's `Quality` job fails.
+
 ```bash
 pnpm check
 ```
@@ -2121,7 +2396,7 @@ pnpm check
 
 **Branch:** `test/s5-t11-authz-matrix` · **Story:** US-056 · **3 SP** · 🔒 risk **R-04/R-05**
 
-> 🎯 *"Can this person do that?"* answered for **every Server Action × every kind of user**, by running the **real** code: real Better Auth, real actions, real permissions — on an in-memory database. And a meta-test makes it **impossible to add an action without deciding how it's protected**.
+> 🎯 _"Can this person do that?"_ answered for **every Server Action × every kind of user**, by running the **real** code: real Better Auth, real actions, real permissions — on an in-memory database. And a meta-test makes it **impossible to add an action without deciding how it's protected**.
 
 ```bash
 git switch main && git pull && git switch -c test/s5-t11-authz-matrix
@@ -2131,6 +2406,7 @@ mkdir -p tests/security
 ### 1. Shared mocks (only what must be faked: Next.js plumbing and the database module)
 
 📄 **Create `tests/security/mocks.ts`:**
+
 ```ts
 import { createTestDb } from '../utils/test-db';
 
@@ -2183,6 +2459,7 @@ export async function testDbModule() {
 ### 2. The registry: every action must be accounted for
 
 📄 **Create `tests/security/action-registry.ts`** (pure data — no imports from the app):
+
 ```ts
 export type Coverage =
   | { kind: 'public' } // intentionally open to everyone
@@ -2201,7 +2478,8 @@ export const ACTION_REGISTRY: Record<string, Coverage> = {
   revokeOtherSessions: { kind: 'matrix', requirement: 'signed in' },
   deletePasskey: {
     kind: 'exempt',
-    reason: 'needs a real passkey. Guard: requireFreshSession (session.test.ts); lifecycle: e2e/auth-advanced.spec.ts',
+    reason:
+      'needs a real passkey. Guard: requireFreshSession (session.test.ts); lifecycle: e2e/auth-advanced.spec.ts',
   },
 
   createProject: { kind: 'matrix', requirement: 'org member with project:create' },
@@ -2214,18 +2492,24 @@ export const ACTION_REGISTRY: Record<string, Coverage> = {
   transferOwnership: { kind: 'matrix', requirement: 'owner + fresh session' },
   leaveOrganization: {
     kind: 'exempt',
-    reason: 'destructive for the caller. Last-owner rule: org-members.test.ts; flow: e2e/tenancy.spec.ts',
+    reason:
+      'destructive for the caller. Last-owner rule: org-members.test.ts; flow: e2e/tenancy.spec.ts',
   },
 
   banUser: { kind: 'matrix', requirement: 'platform admin' },
   unbanUser: { kind: 'matrix', requirement: 'platform admin' },
   revokeUserSessions: { kind: 'matrix', requirement: 'platform admin' },
   setUserRole: { kind: 'matrix', requirement: 'platform admin' },
-  startImpersonation: { kind: 'matrix', requirement: 'platform admin (admin success path: e2e/admin.spec.ts)' },
+  startImpersonation: {
+    kind: 'matrix',
+    requirement: 'platform admin (admin success path: e2e/admin.spec.ts)',
+  },
   stopImpersonation: { kind: 'matrix', requirement: 'signed in AND impersonating' },
 };
 ```
+
 📄 **Create `tests/security/action-coverage.test.ts`** — the meta-test (no database needed):
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -2240,13 +2524,20 @@ function exportedActions(): string[] {
   return readdirSync(ACTIONS_DIR)
     .filter((file) => file.endsWith('.ts'))
     .flatMap((file) =>
-      [...readFileSync(path.join(ACTIONS_DIR, file), 'utf8').matchAll(/export async function (\w+)\(/g)].map((match) => match[1]!),
+      [
+        ...readFileSync(path.join(ACTIONS_DIR, file), 'utf8').matchAll(
+          /export async function (\w+)\(/g,
+        ),
+      ].map((match) => match[1]!),
     );
 }
 
 it('every Server Action is classified in the registry (add a row → decide how it is protected)', () => {
   const missing = exportedActions().filter((name) => !(name in ACTION_REGISTRY));
-  expect(missing, `New action(s) without a security classification: ${missing.join(', ')}\nAdd them to tests/security/action-registry.ts`).toEqual([]);
+  expect(
+    missing,
+    `New action(s) without a security classification: ${missing.join(', ')}\nAdd them to tests/security/action-registry.ts`,
+  ).toEqual([]);
 });
 
 it('the registry has no rows for actions that no longer exist', () => {
@@ -2264,6 +2555,7 @@ it('exempt rows must explain where the action is covered', () => {
 ### 3. The matrix
 
 📄 **Create `tests/security/authz-matrix.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -2275,8 +2567,20 @@ vi.mock('@/i18n/navigation', async () => (await import('./mocks')).intlNavigatio
 vi.mock('@/db/client', async () => (await import('./mocks')).testDbModule());
 
 import { changePassword, revokeOtherSessions, revokeSession } from '@/actions/account';
-import { banUser, revokeUserSessions, setUserRole, startImpersonation, stopImpersonation, unbanUser } from '@/actions/admin';
-import { deleteOrganization, removeMember, transferOwnership, updateMemberRole } from '@/actions/organization';
+import {
+  banUser,
+  revokeUserSessions,
+  setUserRole,
+  startImpersonation,
+  stopImpersonation,
+  unbanUser,
+} from '@/actions/admin';
+import {
+  deleteOrganization,
+  removeMember,
+  transferOwnership,
+  updateMemberRole,
+} from '@/actions/organization';
 import { createProject, deleteProject, updateProject } from '@/actions/projects';
 import { createTenantDb } from '@/data/tenant-db';
 import { db as mockedDb } from '@/db/client';
@@ -2290,12 +2594,19 @@ import { userFactory } from '../factories/user.factory';
 import { signIn } from '../utils/auth';
 import type { TestDb } from '../utils/test-db';
 import { buildWorld, type World } from '../utils/world';
-
 import { ACTION_REGISTRY } from './action-registry';
 import { actor, testDb } from './mocks';
 
 type Outcome = 'ok' | 'UNAUTHENTICATED' | 'FORBIDDEN' | 'NOT_FOUND' | 'VALIDATION_ERROR';
-const ACTORS = ['anon', 'outsider', 'ownerB', 'memberA', 'adminA', 'ownerA', 'platformAdmin'] as const;
+const ACTORS = [
+  'anon',
+  'outsider',
+  'ownerB',
+  'memberA',
+  'adminA',
+  'ownerA',
+  'platformAdmin',
+] as const;
 type Actor = (typeof ACTORS)[number];
 
 const db = mockedDb as unknown as TestDb;
@@ -2313,10 +2624,13 @@ afterAll(async () => {
 });
 
 const headersFor = (who: Actor) => (who === 'anon' ? new Headers() : world.people[who].headers);
-const classify = (result: ActionResult<unknown>): Outcome => (result.ok ? 'ok' : (result.error.code as Outcome));
+const classify = (result: ActionResult<unknown>): Outcome =>
+  result.ok ? 'ok' : (result.error.code as Outcome);
 
 async function freshProject() {
-  return (await createTenantDb(db, world.orgA.id).projects.create({ name: 'tmp' }, world.people.ownerA.id)).id;
+  return (
+    await createTenantDb(db, world.orgA.id).projects.create({ name: 'tmp' }, world.people.ownerA.id)
+  ).id;
 }
 async function freshUser() {
   const row = userFactory.build();
@@ -2369,7 +2683,13 @@ const CASES: Record<string, Case> = {
     expected: orgScoped('ok', 'ok', 'ok'),
   },
   updateProject: {
-    input: async () => ({ orgSlug: ORG, id: await freshProject(), name: 'Renamed', description: '', status: 'active' }),
+    input: async () => ({
+      orgSlug: ORG,
+      id: await freshProject(),
+      name: 'Renamed',
+      description: '',
+      status: 'active',
+    }),
     call: updateProject,
     expected: orgScoped('ok', 'ok', 'ok'),
   },
@@ -2401,8 +2721,16 @@ const CASES: Record<string, Case> = {
     expected: orgScoped('FORBIDDEN', 'FORBIDDEN', 'NOT_FOUND'), // owners only
   },
 
-  banUser: { input: async () => ({ userId: await freshUser() }), call: banUser, expected: platformOnly('ok') },
-  unbanUser: { input: async () => ({ userId: await freshUser() }), call: unbanUser, expected: platformOnly('ok') },
+  banUser: {
+    input: async () => ({ userId: await freshUser() }),
+    call: banUser,
+    expected: platformOnly('ok'),
+  },
+  unbanUser: {
+    input: async () => ({ userId: await freshUser() }),
+    call: unbanUser,
+    expected: platformOnly('ok'),
+  },
   revokeUserSessions: {
     input: async () => ({ userId: await freshUser() }),
     call: revokeUserSessions,
@@ -2442,7 +2770,11 @@ const CASES: Record<string, Case> = {
     call: revokeSession,
     expected: signedIn('NOT_FOUND'),
   },
-  revokeOtherSessions: { input: () => ({}), call: () => revokeOtherSessions(), expected: signedIn('ok') },
+  revokeOtherSessions: {
+    input: () => ({}),
+    call: () => revokeOtherSessions(),
+    expected: signedIn('ok'),
+  },
 };
 
 describe('the matrix covers exactly what the registry says it covers', () => {
@@ -2462,22 +2794,27 @@ for (const [name, testCase] of Object.entries(CASES)) {
     it.each(actors)('%s', async (who) => {
       actor.headers = headersFor(who);
       const result = await testCase.call(await testCase.input());
-      expect(classify(result), `${name} as ${who}: ${JSON.stringify(result)}`).toBe(testCase.expected[who]);
+      expect(classify(result), `${name} as ${who}: ${JSON.stringify(result)}`).toBe(
+        testCase.expected[who],
+      );
     });
   });
 }
 ```
-> 🔍 If a case fails with a **different code** than expected, decide which side is wrong: the expectation table is the *policy*. Change the policy only deliberately (and in the same PR as `docs/guides/rbac.md`).
-> 🔎 Why the clever "non-existent target" inputs? They let us observe the permission gate **without** mutating anything: a member is stopped *before* the target is looked up (`FORBIDDEN`), an admin gets *past* the gate and fails on the missing target (`NOT_FOUND`).
+
+> 🔍 If a case fails with a **different code** than expected, decide which side is wrong: the expectation table is the _policy_. Change the policy only deliberately (and in the same PR as `docs/guides/rbac.md`). 🔎 Why the clever "non-existent target" inputs? They let us observe the permission gate **without** mutating anything: a member is stopped _before_ the target is looked up (`FORBIDDEN`), an admin gets _past_ the gate and fails on the missing target (`NOT_FOUND`).
 
 ### ✅ Verify
+
 ```bash
 pnpm test tests/security                 # the whole suite (≈ 15–40 s, six real sign-ins)
 ```
+
 Expect ~**110** assertions, all green. Now prove the suite has teeth — **each of these must make it fail** (revert after each):
+
 1. In `deleteProject` (`src/actions/projects.ts`) change `{ project: ['delete'] }` to `{ project: ['read'] }` → `deleteProject as memberA` fails.
 2. In `getAdminOrThrow` remove the `isPlatformAdmin` check → every `platformOnly` case fails for owners/members.
-3. In `src/actions/projects.ts` add a new exported action `export async function archiveProject() {…}` → `action-coverage.test.ts` fails with *"New action(s) without a security classification: archiveProject"*.
+3. In `src/actions/projects.ts` add a new exported action `export async function archiveProject() {…}` → `action-coverage.test.ts` fails with _"New action(s) without a security classification: archiveProject"_.
 4. In `getOrgMembershipOrThrow` return the membership without checking the user → `outsider`/`ownerB` cases fail.
 
 Record the four "it failed as expected" results in the PR description.
@@ -2490,7 +2827,7 @@ Record the four "it failed as expected" results in the PR description.
 
 **Branch:** `test/s5-t12-idor-injection` · **Story:** US-056 · **2 SP** · 🔒
 
-> 🎯 The matrix proves *roles*. These tests prove **identifiers and input**: swapping an id for someone else's, sending hostile strings, or adding fields the form never offered.
+> 🎯 The matrix proves _roles_. These tests prove **identifiers and input**: swapping an id for someone else's, sending hostile strings, or adding fields the form never offered.
 
 ```bash
 git switch main && git pull && git switch -c test/s5-t12-idor-injection
@@ -2502,26 +2839,40 @@ pnpm add -D cross-env              # skip if it's already there (S0-T09 fallback
 A **null byte** (`\u0000`) in text is rejected by PostgreSQL → our action would answer `INTERNAL` (a 500). Reject it at the boundary:
 
 📄 **Create `src/validations/common.ts`:**
+
 ```ts
 /** PostgreSQL text columns cannot contain NUL; reject early instead of failing deep in the driver. */
 export const noNullBytes = (value: string) => !value.includes('\u0000');
 export const NO_NULL_BYTES_MESSAGE = { message: 'validation.invalid' } as const;
 ```
+
 📄 **Edit `src/validations/project.ts`:**
+
 ```ts
 import { NO_NULL_BYTES_MESSAGE, noNullBytes } from './common';
 
 export const projectSchema = z.object({
-  name: z.string().trim().min(1, { message: 'validation.projectName' }).max(80, { message: 'validation.projectName' }).refine(noNullBytes, NO_NULL_BYTES_MESSAGE),
-  description: z.string().trim().max(500, { message: 'validation.projectDescription' }).refine(noNullBytes, NO_NULL_BYTES_MESSAGE),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: 'validation.projectName' })
+    .max(80, { message: 'validation.projectName' })
+    .refine(noNullBytes, NO_NULL_BYTES_MESSAGE),
+  description: z
+    .string()
+    .trim()
+    .max(500, { message: 'validation.projectDescription' })
+    .refine(noNullBytes, NO_NULL_BYTES_MESSAGE),
   status: z.enum(['active', 'archived']),
 });
 ```
+
 Apply the same `.refine(noNullBytes, NO_NULL_BYTES_MESSAGE)` to the free-text fields in `src/validations/org.ts` (`name`), `src/validations/auth.ts` (`name`) and `src/validations/contact.ts` (`name`, `message`).
 
 ### 2. The suite
 
 📄 **Create `tests/security/idor.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -2543,7 +2894,6 @@ import { MemoryTransport } from '@/libs/email/memory-transport';
 
 import type { TestDb } from '../utils/test-db';
 import { buildWorld, type World } from '../utils/world';
-
 import { actor, testDb } from './mocks';
 
 const db = mockedDb as unknown as TestDb;
@@ -2562,14 +2912,25 @@ afterAll(async () => {
 const as = (who: keyof World['people']) => {
   actor.headers = world.people[who].headers;
 };
-const code = (result: { ok: boolean; error?: { code: string } }) => (result.ok ? 'ok' : result.error?.code);
+const code = (result: { ok: boolean; error?: { code: string } }) =>
+  result.ok ? 'ok' : result.error?.code;
 
 describe('swapping an id for another tenant’s id', () => {
   it('cannot update or delete another organization’s project (and nothing changes)', async () => {
     as('ownerA'); // a legitimate owner — of org-a
     const foreign = world.projects.b[0]!.id;
 
-    expect(code(await updateProject({ orgSlug: 'org-a', id: foreign, name: 'hacked', description: '', status: 'active' }))).toBe('NOT_FOUND');
+    expect(
+      code(
+        await updateProject({
+          orgSlug: 'org-a',
+          id: foreign,
+          name: 'hacked',
+          description: '',
+          status: 'active',
+        }),
+      ),
+    ).toBe('NOT_FOUND');
     expect(code(await deleteProject({ orgSlug: 'org-a', id: foreign }))).toBe('NOT_FOUND');
 
     const [row] = await db.select().from(project).where(eq(project.id, foreign));
@@ -2578,21 +2939,31 @@ describe('swapping an id for another tenant’s id', () => {
 
   it('cannot remove a member of another organization by guessing the member id', async () => {
     as('ownerA');
-    const [foreignOwner] = await db.select().from(member).where(eq(member.userId, world.people.ownerB.id));
+    const [foreignOwner] = await db
+      .select()
+      .from(member)
+      .where(eq(member.userId, world.people.ownerB.id));
 
-    expect(code(await removeMember({ orgSlug: 'org-a', memberId: foreignOwner!.id }))).toBe('NOT_FOUND');
+    expect(code(await removeMember({ orgSlug: 'org-a', memberId: foreignOwner!.id }))).toBe(
+      'NOT_FOUND',
+    );
     expect(await db.select().from(member).where(eq(member.id, foreignOwner!.id))).toHaveLength(1);
   });
 
   it('cannot revoke somebody else’s session', async () => {
     const fresh = { query: { disableCookieCache: true } } as const;
-    const victimSession = await auth.api.getSession({ headers: world.people.ownerA.headers, ...fresh });
+    const victimSession = await auth.api.getSession({
+      headers: world.people.ownerA.headers,
+      ...fresh,
+    });
 
     as('memberA');
     expect(code(await revokeSession({ sessionId: victimSession!.session.id }))).toBe('NOT_FOUND');
 
     // the victim is still signed in
-    expect(await auth.api.getSession({ headers: world.people.ownerA.headers, ...fresh })).not.toBeNull();
+    expect(
+      await auth.api.getSession({ headers: world.people.ownerA.headers, ...fresh }),
+    ).not.toBeNull();
   });
 
   it('cannot cancel another organization’s invitation', async () => {
@@ -2601,10 +2972,16 @@ describe('swapping an id for another tenant’s id', () => {
       body: { email: 'target@example.com', role: 'member', organizationId: world.orgB.id },
       headers: world.people.ownerB.headers,
     });
-    const [pending] = await db.select().from(invitation).where(eq(invitation.organizationId, world.orgB.id));
+    const [pending] = await db
+      .select()
+      .from(invitation)
+      .where(eq(invitation.organizationId, world.orgB.id));
 
     await expect(
-      auth.api.cancelInvitation({ body: { invitationId: pending!.id }, headers: world.people.ownerA.headers }),
+      auth.api.cancelInvitation({
+        body: { invitationId: pending!.id },
+        headers: world.people.ownerA.headers,
+      }),
     ).rejects.toThrow();
 
     const [still] = await db.select().from(invitation).where(eq(invitation.id, pending!.id));
@@ -2659,18 +3036,31 @@ const HOSTILE = [
 ];
 
 describe('hostile input never produces a server error', () => {
-  it.each(HOSTILE.map((value) => [JSON.stringify(value).slice(0, 40), value]))('project name %s', async (_label, value) => {
-    as('ownerA');
-    const result = await createProject({ orgSlug: 'org-a', name: value, description: '', status: 'active' });
+  it.each(HOSTILE.map((value) => [JSON.stringify(value).slice(0, 40), value]))(
+    'project name %s',
+    async (_label, value) => {
+      as('ownerA');
+      const result = await createProject({
+        orgSlug: 'org-a',
+        name: value,
+        description: '',
+        status: 'active',
+      });
 
-    // Either accepted (and stored literally) or rejected by validation — never INTERNAL
-    expect(['ok', 'VALIDATION_ERROR']).toContain(code(result));
-  });
+      // Either accepted (and stored literally) or rejected by validation — never INTERNAL
+      expect(['ok', 'VALIDATION_ERROR']).toContain(code(result));
+    },
+  );
 
   it('SQL-looking names are stored literally and the table survives', async () => {
     as('ownerA');
     const evil = "'; DROP TABLE project; --";
-    const result = await createProject({ orgSlug: 'org-a', name: evil, description: '', status: 'active' });
+    const result = await createProject({
+      orgSlug: 'org-a',
+      name: evil,
+      description: '',
+      status: 'active',
+    });
     expect(result.ok).toBe(true);
 
     const [row] = await db.select().from(project).where(eq(project.name, evil));
@@ -2685,7 +3075,9 @@ describe('authentication does not reveal which emails exist', () => {
       .signInEmail({ body: { email: world.people.ownerA.email, password: 'definitely-wrong-123' } })
       .catch((error: { body?: { code?: string } }) => error.body?.code);
     const unknownEmail = await auth.api
-      .signInEmail({ body: { email: 'nobody-at-all@example.com', password: 'definitely-wrong-123' } })
+      .signInEmail({
+        body: { email: 'nobody-at-all@example.com', password: 'definitely-wrong-123' },
+      })
       .catch((error: { body?: { code?: string } }) => error.body?.code);
 
     expect(wrongPassword).toBe('INVALID_EMAIL_OR_PASSWORD');
@@ -2694,8 +3086,12 @@ describe('authentication does not reveal which emails exist', () => {
 
   it('password reset answers identically for known and unknown emails', async () => {
     // 🔍 method name: requestPasswordReset (older: forgetPassword)
-    const known = await auth.api.requestPasswordReset({ body: { email: world.people.ownerA.email, redirectTo: '/reset-password' } });
-    const unknown = await auth.api.requestPasswordReset({ body: { email: 'nobody-at-all@example.com', redirectTo: '/reset-password' } });
+    const known = await auth.api.requestPasswordReset({
+      body: { email: world.people.ownerA.email, redirectTo: '/reset-password' },
+    });
+    const unknown = await auth.api.requestPasswordReset({
+      body: { email: 'nobody-at-all@example.com', redirectTo: '/reset-password' },
+    });
     expect(unknown).toEqual(known);
   });
 });
@@ -2704,6 +3100,7 @@ describe('authentication does not reveal which emails exist', () => {
 ### 3. Timing sanity (opt-in — timing tests are noisy)
 
 📄 **Create `tests/security/timing.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 
@@ -2718,9 +3115,8 @@ import { auth } from '@/libs/Auth';
 import { setEmailTransport } from '@/libs/email';
 import { MemoryTransport } from '@/libs/email/memory-transport';
 
-import type { TestDb } from '../utils/test-db';
 import { createUserWithSession } from '../utils/auth';
-
+import type { TestDb } from '../utils/test-db';
 import { testDb } from './mocks';
 
 const db = mockedDb as unknown as TestDb;
@@ -2736,39 +3132,52 @@ afterAll(async () => {
   await testDb.destroy();
 });
 
-const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]!;
+const median = (values: number[]) =>
+  [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)]!;
 
 async function timeSignIn(email: string) {
   const samples: number[] = [];
   for (let i = 0; i < 9; i += 1) {
     const started = performance.now();
-    await auth.api.signInEmail({ body: { email, password: 'definitely-wrong-123' } }).catch(() => undefined);
+    await auth.api
+      .signInEmail({ body: { email, password: 'definitely-wrong-123' } })
+      .catch(() => undefined);
     samples.push(performance.now() - started);
   }
   return median(samples);
 }
 
 // Run with: pnpm test:timing   (noisy on shared machines, so it is not part of the normal suite)
-it.skipIf(!process.env.RUN_TIMING_TESTS)('sign-in takes about as long for unknown emails as for known ones', async () => {
-  const known = await timeSignIn(knownEmail);
-  const unknown = await timeSignIn('nobody-at-all@example.com');
-  const ratio = known / unknown;
+it.skipIf(!process.env.RUN_TIMING_TESTS)(
+  'sign-in takes about as long for unknown emails as for known ones',
+  async () => {
+    const known = await timeSignIn(knownEmail);
+    const unknown = await timeSignIn('nobody-at-all@example.com');
+    const ratio = known / unknown;
 
-  console.info(`median known=${known.toFixed(0)}ms unknown=${unknown.toFixed(0)}ms ratio=${ratio.toFixed(2)}`);
-  expect(ratio).toBeGreaterThan(0.4);
-  expect(ratio).toBeLessThan(2.5);
-}, 120_000);
+    console.info(
+      `median known=${known.toFixed(0)}ms unknown=${unknown.toFixed(0)}ms ratio=${ratio.toFixed(2)}`,
+    );
+    expect(ratio).toBeGreaterThan(0.4);
+    expect(ratio).toBeLessThan(2.5);
+  },
+  120_000,
+);
 ```
+
 📄 **Edit `package.json`:** `"test:timing": "cross-env RUN_TIMING_TESTS=1 vitest run --project unit tests/security/timing.test.ts"`
 
 ### ✅ Verify
+
 ```bash
 pnpm test tests/security          # matrix + idor + coverage meta-test (timing is skipped)
 pnpm test:timing                  # run once, on a quiet machine; record the ratio
 pnpm check
 ```
+
 Mutation proofs (revert after each):
-1. In `tenant-db.ts` remove `inOrg` from `update`'s `where` → *"cannot update … another organization’s project"* fails.
+
+1. In `tenant-db.ts` remove `inOrg` from `update`'s `where` → _"cannot update … another organization’s project"_ fails.
 2. Remove `.refine(noNullBytes, …)` from `projectSchema` → the `\u0000` rows fail with `INTERNAL`.
 3. In `createProject`'s schema use `.passthrough()` and spread `input` into `create` → the mass-assignment test fails.
 4. In `src/actions/account.ts` (`revokeSession`) drop the "only the caller's own sessions" lookup and revoke by id directly → the session-IDOR test fails.
@@ -2792,11 +3201,13 @@ git switch main && git pull && git switch -c test/s5-t13-component-tests
 ```bash
 pnpm test:coverage && pnpm coverage:summary
 ```
-Open `coverage/index.html` → sort by *uncovered lines* → work through the biggest files in `src/components/{forms,auth,org,account}` first.
+
+Open `coverage/index.html` → sort by _uncovered lines_ → work through the biggest files in `src/components/{forms,auth,org,account}` first.
 
 ### 2. Shared browser-test plumbing
 
 📄 **Create `tests/utils/browser-mocks.tsx`** — a stand-in for next-intl's navigation so components can be rendered without a Next.js app:
+
 ```tsx
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { vi } from 'vitest';
@@ -2807,8 +3218,13 @@ export const navigationModule = {
   useRouter: () => router,
   usePathname: () => '/',
   redirect: vi.fn(),
-  getPathname: ({ href, locale }: { href: string; locale?: string }) => (locale && locale !== 'en' ? `/${locale}${href}` : href),
-  Link: ({ href, children, ...rest }: { href: string; children: ReactNode } & AnchorHTMLAttributes<HTMLAnchorElement>) => (
+  getPathname: ({ href, locale }: { href: string; locale?: string }) =>
+    locale && locale !== 'en' ? `/${locale}${href}` : href,
+  Link: ({
+    href,
+    children,
+    ...rest
+  }: { href: string; children: ReactNode } & AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a href={href} {...rest}>
       {children}
     </a>
@@ -2819,7 +3235,9 @@ export const resetRouter = () => {
   for (const fn of Object.values(router)) fn.mockReset();
 };
 ```
+
 📄 **Extend `tests/utils/render.tsx`** — optional locale:
+
 ```tsx
 import fr from '@/locales/fr.json';
 
@@ -2834,29 +3252,39 @@ export function renderWithIntl(ui: ReactNode, { locale = 'en' }: { locale?: 'en'
   });
 }
 ```
+
 Pattern used in every test below (one line per module you need to fake):
+
 ```ts
-vi.mock('@/i18n/navigation', async () => (await import('../../../tests/utils/browser-mocks')).navigationModule);
+vi.mock(
+  '@/i18n/navigation',
+  async () => (await import('../../../tests/utils/browser-mocks')).navigationModule,
+);
 ```
 
 ### 3. Tests that pay for themselves
 
 📄 **Create `src/components/auth/sign-in-form.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { SignInForm } from './sign-in-form';
 
 const signInEmail = vi.hoisted(() => vi.fn());
 const sendVerificationEmail = vi.hoisted(() => vi.fn());
 const nextRouter = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 
-vi.mock('@/libs/AuthClient', () => ({ authClient: { signIn: { email: signInEmail }, sendVerificationEmail } }));
+vi.mock('@/libs/AuthClient', () => ({
+  authClient: { signIn: { email: signInEmail }, sendVerificationEmail },
+}));
 vi.mock('@/hooks/use-passkey-autofill', () => ({ usePasskeyAutofill: () => undefined }));
 vi.mock('next/navigation', () => ({ useRouter: () => nextRouter }));
-vi.mock('@/i18n/navigation', async () => (await import('../../../tests/utils/browser-mocks')).navigationModule);
+vi.mock(
+  '@/i18n/navigation',
+  async () => (await import('../../../tests/utils/browser-mocks')).navigationModule,
+);
 
 beforeEach(() => {
   signInEmail.mockReset();
@@ -2879,7 +3307,10 @@ test('empty submit shows translated errors and calls nothing', async () => {
 });
 
 test('bad credentials show ONE generic message', async () => {
-  signInEmail.mockResolvedValue({ data: null, error: { code: 'INVALID_EMAIL_OR_PASSWORD', status: 401 } });
+  signInEmail.mockResolvedValue({
+    data: null,
+    error: { code: 'INVALID_EMAIL_OR_PASSWORD', status: 401 },
+  });
   const screen = await renderWithIntl(<SignInForm callbackUrl="/dashboard" />);
   await submit(screen);
 
@@ -2911,25 +3342,33 @@ test('an unverified email triggers a fresh verification link and explains why', 
   await submit(screen);
 
   await expect.element(screen.getByRole('alert')).toHaveTextContent('verify your email');
-  expect(sendVerificationEmail).toHaveBeenCalledWith(expect.objectContaining({ email: 'ada@example.com' }));
+  expect(sendVerificationEmail).toHaveBeenCalledWith(
+    expect.objectContaining({ email: 'ada@example.com' }),
+  );
 });
 ```
+
 📄 **Create `src/components/org/invite-member-form.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { InviteMemberForm } from './invite-member-form';
 
 const inviteMember = vi.hoisted(() => vi.fn());
 vi.mock('@/libs/AuthClient', () => ({ authClient: { organization: { inviteMember } } }));
-vi.mock('@/i18n/navigation', async () => (await import('../../../tests/utils/browser-mocks')).navigationModule);
+vi.mock(
+  '@/i18n/navigation',
+  async () => (await import('../../../tests/utils/browser-mocks')).navigationModule,
+);
 
 beforeEach(() => inviteMember.mockReset());
 
 test('rejects an invalid email without calling the server', async () => {
-  const screen = await renderWithIntl(<InviteMemberForm organizationId="org-1" roles={['admin', 'member']} />);
+  const screen = await renderWithIntl(
+    <InviteMemberForm organizationId="org-1" roles={['admin', 'member']} />,
+  );
   await screen.getByLabelText('Email address').fill('not-an-email');
   await screen.getByRole('button', { name: 'Send invitation' }).click();
 
@@ -2939,18 +3378,29 @@ test('rejects an invalid email without calling the server', async () => {
 
 test('invites with the organization id and the default role "member"', async () => {
   inviteMember.mockResolvedValue({ data: {}, error: null });
-  const screen = await renderWithIntl(<InviteMemberForm organizationId="org-1" roles={['admin', 'member']} />);
+  const screen = await renderWithIntl(
+    <InviteMemberForm organizationId="org-1" roles={['admin', 'member']} />,
+  );
   await screen.getByLabelText('Email address').fill('new@example.com');
   await screen.getByRole('button', { name: 'Send invitation' }).click();
 
   await vi.waitFor(() =>
-    expect(inviteMember).toHaveBeenCalledWith({ email: 'new@example.com', role: 'member', organizationId: 'org-1' }),
+    expect(inviteMember).toHaveBeenCalledWith({
+      email: 'new@example.com',
+      role: 'member',
+      organizationId: 'org-1',
+    }),
   );
 });
 
 test('shows a translated message when the person is already a member', async () => {
-  inviteMember.mockResolvedValue({ data: null, error: { code: 'USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION', status: 400 } });
-  const screen = await renderWithIntl(<InviteMemberForm organizationId="org-1" roles={['member']} />);
+  inviteMember.mockResolvedValue({
+    data: null,
+    error: { code: 'USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION', status: 400 },
+  });
+  const screen = await renderWithIntl(
+    <InviteMemberForm organizationId="org-1" roles={['member']} />,
+  );
   await screen.getByLabelText('Email address').fill('mia@example.com');
   await screen.getByRole('button', { name: 'Send invitation' }).click();
 
@@ -2958,16 +3408,20 @@ test('shows a translated message when the person is already a member', async () 
 });
 
 test('speaks French', async () => {
-  const screen = await renderWithIntl(<InviteMemberForm organizationId="org-1" roles={['member']} />, { locale: 'fr' });
+  const screen = await renderWithIntl(
+    <InviteMemberForm organizationId="org-1" roles={['member']} />,
+    { locale: 'fr' },
+  );
   await expect.element(screen.getByRole('button', { name: "Envoyer l'invitation" })).toBeVisible();
 });
 ```
+
 📄 **Create `src/components/org/members-table.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { MembersTable } from './members-table';
 
 const actions = vi.hoisted(() => ({
@@ -2976,12 +3430,33 @@ const actions = vi.hoisted(() => ({
   leaveOrganization: vi.fn(),
 }));
 vi.mock('@/actions/organization', () => actions);
-vi.mock('@/i18n/navigation', async () => (await import('../../../tests/utils/browser-mocks')).navigationModule);
+vi.mock(
+  '@/i18n/navigation',
+  async () => (await import('../../../tests/utils/browser-mocks')).navigationModule,
+);
 
 const members = [
-  { memberId: 'm1', name: 'Olivia Owner', email: 'o@example.com', role: 'owner', joinedAt: '2026-01-01T00:00:00Z' },
-  { memberId: 'm2', name: 'Adam Admin', email: 'a@example.com', role: 'admin', joinedAt: '2026-01-02T00:00:00Z' },
-  { memberId: 'm3', name: 'Mia Member', email: 'm@example.com', role: 'member', joinedAt: '2026-01-03T00:00:00Z' },
+  {
+    memberId: 'm1',
+    name: 'Olivia Owner',
+    email: 'o@example.com',
+    role: 'owner',
+    joinedAt: '2026-01-01T00:00:00Z',
+  },
+  {
+    memberId: 'm2',
+    name: 'Adam Admin',
+    email: 'a@example.com',
+    role: 'admin',
+    joinedAt: '2026-01-02T00:00:00Z',
+  },
+  {
+    memberId: 'm3',
+    name: 'Mia Member',
+    email: 'm@example.com',
+    role: 'member',
+    joinedAt: '2026-01-03T00:00:00Z',
+  },
 ];
 
 beforeEach(() => {
@@ -2989,7 +3464,9 @@ beforeEach(() => {
 });
 
 test('an owner can change roles of admins/members and remove them — but not touch other owners', async () => {
-  const screen = await renderWithIntl(<MembersTable orgSlug="acme" members={members} currentMemberId="m1" actorRole="owner" />);
+  const screen = await renderWithIntl(
+    <MembersTable orgSlug="acme" members={members} currentMemberId="m1" actorRole="owner" />,
+  );
 
   await expect.element(screen.getByRole('combobox', { name: /Adam Admin/ })).toBeVisible();
   await expect.element(screen.getByRole('combobox', { name: /Mia Member/ })).toBeVisible();
@@ -2998,7 +3475,9 @@ test('an owner can change roles of admins/members and remove them — but not to
 });
 
 test('an admin may manage only plain members', async () => {
-  const screen = await renderWithIntl(<MembersTable orgSlug="acme" members={members} currentMemberId="m2" actorRole="admin" />);
+  const screen = await renderWithIntl(
+    <MembersTable orgSlug="acme" members={members} currentMemberId="m2" actorRole="admin" />,
+  );
 
   await expect.element(screen.getByRole('combobox', { name: /Mia Member/ })).toBeVisible();
   expect(screen.getByRole('combobox', { name: /Olivia Owner/ }).elements()).toHaveLength(0);
@@ -3006,7 +3485,9 @@ test('an admin may manage only plain members', async () => {
 });
 
 test('a member sees the list but no controls except "Leave"', async () => {
-  const screen = await renderWithIntl(<MembersTable orgSlug="acme" members={members} currentMemberId="m3" actorRole="member" />);
+  const screen = await renderWithIntl(
+    <MembersTable orgSlug="acme" members={members} currentMemberId="m3" actorRole="member" />,
+  );
 
   expect(screen.getByRole('combobox').elements()).toHaveLength(0);
   expect(screen.getByRole('button', { name: 'Remove' }).elements()).toHaveLength(0);
@@ -3014,18 +3495,23 @@ test('a member sees the list but no controls except "Leave"', async () => {
 });
 
 test('Remove calls the server action with the right ids', async () => {
-  const screen = await renderWithIntl(<MembersTable orgSlug="acme" members={members} currentMemberId="m1" actorRole="owner" />);
+  const screen = await renderWithIntl(
+    <MembersTable orgSlug="acme" members={members} currentMemberId="m1" actorRole="owner" />,
+  );
   await screen.getByRole('button', { name: 'Remove' }).first().click();
 
-  await vi.waitFor(() => expect(actions.removeMember).toHaveBeenCalledWith({ orgSlug: 'acme', memberId: 'm2' }));
+  await vi.waitFor(() =>
+    expect(actions.removeMember).toHaveBeenCalledWith({ orgSlug: 'acme', memberId: 'm2' }),
+  );
 });
 ```
+
 📄 **Create `src/components/account/backup-codes.test.tsx`:**
+
 ```tsx
 import { expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { BackupCodes } from './backup-codes';
 
 const codes = ['aaaaa-bbbbb', 'ccccc-ddddd', 'eeeee-fffff'];
@@ -3044,21 +3530,28 @@ test('shows every code and keeps "Done" disabled until the user confirms they sa
   expect(onDone).toHaveBeenCalledOnce();
 });
 ```
+
 📄 **Create `src/components/account/totp-setup.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { TotpSetup } from './totp-setup';
 
 const enable = vi.hoisted(() => vi.fn());
 const verifyTotp = vi.hoisted(() => vi.fn());
 vi.mock('@/libs/AuthClient', () => ({ authClient: { twoFactor: { enable, verifyTotp } } }));
-vi.mock('@/i18n/navigation', async () => (await import('../../../tests/utils/browser-mocks')).navigationModule);
+vi.mock(
+  '@/i18n/navigation',
+  async () => (await import('../../../tests/utils/browser-mocks')).navigationModule,
+);
 
 const enrolment = {
-  data: { totpURI: 'otpauth://totp/App:ada@example.com?secret=JBSWY3DPEHPK3PXP&issuer=App', backupCodes: ['aaaaa-bbbbb'] },
+  data: {
+    totpURI: 'otpauth://totp/App:ada@example.com?secret=JBSWY3DPEHPK3PXP&issuer=App',
+    backupCodes: ['aaaaa-bbbbb'],
+  },
   error: null,
 };
 
@@ -3119,7 +3612,7 @@ test('a valid code moves on to the backup codes', async () => {
 ### 4. The rest of the checklist (same patterns — pick by uncovered lines)
 
 | Component | What to assert |
-|---|---|
+| --- | --- |
 | `forgot-password-form` | invalid email blocked; **same** confirmation screen on success and on error |
 | `reset-password-form` | mismatch/complexity errors; success toast + redirect to sign-in; API error shown |
 | `check-email` | resend disabled during the cooldown; success message after resend |
@@ -3135,9 +3628,11 @@ test('a valid code moves on to the backup codes', async () => {
 ```bash
 pnpm test:coverage && pnpm coverage:summary
 ```
+
 Target **≥ 70 %** lines on `src/components/forms`, `auth`, `org`, `account`. Then raise the thresholds:
 
 📄 **Edit `vitest.config.ts`:**
+
 ```ts
       thresholds: {
         lines: 80,
@@ -3148,12 +3643,15 @@ Target **≥ 70 %** lines on `src/components/forms`, `auth`, `org`, `account`. T
         'src/libs/**': { lines: 85 },
       },
 ```
+
 If a number is out of reach, **write the missing tests** or lower it by the smallest possible step and record why in `06-project-state.md` — don't exclude files to hit the number.
 
 ### ✅ Verify
+
 ```bash
 pnpm test:browser && pnpm test:coverage && pnpm check
 ```
+
 - No test uses `setTimeout`/sleeps (grep: `git grep -n "setTimeout" -- 'src/**/*.test.tsx'` → nothing). Use `vi.waitFor` or `expect.element`.
 - Run the browser project **5 times** to check for flakes: `for i in 1 2 3 4 5; do pnpm test:browser || break; done` (🪟 Git Bash).
 - **Mutation spot-checks** (revert after each): in `BackupCodes` remove `disabled={!saved}` → the "Done stays disabled" test fails; in `SignInForm` drop the `twoFactorRedirect` branch → the 2FA test fails; in `InviteMemberForm` hard-code `role: 'admin'` → the default-role test fails. Record the three results in the PR.
@@ -3165,36 +3663,40 @@ pnpm test:browser && pnpm test:coverage && pnpm check
 ## 🧾 Sprint 5 wrap-up
 
 **Branch:** `docs/s5-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s5-wrap-up
 ```
 
 ### 1. Update `docs/guides/testing.md`
+
 Append:
-````markdown
+
+```markdown
 ## The security suites (`tests/security/`)
+
 | File | Proves |
-|---|---|
+| --- | --- |
 | `authz-matrix.test.ts` | every Server Action × every kind of user, with the REAL actions and Better Auth |
 | `action-coverage.test.ts` | every exported action is classified in `action-registry.ts` (add an action → decide its protection) |
 | `idor.test.ts` | swapped ids, mass assignment, hostile input, no account enumeration |
 | `timing.test.ts` | (opt-in: `pnpm test:timing`) known vs unknown email take similar time |
 
-**Adding a Server Action:** (1) write it with `withOrgPermission` / `getAdminOrThrow` / `withAuth`, (2) add a row to
-`tests/security/action-registry.ts`, (3) add a `CASES` entry (or an `exempt` row saying where it's covered),
-(4) add its name to `.storybook/stubs/actions.ts`.
+**Adding a Server Action:** (1) write it with `withOrgPermission` / `getAdminOrThrow` / `withAuth`, (2) add a row to `tests/security/action-registry.ts`, (3) add a `CASES` entry (or an `exempt` row saying where it's covered), (4) add its name to `.storybook/stubs/actions.ts`.
 
 ## Coverage
-Thresholds live in `vitest.config.ts` (80 / 80 / 70; `src/data` and `src/libs` 85). Excluded on purpose (TD-08): shadcn
-primitives and Next route files. `pnpm coverage:summary` prints the per-folder picture.
+
+Thresholds live in `vitest.config.ts` (80 / 80 / 70; `src/data` and `src/libs` 85). Excluded on purpose (TD-08): shadcn primitives and Next route files. `pnpm coverage:summary` prints the per-folder picture.
 
 ## CI map
+
 `CI OK` (the only required check) ← Quality · Tests+coverage · Build · Storybook · E2E ×2 shards · Visual · Commit messages.
-````
+```
 
 ### 2. Update `AGENTS.md`
-**Commands:** `pnpm storybook`, `pnpm e2e:visual`, `pnpm e2e:reset`, `pnpm coverage:summary`, `pnpm bundle:size`, `pnpm i18n:check`, `pnpm test:timing`, `pnpm auth:schema:check`.
-**Conventions / testing:**
+
+**Commands:** `pnpm storybook`, `pnpm e2e:visual`, `pnpm e2e:reset`, `pnpm coverage:summary`, `pnpm bundle:size`, `pnpm i18n:check`, `pnpm test:timing`, `pnpm auth:schema:check`. **Conventions / testing:**
+
 ```markdown
 - New Server Action → row in `tests/security/action-registry.ts` AND a matrix case (or an `exempt` reason) AND a stub in `.storybook/stubs/actions.ts`.
 - New UI component → a story (default + error/empty + French/dark if relevant) and, if it has logic, a browser test.
@@ -3203,11 +3705,13 @@ primitives and Next route files. `pnpm coverage:summary` prints the per-folder p
 - Locale changes: both languages together, then `pnpm i18n:check`.
 - Free text accepted from users must reject NUL bytes (`noNullBytes` in src/validations/common.ts).
 ```
+
 ```bash
 pnpm check:agents
 ```
 
 ### 3. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 5 · **Current sprint:** Sprint 6
 - **Tooling added:** Storybook, visual regression (64 baselines, CI-generated), coverage thresholds + Codecov, `CI OK` aggregate check, E2E stack on 3100/5434 with personas, bundle budget, i18n-check, authz matrix + IDOR suites, weekly schema-drift workflow
 - **Measured (fill in):** PR CI time before → after · `pnpm e2e` before → after · coverage before → after (total and `src/components/*`) · browser tests 5× flake result · timing-test ratio
@@ -3216,6 +3720,7 @@ pnpm check:agents
 - **Debt:** TD-03 (visual on one browser only), TD-08 (coverage exclusions), unused-key report is advisory
 
 Tick the checkboxes in `docs/roadmap/sprint-05-quality-testing.md`, then:
+
 ```bash
 pnpm check
 git add -A
@@ -3245,23 +3750,23 @@ git push origin v0.5.1
 
 ### 🎬 Sprint review — measurable acceptance
 
-| Check | Expected |
-|---|---|
-| Break a style on purpose | `Visual` job fails and uploads diffs |
-| Remove a permission check | the authz matrix fails naming actor and action |
-| Add a Server Action without a registry row | `action-coverage.test.ts` fails |
-| Delete a French translation | `pnpm i18n:check` fails (pre-push and CI) |
-| Lower coverage below the threshold | `Tests + coverage` fails |
-| Push a docs-only change | CI finishes in seconds |
-| Grow the bundle by 15 % | `Build` fails on the budget |
-| PR pipeline | < 10 min |
+| Check                                      | Expected                                       |
+| ------------------------------------------ | ---------------------------------------------- |
+| Break a style on purpose                   | `Visual` job fails and uploads diffs           |
+| Remove a permission check                  | the authz matrix fails naming actor and action |
+| Add a Server Action without a registry row | `action-coverage.test.ts` fails                |
+| Delete a French translation                | `pnpm i18n:check` fails (pre-push and CI)      |
+| Lower coverage below the threshold         | `Tests + coverage` fails                       |
+| Push a docs-only change                    | CI finishes in seconds                         |
+| Grow the bundle by 15 %                    | `Build` fails on the budget                    |
+| PR pipeline                                | < 10 min                                       |
 
 ---
 
 ## 🧯 Troubleshooting (Sprint 5)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | `pnpm build-storybook` fails with "Cannot resolve '@/actions/…'" or a missing export | Add the action's name to `.storybook/stubs/actions.ts` |
 | Storybook: component can't find `next/navigation` pieces | `@storybook/nextjs-vite` mocks them; give `parameters.nextjs.navigation` values when a story needs params/pathname |
 | E2E: `EADDRINUSE 3100` / `5434` | A previous run is still alive → `netstat -ano \| findstr :3100` → `taskkill /PID <pid> /F` |

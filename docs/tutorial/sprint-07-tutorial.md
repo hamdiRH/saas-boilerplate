@@ -2,8 +2,7 @@
 
 ## Sprint 7 — SEO, Marketing, i18n Sync, Performance & Accessibility
 
-> Companion to `docs/roadmap/sprint-07-seo-marketing-perf.md`. Every `S7-Txx` section is one ticket. Tickets follow the sprint file's order.
-> **Release gate: 0.8 Beta.** By the end the public face of the product is discoverable, fast, accessible and translatable — and *measured* (Lighthouse and axe run in CI).
+> Companion to `docs/roadmap/sprint-07-seo-marketing-perf.md`. Every `S7-Txx` section is one ticket. Tickets follow the sprint file's order. **Release gate: 0.8 Beta.** By the end the public face of the product is discoverable, fast, accessible and translatable — and _measured_ (Lighthouse and axe run in CI).
 
 🪟 **Windows + Cmder:** use the **Git Bash tab**. Paths with `[brackets]`/`(parentheses)` must be quoted. Windows-specific notes are marked 🪟.
 
@@ -25,14 +24,14 @@
 ## 🧭 Decisions & deviations (made once, here)
 
 | Topic | Decision | Why |
-|---|---|---|
+| --- | --- | --- |
 | FAQ widget | Native `<details>/<summary>`, no JS library | Zero JavaScript, accessible by default, helps Lighthouse |
 | Marketing rendering | **Static** (`setRequestLocale` + `generateStaticParams`), relaxed CSP tier (S6-T11) | Speed and cacheability |
 | Indexing | `SITE_INDEXING=false` by default → `robots.txt` disallows everything and pages say `noindex`; turn it **on in production** | Forks, previews and staging must never be indexed |
 | Legal pages | Templates, marked "not legal advice", `noindex` while `LEGAL_NOINDEX=true` (default) | Nobody should publish an unreviewed policy |
 | Metadata | One helper (`src/libs/seo.ts`) builds title, canonical, hreflang, OG, Twitter and robots | Consistency, and unit-testable |
 | OG images | Generated with `next/og`, default font (no custom font bundled) | Fewer moving parts; custom fonts can be added later |
-| Lighthouse | LHCI runs on a **clean build** (no Sentry/PostHog dummy keys) | Failing requests to fake vendors would pollute *Best Practices* |
+| Lighthouse | LHCI runs on a **clean build** (no Sentry/PostHog dummy keys) | Failing requests to fake vendors would pollute _Best Practices_ |
 | Cache Components (`"use cache"`) | Evaluated, **not adopted** for v1.0 | Static marketing pages already cache fully; it would change semantics app-wide (documented in S7-T09) |
 | React Compiler | Measured in S7-T10; adopt only if tests pass and the bundle doesn't grow | Decision recorded as `TD-09` |
 | RTL | Verified with a **build-time** direction override; no Arabic translations shipped | Proves the layout; adding `ar` is a documented recipe |
@@ -55,6 +54,7 @@ gh pr checks --watch
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line. Run `pnpm pin` after adding dependencies. **Visual baselines change a lot this sprint** (new pages, footer, theme): regenerate them with the `update-snapshots` label (Sprint 5) after reviewing the diffs — never from your machine.
 
 ---
@@ -66,7 +66,8 @@ git switch main && git pull
 pnpm install
 pnpm check              # Sprint 6 must be green
 ```
-Set **Current sprint: Sprint 7** in `docs/roadmap/06-project-state.md`. **Measure now and write down:** Lighthouse mobile scores of `/` (run it in Chrome DevTools → *Lighthouse*, or wait for S7-T08 for the proper baseline).
+
+Set **Current sprint: Sprint 7** in `docs/roadmap/06-project-state.md`. **Measure now and write down:** Lighthouse mobile scores of `/` (run it in Chrome DevTools → _Lighthouse_, or wait for S7-T08 for the proper baseline).
 
 ---
 
@@ -82,12 +83,15 @@ mkdir -p src/components/marketing src/config "src/app/[locale]/(marketing)/prici
 ### 1. A small brand config (completed in S7-T13)
 
 📄 **Edit `src/libs/Env.ts`** (`client` + `runtimeEnv`):
+
 ```ts
     NEXT_PUBLIC_SUPPORT_EMAIL: z.email().default('support@example.com'),
 ```
+
 `.env.example`: `NEXT_PUBLIC_SUPPORT_EMAIL=support@example.com`.
 
 📄 **Create `src/config/brand.ts`:**
+
 ```ts
 import { Env } from '@/libs/Env';
 
@@ -107,6 +111,7 @@ export const brand = {
 ### 2. Copy (English)
 
 📄 **`src/locales/en.json`** — in `nav` add `"pricing": "Pricing", "about": "About"`; in `footer` add `"terms": "Terms", "privacy": "Privacy", "cookies": "Cookies"`; **replace** the whole `marketing` object:
+
 ```json
   "marketing": {
     "hero": {
@@ -166,9 +171,11 @@ export const brand = {
     }
   }
 ```
+
 ### …and French
 
 📄 **`src/locales/fr.json`** — `nav`: `"pricing": "Tarifs", "about": "À propos"`; `footer`: `"terms": "Conditions", "privacy": "Confidentialité", "cookies": "Cookies"`; **replace** `marketing` and add `pricing`, `about`:
+
 ```json
   "marketing": {
     "hero": {
@@ -228,6 +235,7 @@ export const brand = {
     }
   }
 ```
+
 ```bash
 pnpm test        # the locale parity test must stay green
 ```
@@ -235,6 +243,7 @@ pnpm test        # the locale parity test must stay green
 ### 3. Sections (server components, no client JavaScript)
 
 📄 **Create `src/components/marketing/hero-section.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -249,8 +258,12 @@ export function HeroSection() {
       <p className="bg-muted text-muted-foreground mx-auto mb-6 inline-block rounded-full px-3 py-1 text-xs font-medium">
         {t('badge')}
       </p>
-      <h1 className="text-4xl font-semibold tracking-tight text-balance md:text-6xl">{t('title')}</h1>
-      <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg text-pretty">{t('subtitle')}</p>
+      <h1 className="text-4xl font-semibold tracking-tight text-balance md:text-6xl">
+        {t('title')}
+      </h1>
+      <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg text-pretty">
+        {t('subtitle')}
+      </p>
       <div className="mt-10 flex flex-wrap justify-center gap-3">
         <Button asChild size="lg">
           <Link href="/sign-up">{t('primary')}</Link>
@@ -263,7 +276,9 @@ export function HeroSection() {
   );
 }
 ```
+
 📄 **Create `src/components/marketing/feature-grid.tsx`:**
+
 ```tsx
 import { Gauge, Languages, Layers, ShieldCheck, Users, Wrench } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -301,7 +316,9 @@ export function FeatureGrid() {
   );
 }
 ```
+
 📄 **Create `src/components/marketing/faq-section.tsx`** — native disclosure, shared with the JSON-LD in S7-T04:
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -320,7 +337,12 @@ export function FaqSection() {
           <details key={key} className="group p-4">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium">
               {t(`items.${key}.q`, { appName: brand.name })}
-              <span aria-hidden className="text-muted-foreground transition-transform group-open:rotate-45">+</span>
+              <span
+                aria-hidden
+                className="text-muted-foreground transition-transform group-open:rotate-45"
+              >
+                +
+              </span>
             </summary>
             <p className="text-muted-foreground mt-3 text-sm">{t(`items.${key}.a`)}</p>
           </details>
@@ -330,7 +352,9 @@ export function FaqSection() {
   );
 }
 ```
+
 📄 **Create `src/components/marketing/cta-section.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -355,6 +379,7 @@ export function CtaSection() {
 ### 4. The pages
 
 📄 **Rewrite `src/app/[locale]/(marketing)/page.tsx`:**
+
 ```tsx
 import { setRequestLocale } from 'next-intl/server';
 import { use } from 'react';
@@ -378,7 +403,9 @@ export default function HomePage({ params }: { params: Promise<{ locale: string 
   );
 }
 ```
+
 📄 **Create `…/(marketing)/pricing/page.tsx`:**
+
 ```tsx
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -408,11 +435,16 @@ export default function PricingPage({ params }: { params: Promise<{ locale: stri
 
       <ul className="mt-12 grid gap-6 md:grid-cols-3">
         {TIERS.map(({ key, href, featured }) => (
-          <li key={key} className={`flex flex-col rounded-lg border p-6 ${featured ? 'border-primary shadow-md' : ''}`}>
+          <li
+            key={key}
+            className={`flex flex-col rounded-lg border p-6 ${featured ? 'border-primary shadow-md' : ''}`}
+          >
             <h2 className="text-lg font-medium">{t(`tiers.${key}.name`)}</h2>
             <p className="mt-4 text-3xl font-semibold">
               {t(`tiers.${key}.price`)}
-              <span className="text-muted-foreground ms-1 text-sm font-normal">{t(`tiers.${key}.period`)}</span>
+              <span className="text-muted-foreground ms-1 text-sm font-normal">
+                {t(`tiers.${key}.period`)}
+              </span>
             </p>
             <p className="text-muted-foreground mt-2 text-sm">{t(`tiers.${key}.description`)}</p>
             <ul className="mt-6 flex-1 space-y-2 text-sm">
@@ -434,7 +466,9 @@ export default function PricingPage({ params }: { params: Promise<{ locale: stri
   );
 }
 ```
+
 📄 **Create `…/(marketing)/about/page.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
@@ -450,7 +484,9 @@ export default function AboutPage({ params }: { params: Promise<{ locale: string
   return (
     <article className="mx-auto max-w-3xl space-y-8 px-4 py-20">
       <header>
-        <h1 className="text-4xl font-semibold tracking-tight">{t('title', { appName: brand.name })}</h1>
+        <h1 className="text-4xl font-semibold tracking-tight">
+          {t('title', { appName: brand.name })}
+        </h1>
         <p className="text-muted-foreground mt-4 text-lg">{t('intro', { appName: brand.name })}</p>
       </header>
       <section>
@@ -473,6 +509,7 @@ export default function AboutPage({ params }: { params: Promise<{ locale: string
 ### 5. Navigation
 
 📄 **Edit `src/components/layout/site-header.tsx`** — links and brand:
+
 ```tsx
 import { brand } from '@/config/brand';
 // links:
@@ -482,26 +519,31 @@ import { brand } from '@/config/brand';
     { href: '/contact', label: t('nav.contact') },
 // brand text:  {brand.name}   (instead of t('common.appName'))
 ```
+
 📄 **Edit `src/components/layout/site-footer.tsx`** — legal links (the pages arrive in S7-T02) and brand name:
+
 ```tsx
-        <nav aria-label="Legal" className="flex flex-wrap gap-4">
-          <Link href="/terms">{t('footer.terms')}</Link>
-          <Link href="/privacy">{t('footer.privacy')}</Link>
-          <Link href="/cookies">{t('footer.cookies')}</Link>
-          <CookieSettingsButton className="hover:text-foreground underline" />
-        </nav>
+<nav aria-label="Legal" className="flex flex-wrap gap-4">
+  <Link href="/terms">{t('footer.terms')}</Link>
+  <Link href="/privacy">{t('footer.privacy')}</Link>
+  <Link href="/cookies">{t('footer.cookies')}</Link>
+  <CookieSettingsButton className="hover:text-foreground underline" />
+</nav>
 ```
+
 (`Link` from `@/i18n/navigation`; and `{brand.name}` in the copyright line.) Update the other `t('common.appName')` uses the same way for now (`app layout`, `auth` pages): `git grep -n "common.appName" src`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm i18n:check
 pnpm build
 ```
+
 1. The build output lists `/`, `/pricing`, `/about` (and `/fr/...`) as **static** (`○` / `●`), not dynamic (`ƒ`). If one is dynamic you read `headers()`/`cookies()` somewhere in the tree — find and remove it.
 2. `pnpm dev`: `/`, `/pricing`, `/about` look right at **360 / 768 / 1280 px**, light and dark; `/fr` is entirely French (no English leftovers, FAQ uses the brand name).
 3. FAQ opens and closes **without JavaScript** (disable JS in DevTools to prove it) and with the keyboard (Tab → Enter/Space).
-4. Disable the network cache and check *Network → JS*: the home page loads no page-specific client code beyond the providers.
+4. Disable the network cache and check _Network → JS_: the home page loads no page-specific client code beyond the providers.
 
 **🚢 Ship** — branch `feat/s7-t01-marketing-pages` · message: `feat(marketing): add home, pricing and about pages with brand config in en/fr`
 
@@ -519,14 +561,20 @@ mkdir -p "src/app/[locale]/(marketing)/terms" "src/app/[locale]/(marketing)/priv
 ### 1. Email building blocks
 
 📄 **Create `src/libs/email/sanitize.ts`:**
+
 ```ts
 /** Header injection guard: user input that ends up in a subject or address must stay on ONE line. */
 export const singleLine = (value: string) => value.replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
 
 export const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+  value.replace(
+    /[&<>"']/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!,
+  );
 ```
+
 📄 **Create `src/libs/email/sanitize.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -538,19 +586,25 @@ it('removes line breaks so nobody can inject extra headers', () => {
 });
 
 it('escapes HTML', () => {
-  expect(escapeHtml(`<script>alert("x")</script> & 'y'`)).toBe('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;');
+  expect(escapeHtml(`<script>alert("x")</script> & 'y'`)).toBe(
+    '&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#39;y&#39;',
+  );
 });
 ```
+
 📄 **Edit `src/libs/email/types.ts`:** add `replyTo?: string;` to `EmailMessage`. 📄 **Edit `resend-transport.ts`:** add `...(message.replyTo ? { reply_to: message.replyTo } : {}),` to the JSON body.
 
 ### 2. The action sends a real message
 
 📄 **Edit `src/validations/contact.ts`** — add the honeypot field:
+
 ```ts
   // Honeypot: invisible to people, tempting to bots. Anything in here means "not a human".
   website: z.string().max(200).optional(),
 ```
+
 📄 **Edit `src/actions/contact.ts`:**
+
 ```ts
 'use server';
 
@@ -586,7 +640,9 @@ export async function submitContact(input: unknown) {
   return handleContact(input);
 }
 ```
+
 📄 **Create `src/actions/contact.test.ts`:**
+
 ```ts
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
@@ -605,14 +661,21 @@ beforeEach(() => {
 });
 afterEach(() => setEmailTransport(undefined));
 
-const valid = { name: 'Ada Lovelace', email: 'ada@example.com', message: 'Hello, this is a real question.' };
+const valid = {
+  name: 'Ada Lovelace',
+  email: 'ada@example.com',
+  message: 'Hello, this is a real question.',
+};
 
 it('emails the support address with the visitor as reply-to', async () => {
   const result = await submitContact({ ...valid, website: '' });
 
   expect(result.ok).toBe(true);
   expect(transport.outbox).toHaveLength(1);
-  expect(transport.outbox[0]).toMatchObject({ replyTo: 'ada@example.com', tags: { type: 'contact' } });
+  expect(transport.outbox[0]).toMatchObject({
+    replyTo: 'ada@example.com',
+    tags: { type: 'contact' },
+  });
   expect(transport.outbox[0]?.subject).toContain('Ada Lovelace');
 });
 
@@ -623,7 +686,11 @@ it('a filled honeypot looks successful but sends nothing', async () => {
 });
 
 it('cannot inject headers through the name, and HTML in the message is escaped', async () => {
-  await submitContact({ ...valid, name: 'Ada\r\nBcc: victim@example.com', message: '<img src=x onerror=alert(1)> hello there' });
+  await submitContact({
+    ...valid,
+    name: 'Ada\r\nBcc: victim@example.com',
+    message: '<img src=x onerror=alert(1)> hello there',
+  });
   const [mail] = transport.outbox;
 
   expect(mail?.subject).not.toMatch(/[\r\n]/);
@@ -632,10 +699,15 @@ it('cannot inject headers through the name, and HTML in the message is escaped',
 });
 
 it('still validates input on the server', async () => {
-  expect(await submitContact({ ...valid, email: 'nope' })).toMatchObject({ ok: false, error: { code: 'VALIDATION_ERROR' } });
+  expect(await submitContact({ ...valid, email: 'nope' })).toMatchObject({
+    ok: false,
+    error: { code: 'VALIDATION_ERROR' },
+  });
 });
 ```
+
 📄 **Edit `src/components/forms/contact-form.tsx`** — add the honeypot to the form and to `defaultValues`:
+
 ```tsx
     defaultValues: { name: '', email: '', message: '', website: '' },
 // …inside <form>, before the submit button:
@@ -648,11 +720,13 @@ it('still validates input on the server', async () => {
           className="sr-only"
         />
 ```
+
 Update `contact-form.test.tsx`: the expected call now includes `website: ''`.
 
 ### 3. A rate limit specific to the contact form
 
 📄 **Edit `src/libs/arcjet-routes.ts`:**
+
 ```ts
 import { splitLocale } from '@/libs/route-guard';
 
@@ -664,10 +738,16 @@ export function classifyRoute(pathname: string, method = 'GET'): RouteKind {
   if (!pathname.startsWith('/api/auth')) return 'page';
   // …unchanged below…
 ```
+
 📄 **Edit `src/libs/Arcjet.ts`:** a third client and the call site:
+
 ```ts
 const contact: ProtectClient | undefined = Env.ARCJET_KEY
-  ? arcjet({ key: Env.ARCJET_KEY, characteristics: ['ip.src'], rules: [slidingWindow({ mode, interval: '1h', max: 5 })] })
+  ? arcjet({
+      key: Env.ARCJET_KEY,
+      characteristics: ['ip.src'],
+      rules: [slidingWindow({ mode, interval: '1h', max: 5 })],
+    })
   : undefined;
 
 // Clients: add `contact?: ProtectClient`; in evaluate()'s `runs` list add:
@@ -679,6 +759,7 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
   return evaluate({ general, email, contact }, { request, pathname, email: address }, kind);
 }
 ```
+
 📄 **Extend tests** — `arcjet-routes.test.ts`: `expect(classifyRoute('/contact', 'POST')).toBe('contact'); expect(classifyRoute('/fr/contact', 'POST')).toBe('contact'); expect(classifyRoute('/contact', 'GET')).toBe('page');` and in `arcjet.test.ts` a case checking the `contact` client runs only for `kind === 'contact'`.
 
 ### 4. Legal templates
@@ -686,6 +767,7 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
 📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`): `LEGAL_NOINDEX: flag('true'),` · `.env.example`: `LEGAL_NOINDEX=true  # set false only after a lawyer has reviewed your legal pages`.
 
 📄 **`src/locales/en.json`** — add:
+
 ```json
   "legal": {
     "notice": "This page is a template, not legal advice. Have it reviewed by a qualified lawyer before you publish it.",
@@ -714,7 +796,9 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
     }
   }
 ```
+
 📄 **`src/locales/fr.json`:**
+
 ```json
   "legal": {
     "notice": "Cette page est un modèle, pas un avis juridique. Faites-la relire par un juriste avant de la publier.",
@@ -743,7 +827,9 @@ export async function protectRequest(request: Request, { pathname }: { pathname:
     }
   }
 ```
+
 📄 **Create `src/components/marketing/legal-page.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -775,7 +861,10 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
         <section key={key}>
           <h2 className="text-xl font-semibold">{tDoc(`${key}.title` as never)}</h2>
           <p className="text-muted-foreground mt-2">
-            {tDoc(`${key}.body` as never, { appName: brand.name, email: brand.supportEmail } as never)}
+            {tDoc(
+              `${key}.body` as never,
+              { appName: brand.name, email: brand.supportEmail } as never,
+            )}
           </p>
         </section>
       ))}
@@ -788,7 +877,9 @@ export function LegalPage({ doc }: { doc: LegalDoc }) {
   );
 }
 ```
+
 Three tiny pages:
+
 ```tsx
 // src/app/[locale]/(marketing)/terms/page.tsx   (privacy → doc="privacy", cookies → doc="cookies")
 import { setRequestLocale } from 'next-intl/server';
@@ -804,10 +895,12 @@ export default function TermsPage({ params }: { params: Promise<{ locale: string
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm build
 pnpm dev
 ```
+
 1. `/contact`: submit the form → the terminal prints the support email (**Reply-To** is the visitor). Invalid input shows translated errors.
 2. DevTools: edit the DOM to type text into the invisible `website` field and submit → success toast, **no email** printed, a `security` log line "Contact honeypot triggered".
 3. With `ARCJET_KEY` + `ARCJET_MODE=LIVE` temporarily: the 6th submission within an hour from one IP is blocked (429); revert.
@@ -828,15 +921,18 @@ git switch main && git pull && git switch -c feat/s7-t03-metadata
 ### 1. Environment
 
 📄 **Edit `src/libs/Env.ts`** (`server` + `runtimeEnv`):
+
 ```ts
     // Search engines may index the site ONLY when this is true — set it in production, nowhere else.
     SITE_INDEXING: flag('false'),
 ```
+
 `.env.example`: `SITE_INDEXING=false  # true in production only`.
 
 ### 2. One helper builds everything (pure → testable)
 
 📄 **Create `src/libs/seo.ts`:**
+
 ```ts
 import type { Metadata } from 'next';
 
@@ -873,7 +969,16 @@ type Input = {
   indexable: boolean;
 };
 
-export function buildMetadata({ baseUrl, siteName, locale, path, title, description, absoluteTitle, indexable }: Input): Metadata {
+export function buildMetadata({
+  baseUrl,
+  siteName,
+  locale,
+  path,
+  title,
+  description,
+  absoluteTitle,
+  indexable,
+}: Input): Metadata {
   const url = pageUrl(baseUrl, locale, path);
 
   return {
@@ -887,7 +992,9 @@ export function buildMetadata({ baseUrl, siteName, locale, path, title, descript
       title,
       description,
       locale: OG_LOCALE[locale],
-      alternateLocale: routing.locales.filter((code) => code !== locale).map((code) => OG_LOCALE[code]!),
+      alternateLocale: routing.locales
+        .filter((code) => code !== locale)
+        .map((code) => OG_LOCALE[code]!),
     },
     twitter: { card: 'summary_large_image', title, description },
     // Pages that must not appear in search results (and everything, while SITE_INDEXING is off)
@@ -895,7 +1002,9 @@ export function buildMetadata({ baseUrl, siteName, locale, path, title, descript
   };
 }
 ```
+
 📄 **Create `src/libs/seo.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -920,17 +1029,34 @@ describe('buildAlternates', () => {
     const fromEn = buildAlternates(base, 'en', '/pricing').languages;
     const fromFr = buildAlternates(base, 'fr', '/pricing').languages;
     expect(fromFr).toEqual(fromEn);
-    expect(fromEn).toMatchObject({ en: 'https://app.test/pricing', fr: 'https://app.test/fr/pricing', 'x-default': 'https://app.test/pricing' });
+    expect(fromEn).toMatchObject({
+      en: 'https://app.test/pricing',
+      fr: 'https://app.test/fr/pricing',
+      'x-default': 'https://app.test/pricing',
+    });
   });
 });
 
 describe('buildMetadata', () => {
-  const input = { baseUrl: base, siteName: 'Acme', locale: 'fr', path: '/pricing', title: 'Tarifs', description: 'Des tarifs simples', indexable: true };
+  const input = {
+    baseUrl: base,
+    siteName: 'Acme',
+    locale: 'fr',
+    path: '/pricing',
+    title: 'Tarifs',
+    description: 'Des tarifs simples',
+    indexable: true,
+  };
 
   it('fills title, description, Open Graph and Twitter consistently', () => {
     const meta = buildMetadata(input);
     expect(meta.title).toBe('Tarifs');
-    expect(meta.openGraph).toMatchObject({ url: 'https://app.test/fr/pricing', siteName: 'Acme', locale: 'fr_FR', alternateLocale: ['en_US'] });
+    expect(meta.openGraph).toMatchObject({
+      url: 'https://app.test/fr/pricing',
+      siteName: 'Acme',
+      locale: 'fr_FR',
+      alternateLocale: ['en_US'],
+    });
     expect(meta.twitter).toMatchObject({ card: 'summary_large_image', title: 'Tarifs' });
   });
 
@@ -939,7 +1065,10 @@ describe('buildMetadata', () => {
   });
 
   it('noindex when not indexable', () => {
-    expect(buildMetadata({ ...input, indexable: false }).robots).toEqual({ index: false, follow: false });
+    expect(buildMetadata({ ...input, indexable: false }).robots).toEqual({
+      index: false,
+      follow: false,
+    });
     expect(buildMetadata(input).robots).toEqual({ index: true, follow: true });
   });
 });
@@ -948,6 +1077,7 @@ describe('buildMetadata', () => {
 ### 3. Translated titles/descriptions, one wrapper
 
 📄 **`src/locales/en.json`** — add `meta`:
+
 ```json
   "meta": {
     "home": { "title": "{appName} — ship your SaaS faster", "description": "An open-source SaaS starter with authentication, organizations, roles, observability and a serious test suite." },
@@ -962,7 +1092,9 @@ describe('buildMetadata', () => {
     "forgotPassword": { "title": "Forgot your password?", "description": "Receive a link to reset your password." }
   }
 ```
+
 📄 **`src/locales/fr.json`:**
+
 ```json
   "meta": {
     "home": { "title": "{appName} — lancez votre SaaS plus vite", "description": "Un starter SaaS open source avec authentification, organisations, rôles, observabilité et une vraie batterie de tests." },
@@ -977,10 +1109,11 @@ describe('buildMetadata', () => {
     "forgotPassword": { "title": "Mot de passe oublié ?", "description": "Recevez un lien pour réinitialiser votre mot de passe." }
   }
 ```
+
 📄 **Create `src/libs/site-metadata.ts`:**
+
 ```ts
 import 'server-only';
-
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
@@ -988,7 +1121,17 @@ import { brand } from '@/config/brand';
 import { Env } from '@/libs/Env';
 import { buildMetadata } from '@/libs/seo';
 
-type PageKey = 'home' | 'pricing' | 'about' | 'contact' | 'terms' | 'privacy' | 'cookies' | 'signIn' | 'signUp' | 'forgotPassword';
+type PageKey =
+  | 'home'
+  | 'pricing'
+  | 'about'
+  | 'contact'
+  | 'terms'
+  | 'privacy'
+  | 'cookies'
+  | 'signIn'
+  | 'signUp'
+  | 'forgotPassword';
 
 /** `export async function generateMetadata({ params }) { return siteMetadata({ locale, key: 'pricing', path: '/pricing' }) }` */
 export async function siteMetadata({
@@ -1020,24 +1163,34 @@ export async function siteMetadata({
   });
 }
 ```
+
 Add this to **every public page**:
+
 ```tsx
 // e.g. src/app/[locale]/(marketing)/pricing/page.tsx
 import type { Metadata } from 'next';
+
 import { siteMetadata } from '@/libs/site-metadata';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
   const { locale } = await params;
   return siteMetadata({ locale, key: 'pricing', path: '/pricing' });
 }
 ```
+
 Keys/paths: home `'/'`, pricing, about, contact, **terms/privacy/cookies with `legal: true`**, and for `sign-in`, `sign-up`, `forgot-password` pages `noindex: true`.
 
 ### 4. Root layout, app areas, icons, manifest
 
 📄 **Edit `src/app/[locale]/layout.tsx`** — replace the static `metadata` with:
+
 ```tsx
 import type { Metadata, Viewport } from 'next';
+
 import { brand } from '@/config/brand';
 import { Env } from '@/libs/Env';
 
@@ -1058,11 +1211,15 @@ export const viewport: Viewport = {
   ],
 };
 ```
+
 📄 **Private areas are never indexable** — in `(app)/layout.tsx`, `(admin)/layout.tsx` **and** `(auth)/layout.tsx` add:
+
 ```tsx
 export const metadata = { robots: { index: false, follow: false } };
 ```
+
 📄 **Create `src/app/icon.tsx`** (a generated favicon, no binary assets to maintain):
+
 ```tsx
 import { ImageResponse } from 'next/og';
 
@@ -1073,17 +1230,29 @@ export const contentType = 'image/png';
 
 export default function Icon() {
   return new ImageResponse(
-    (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', color: '#ffffff', fontSize: 320, fontWeight: 700, borderRadius: 96 }}>
-        {brand.name.slice(0, 1).toUpperCase()}
-      </div>
-    ),
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0a0a0a',
+        color: '#ffffff',
+        fontSize: 320,
+        fontWeight: 700,
+        borderRadius: 96,
+      }}
+    >
+      {brand.name.slice(0, 1).toUpperCase()}
+    </div>,
     size,
   );
 }
 ```
-📄 **Create `src/app/apple-icon.tsx`** — same markup with `size = { width: 180, height: 180 }` and `fontSize: 110, borderRadius: 0`.
-📄 **Create `src/app/manifest.ts`:**
+
+📄 **Create `src/app/apple-icon.tsx`** — same markup with `size = { width: 180, height: 180 }` and `fontSize: 110, borderRadius: 0`. 📄 **Create `src/app/manifest.ts`:**
+
 ```ts
 import type { MetadataRoute } from 'next';
 
@@ -1101,12 +1270,15 @@ export default function manifest(): MetadataRoute.Manifest {
   };
 }
 ```
+
 Delete the scaffold's `src/app/favicon.ico` if you want the generated icon to win (`git rm src/app/favicon.ico`).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm build
 ```
+
 1. View-source on `/pricing` and `/fr/pricing`: unique `<title>`, `<meta name="description">`, `<link rel="canonical">` pointing at **itself**, `<link rel="alternate" hreflang="en|fr|x-default">` (3 entries), `og:*`, `twitter:*`. `<meta name="robots" content="noindex">` while `SITE_INDEXING=false`.
 2. `SITE_INDEXING=true pnpm build && pnpm start` → public pages say `index, follow`; `/terms` (legal) still `noindex` (`LEGAL_NOINDEX=true`); `/sign-in`, `/dashboard/*` always `noindex`.
 3. The browser tab shows the generated **icon**; `/manifest.webmanifest` is valid JSON.
@@ -1128,6 +1300,7 @@ mkdir -p src/components/seo
 ### 1. Builders and a safe serializer
 
 📄 **Create `src/libs/json-ld.ts`:**
+
 ```ts
 import { routing } from '@/i18n/routing';
 
@@ -1138,10 +1311,23 @@ const CONTEXT = 'https://schema.org';
  * JSON allows but JavaScript doesn't).
  */
 export function serializeJsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  return JSON.stringify(data)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
-export const organizationJsonLd = ({ name, url, logo, sameAs = [] }: { name: string; url: string; logo: string; sameAs?: string[] }) => ({
+export const organizationJsonLd = ({
+  name,
+  url,
+  logo,
+  sameAs = [],
+}: {
+  name: string;
+  url: string;
+  logo: string;
+  sameAs?: string[];
+}) => ({
   '@context': CONTEXT,
   '@type': 'Organization',
   name,
@@ -1158,7 +1344,15 @@ export const webSiteJsonLd = ({ name, url }: { name: string; url: string }) => (
   inLanguage: [...routing.locales],
 });
 
-export const softwareApplicationJsonLd = ({ name, description, url }: { name: string; description: string; url: string }) => ({
+export const softwareApplicationJsonLd = ({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) => ({
   '@context': CONTEXT,
   '@type': 'SoftwareApplication',
   name,
@@ -1182,10 +1376,17 @@ export const faqPageJsonLd = (items: { question: string; answer: string }[]) => 
 export const breadcrumbJsonLd = (crumbs: { name: string; url: string }[]) => ({
   '@context': CONTEXT,
   '@type': 'BreadcrumbList',
-  itemListElement: crumbs.map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, name: crumb.name, item: crumb.url })),
+  itemListElement: crumbs.map((crumb, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: crumb.name,
+    item: crumb.url,
+  })),
 });
 ```
+
 📄 **Create `src/libs/json-ld.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -1209,28 +1410,54 @@ describe('serializeJsonLd', () => {
 
 describe('builders contain the properties search engines require', () => {
   it('Organization', () => {
-    expect(organizationJsonLd({ name: 'Acme', url: 'https://acme.test', logo: 'https://acme.test/icon' })).toMatchObject({
-      '@context': 'https://schema.org', '@type': 'Organization', name: 'Acme', url: 'https://acme.test', logo: 'https://acme.test/icon',
+    expect(
+      organizationJsonLd({
+        name: 'Acme',
+        url: 'https://acme.test',
+        logo: 'https://acme.test/icon',
+      }),
+    ).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Acme',
+      url: 'https://acme.test',
+      logo: 'https://acme.test/icon',
     });
   });
   it('WebSite lists the languages', () => {
-    expect(webSiteJsonLd({ name: 'Acme', url: 'https://acme.test' })).toMatchObject({ '@type': 'WebSite', inLanguage: ['en', 'fr'] });
+    expect(webSiteJsonLd({ name: 'Acme', url: 'https://acme.test' })).toMatchObject({
+      '@type': 'WebSite',
+      inLanguage: ['en', 'fr'],
+    });
   });
   it('SoftwareApplication has category, OS and an offer', () => {
     const data = softwareApplicationJsonLd({ name: 'Acme', description: 'd', url: 'u' });
-    expect(data).toMatchObject({ applicationCategory: 'BusinessApplication', operatingSystem: 'Web', offers: { '@type': 'Offer' } });
+    expect(data).toMatchObject({
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      offers: { '@type': 'Offer' },
+    });
   });
   it('FAQPage mirrors the questions', () => {
     const data = faqPageJsonLd([{ question: 'Q1?', answer: 'A1' }]);
-    expect(data.mainEntity[0]).toEqual({ '@type': 'Question', name: 'Q1?', acceptedAnswer: { '@type': 'Answer', text: 'A1' } });
+    expect(data.mainEntity[0]).toEqual({
+      '@type': 'Question',
+      name: 'Q1?',
+      acceptedAnswer: { '@type': 'Answer', text: 'A1' },
+    });
   });
   it('BreadcrumbList positions start at 1', () => {
-    const data = breadcrumbJsonLd([{ name: 'Home', url: 'u1' }, { name: 'Pricing', url: 'u2' }]);
+    const data = breadcrumbJsonLd([
+      { name: 'Home', url: 'u1' },
+      { name: 'Pricing', url: 'u2' },
+    ]);
     expect(data.itemListElement.map((entry) => entry.position)).toEqual([1, 2]);
   });
 });
 ```
+
 📄 **Create `src/components/seo/json-ld.tsx`:**
+
 ```tsx
 import { serializeJsonLd } from '@/libs/json-ld';
 
@@ -1239,13 +1466,19 @@ import { serializeJsonLd } from '@/libs/json-ld';
  * `dangerouslySetInnerHTML` is safe here ONLY because serializeJsonLd escapes `<`.
  */
 export function JsonLd({ data }: { data: unknown }) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
+    />
+  );
 }
 ```
 
 ### 2. Use them
 
 📄 **Edit `(marketing)/layout.tsx`** — organization and site data on every public page:
+
 ```tsx
 import { getLocale } from 'next-intl/server';
 import { JsonLd } from '@/components/seo/json-ld';
@@ -1256,9 +1489,12 @@ import { organizationJsonLd, webSiteJsonLd } from '@/libs/json-ld';
       <JsonLd data={organizationJsonLd({ name: brand.name, url: brand.url, logo: `${brand.url}/icon`, sameAs: Object.values(brand.social).filter((v): v is string => Boolean(v)) })} />
       <JsonLd data={webSiteJsonLd({ name: brand.name, url: brand.url })} />
 ```
+
 📄 **Edit the home page** — add the product and FAQ blocks, built from the **same** translations the visible FAQ uses (so they can't disagree):
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
+
 import { FAQ_KEYS } from '@/components/marketing/faq-section';
 import { JsonLd } from '@/components/seo/json-ld';
 import { brand } from '@/config/brand';
@@ -1272,20 +1508,36 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      <JsonLd data={softwareApplicationJsonLd({ name: brand.name, description: meta('home.description'), url: brand.url })} />
-      <JsonLd data={faqPageJsonLd(FAQ_KEYS.map((key) => ({ question: faq(`items.${key}.q`, { appName: brand.name }), answer: faq(`items.${key}.a`) })))} />
+      <JsonLd
+        data={softwareApplicationJsonLd({
+          name: brand.name,
+          description: meta('home.description'),
+          url: brand.url,
+        })}
+      />
+      <JsonLd
+        data={faqPageJsonLd(
+          FAQ_KEYS.map((key) => ({
+            question: faq(`items.${key}.q`, { appName: brand.name }),
+            answer: faq(`items.${key}.a`),
+          })),
+        )}
+      />
       <HeroSection />
       {/* …unchanged… */}
     </>
   );
 }
 ```
+
 Pricing and About get a breadcrumb: `<JsonLd data={breadcrumbJsonLd([{ name: t('nav.home'), url: pageUrl(brand.url, locale, '/') }, { name: …, url: pageUrl(brand.url, locale, '/pricing') }])} />`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm build
 ```
+
 1. View-source of `/` → several `<script type="application/ld+json">` blocks; copy one into <https://validator.schema.org> (or Google's **Rich Results Test** on a deployed preview): **no errors**; FAQ rich result is eligible.
 2. `/fr`: the FAQ JSON-LD is in **French** and identical in content to the visible FAQ.
 3. Browser console: **no CSP errors** (the data blocks aren't executed).
@@ -1306,6 +1558,7 @@ git switch main && git pull && git switch -c feat/s7-t05-og-sitemap-robots
 ### 1. Which pages are public (one list)
 
 📄 **Create `src/config/site.ts`:**
+
 ```ts
 export type PublicPage = {
   path: string;
@@ -1327,14 +1580,23 @@ export const PUBLIC_PAGES: readonly PublicPage[] = [
 
 /** URL prefixes that must never be crawled (any language). */
 export const PRIVATE_PREFIXES = [
-  '/dashboard', '/admin', '/api', '/sign-in', '/sign-up', '/forgot-password',
-  '/reset-password', '/two-factor', '/verify-email', '/accept-invitation',
+  '/dashboard',
+  '/admin',
+  '/api',
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+  '/reset-password',
+  '/two-factor',
+  '/verify-email',
+  '/accept-invitation',
 ] as const;
 ```
 
 ### 2. Sitemap and robots builders (pure)
 
 📄 **Create `src/libs/sitemap.ts`:**
+
 ```ts
 import type { MetadataRoute } from 'next';
 
@@ -1366,15 +1628,29 @@ export function buildSitemap({
         changeFrequency: page.changeFrequency,
         priority: page.priority,
         // Every language version points at all the others (hreflang in the sitemap)
-        alternates: { languages: Object.fromEntries(routing.locales.map((code) => [code, pageUrl(baseUrl, code, page.path)])) },
+        alternates: {
+          languages: Object.fromEntries(
+            routing.locales.map((code) => [code, pageUrl(baseUrl, code, page.path)]),
+          ),
+        },
       })),
     );
 }
 
-export function buildRobots({ baseUrl, indexing }: { baseUrl: string; indexing: boolean }): MetadataRoute.Robots {
+export function buildRobots({
+  baseUrl,
+  indexing,
+}: {
+  baseUrl: string;
+  indexing: boolean;
+}): MetadataRoute.Robots {
   if (!indexing) return { rules: [{ userAgent: '*', disallow: '/' }] }; // previews, forks, staging
 
-  const prefixes = routing.locales.flatMap((locale) => PRIVATE_PREFIXES.map((prefix) => `${locale === routing.defaultLocale ? '' : `/${locale}`}${prefix}`));
+  const prefixes = routing.locales.flatMap((locale) =>
+    PRIVATE_PREFIXES.map(
+      (prefix) => `${locale === routing.defaultLocale ? '' : `/${locale}`}${prefix}`,
+    ),
+  );
 
   return {
     rules: [{ userAgent: '*', allow: '/', disallow: prefixes }],
@@ -1382,7 +1658,9 @@ export function buildRobots({ baseUrl, indexing }: { baseUrl: string; indexing: 
   };
 }
 ```
+
 📄 **Create `src/libs/sitemap.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -1399,17 +1677,24 @@ describe('buildSitemap', () => {
     expect(entries).toHaveLength(PUBLIC_PAGES.length * 2);
 
     const pricingFr = entries.find((entry) => entry.url === 'https://app.test/fr/pricing');
-    expect(pricingFr?.alternates?.languages).toEqual({ en: 'https://app.test/pricing', fr: 'https://app.test/fr/pricing' });
+    expect(pricingFr?.alternates?.languages).toEqual({
+      en: 'https://app.test/pricing',
+      fr: 'https://app.test/fr/pricing',
+    });
   });
 
   it('keeps legal templates out while they are noindex', () => {
-    const urls = buildSitemap({ ...common, indexing: true, includeLegal: false }).map((entry) => entry.url);
+    const urls = buildSitemap({ ...common, indexing: true, includeLegal: false }).map(
+      (entry) => entry.url,
+    );
     expect(urls.some((url) => /terms|privacy|cookies/.test(url))).toBe(false);
     expect(urls).toContain('https://app.test/');
   });
 
   it('never exposes private areas', () => {
-    const urls = buildSitemap({ ...common, indexing: true, includeLegal: true }).map((entry) => entry.url);
+    const urls = buildSitemap({ ...common, indexing: true, includeLegal: true }).map(
+      (entry) => entry.url,
+    );
     expect(urls.some((url) => /dashboard|admin|sign-in|api/.test(url))).toBe(false);
   });
 
@@ -1420,18 +1705,32 @@ describe('buildSitemap', () => {
 
 describe('buildRobots', () => {
   it('disallows everything while indexing is off', () => {
-    expect(buildRobots({ baseUrl: base, indexing: false })).toEqual({ rules: [{ userAgent: '*', disallow: '/' }] });
+    expect(buildRobots({ baseUrl: base, indexing: false })).toEqual({
+      rules: [{ userAgent: '*', disallow: '/' }],
+    });
   });
 
   it('blocks private areas in every language and points at the sitemap', () => {
     const robots = buildRobots({ baseUrl: base, indexing: true });
     const rule = Array.isArray(robots.rules) ? robots.rules[0]! : robots.rules;
-    expect(rule.disallow).toEqual(expect.arrayContaining(['/dashboard', '/fr/dashboard', '/admin', '/fr/admin', '/api', '/sign-in', '/fr/sign-in']));
+    expect(rule.disallow).toEqual(
+      expect.arrayContaining([
+        '/dashboard',
+        '/fr/dashboard',
+        '/admin',
+        '/fr/admin',
+        '/api',
+        '/sign-in',
+        '/fr/sign-in',
+      ]),
+    );
     expect(robots.sitemap).toBe('https://app.test/sitemap.xml');
   });
 });
 ```
+
 📄 **Create `src/app/sitemap.ts`** and **`src/app/robots.ts`:**
+
 ```ts
 // src/app/sitemap.ts
 import type { MetadataRoute } from 'next';
@@ -1451,6 +1750,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   });
 }
 ```
+
 ```ts
 // src/app/robots.ts
 import type { MetadataRoute } from 'next';
@@ -1463,14 +1763,16 @@ export default function robots(): MetadataRoute.Robots {
   return buildRobots({ baseUrl: brand.url, indexing: Env.SITE_INDEXING });
 }
 ```
+
 > The proxy matcher **excludes** paths with a file extension (`robots.txt`, `sitemap.xml`), so neither is locale-prefixed or inspected.
 
 ### 3. Open Graph / Twitter images
 
 📄 **Create `src/libs/og.tsx`:**
+
 ```tsx
-import { ImageResponse } from 'next/og';
 import { getTranslations } from 'next-intl/server';
+import { ImageResponse } from 'next/og';
 
 import { brand } from '@/config/brand';
 
@@ -1481,25 +1783,33 @@ export async function renderOgImage(locale: string) {
   const t = await getTranslations({ locale, namespace: 'meta' });
 
   return new ImageResponse(
-    (
-      <div
-        style={{
-          width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          padding: 72, background: '#0a0a0a', color: '#ffffff',
-        }}
-      >
-        <div style={{ fontSize: 40, fontWeight: 700, opacity: 0.9 }}>{brand.name}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.1 }}>{t('home.title', { appName: brand.name })}</div>
-          <div style={{ fontSize: 32, opacity: 0.7 }}>{t('home.description')}</div>
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: 72,
+        background: '#0a0a0a',
+        color: '#ffffff',
+      }}
+    >
+      <div style={{ fontSize: 40, fontWeight: 700, opacity: 0.9 }}>{brand.name}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.1 }}>
+          {t('home.title', { appName: brand.name })}
         </div>
+        <div style={{ fontSize: 32, opacity: 0.7 }}>{t('home.description')}</div>
       </div>
-    ),
+    </div>,
     OG_SIZE,
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/opengraph-image.tsx`:**
+
 ```tsx
 import { routing } from '@/i18n/routing';
 import { OG_SIZE, renderOgImage } from '@/libs/og';
@@ -1517,7 +1827,9 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   return renderOgImage(locale);
 }
 ```
+
 📄 **Create `src/app/[locale]/twitter-image.tsx`** — identical content (metadata config exports must be written in each file, not re-exported).
+
 > 🔍 Check that the generated `og:image` URL resolves for **both** `/` and `/fr` (see the E2E test below). If your next-intl/Next combination rewrites it oddly, follow next-intl's guidance for metadata image routes.
 
 ### 4. End-to-end proof of the whole SEO surface
@@ -1525,23 +1837,34 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
 📄 **Edit `playwright.config.ts`** → `appEnv`: `SITE_INDEXING: 'true', LEGAL_NOINDEX: 'true',` (the E2E build behaves like production).
 
 📄 **Create `e2e/seo.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 
 const attr = async (page: import('@playwright/test').Page, selector: string, name: string) =>
   page.locator(selector).first().getAttribute(name);
 
-for (const { path, locale } of [{ path: '/pricing', locale: 'en' }, { path: '/fr/pricing', locale: 'fr' }]) {
-  test(`${path}: unique title, description, canonical, hreflang, social tags`, async ({ page, baseURL }) => {
+for (const { path, locale } of [
+  { path: '/pricing', locale: 'en' },
+  { path: '/fr/pricing', locale: 'fr' },
+]) {
+  test(`${path}: unique title, description, canonical, hreflang, social tags`, async ({
+    page,
+    baseURL,
+  }) => {
     await page.goto(path);
 
     await expect(page).toHaveTitle(/Pricing|Tarifs/);
     expect(await attr(page, 'meta[name="description"]', 'content')).toBeTruthy();
     expect(await attr(page, 'link[rel="canonical"]', 'href')).toBe(`${baseURL}${path}`);
-    expect(await attr(page, 'meta[property="og:locale"]', 'content')).toBe(locale === 'fr' ? 'fr_FR' : 'en_US');
+    expect(await attr(page, 'meta[property="og:locale"]', 'content')).toBe(
+      locale === 'fr' ? 'fr_FR' : 'en_US',
+    );
     expect(await attr(page, 'meta[property="og:image"]', 'content')).toBeTruthy();
 
-    const alternates = await page.locator('link[rel="alternate"][hreflang]').evaluateAll((links) => links.map((link) => link.getAttribute('hreflang')));
+    const alternates = await page
+      .locator('link[rel="alternate"][hreflang]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('hreflang')));
     expect(alternates.sort()).toEqual(['en', 'fr', 'x-default']);
     expect(await attr(page, 'meta[name="robots"]', 'content')).toContain('index');
   });
@@ -1549,8 +1872,15 @@ for (const { path, locale } of [{ path: '/pricing', locale: 'en' }, { path: '/fr
 
 test('the home page carries valid JSON-LD', async ({ page }) => {
   await page.goto('/');
-  const blocks = await page.locator('script[type="application/ld+json"]').evaluateAll((nodes) => nodes.map((node) => JSON.parse(node.textContent ?? '')));
-  expect(blocks.map((block) => block['@type']).sort()).toEqual(['FAQPage', 'Organization', 'SoftwareApplication', 'WebSite']);
+  const blocks = await page
+    .locator('script[type="application/ld+json"]')
+    .evaluateAll((nodes) => nodes.map((node) => JSON.parse(node.textContent ?? '')));
+  expect(blocks.map((block) => block['@type']).sort()).toEqual([
+    'FAQPage',
+    'Organization',
+    'SoftwareApplication',
+    'WebSite',
+  ]);
 });
 
 test('the Open Graph image renders', async ({ page, request }) => {
@@ -1561,7 +1891,10 @@ test('the Open Graph image renders', async ({ page, request }) => {
   expect(response.headers()['content-type']).toContain('image/png');
 });
 
-test('robots.txt hides private areas and points at the sitemap; the sitemap lists both languages', async ({ request, baseURL }) => {
+test('robots.txt hides private areas and points at the sitemap; the sitemap lists both languages', async ({
+  request,
+  baseURL,
+}) => {
   const robots = await (await request.get('/robots.txt')).text();
   expect(robots).toMatch(/Disallow: \/dashboard/);
   expect(robots).toMatch(/Disallow: \/fr\/admin/);
@@ -1581,9 +1914,11 @@ test('private areas are noindex', async ({ ownerPage, world }) => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm e2e
 ```
+
 1. `/opengraph-image-…` (copy the URL from `og:image`) opens a 1200×630 card in English; the `/fr` version shows the French title.
 2. `/robots.txt` and `/sitemap.xml` look right with `SITE_INDEXING=true`; with it `false` robots says `Disallow: /` and the sitemap is empty.
 3. Paste a deployed preview URL into LinkedIn/Slack/Discord to see the card (needs the image to be public).
@@ -1597,7 +1932,7 @@ pnpm test && pnpm check && pnpm e2e
 
 **Branch:** `ci/s7-t06-crowdin` · **Story:** US-072 · **2 SP** · risk **R-14** (translation sync corrupts ICU/JSON)
 
-> 🎯 Translators work in Crowdin; developers keep editing `en.json`. A workflow **uploads** English when it changes and **opens a pull request** with new translations. The PR goes through the *same* CI as any other — including `i18n:check`, so a broken placeholder can't merge.
+> 🎯 Translators work in Crowdin; developers keep editing `en.json`. A workflow **uploads** English when it changes and **opens a pull request** with new translations. The PR goes through the _same_ CI as any other — including `i18n:check`, so a broken placeholder can't merge.
 
 ```bash
 git switch main && git pull && git switch -c ci/s7-t06-crowdin
@@ -1606,6 +1941,7 @@ git switch main && git pull && git switch -c ci/s7-t06-crowdin
 ### 1. Crowdin configuration
 
 📄 **Create `crowdin.yml`:**
+
 ```yaml
 # Credentials come from the environment (never commit them)
 project_id_env: CROWDIN_PROJECT_ID
@@ -1618,7 +1954,9 @@ files:
     # %two_letters_code% → fr.json, de.json… (use %locale% for regional codes such as pt-BR)
     translation: /src/locales/%two_letters_code%.json
 ```
+
 📄 **Create `src/config/crowdin-config.test.ts`** — keeps the config honest when locales change:
+
 ```ts
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -1635,7 +1973,8 @@ it('uploads the source-language file that really exists', () => {
 
 it('maps translations to the file names the app loads', () => {
   expect(config).toContain('/src/locales/%two_letters_code%.json');
-  for (const locale of routing.locales) expect(existsSync(`src/locales/${locale}.json`), locale).toBe(true);
+  for (const locale of routing.locales)
+    expect(existsSync(`src/locales/${locale}.json`), locale).toBe(true);
 });
 
 it('keeps credentials out of the repository', () => {
@@ -1647,6 +1986,7 @@ it('keeps credentials out of the repository', () => {
 ### 2. The workflow
 
 📄 **Create `.github/workflows/crowdin.yml`:**
+
 ```yaml
 name: Crowdin
 
@@ -1706,40 +2046,41 @@ jobs:
           # Use a personal access token (repo scope) stored as CROWDIN_PR_TOKEN when you want CI on these PRs.
           GITHUB_TOKEN: ${{ secrets.CROWDIN_PR_TOKEN || secrets.GITHUB_TOKEN }}
 ```
+
 > 🔒 `export_only_approved` + `skip_untranslated_strings` mean a half-finished translation never ships: the French file only changes when a human approved it.
 
 ### 3. Document the whole i18n lifecycle
 
 📄 **Append to `docs/guides/i18n.md`:**
-````markdown
+
+```markdown
 ## Translation workflow (Crowdin)
+
 1. Developers edit **`src/locales/en.json`** (source of truth) and the matching French keys in the same PR (CI requires parity).
 2. When `en.json` changes on `main`, the **Crowdin** workflow uploads the new strings.
-3. Translators work in Crowdin. Every Monday (or on demand: *Actions → Crowdin → Run workflow*) a PR
-   `chore(i18n): update translations from Crowdin` is opened with approved translations only.
-4. That PR must pass CI — `pnpm i18n:check` rejects missing keys and invalid ICU placeholders. Review the diff, merge.
-Setup: create the Crowdin project, add repository secrets `CROWDIN_PROJECT_ID` and `CROWDIN_PERSONAL_TOKEN`
-(and optionally `CROWDIN_PR_TOKEN`, a PAT, so CI runs on the sync PR).
-Dry run locally: `pnpm dlx @crowdin/cli upload sources --dryrun` (with the two variables exported).
+3. Translators work in Crowdin. Every Monday (or on demand: _Actions → Crowdin → Run workflow_) a PR `chore(i18n): update translations from Crowdin` is opened with approved translations only.
+4. That PR must pass CI — `pnpm i18n:check` rejects missing keys and invalid ICU placeholders. Review the diff, merge. Setup: create the Crowdin project, add repository secrets `CROWDIN_PROJECT_ID` and `CROWDIN_PERSONAL_TOKEN` (and optionally `CROWDIN_PR_TOKEN`, a PAT, so CI runs on the sync PR). Dry run locally: `pnpm dlx @crowdin/cli upload sources --dryrun` (with the two variables exported).
 
 ## Adding a language (checklist)
+
 1. `src/i18n/routing.ts` → add the code to `locales`.
 2. Create `src/locales/<code>.json` (copy `en.json`; Crowdin will fill it).
 3. `src/libs/seo.ts` → add the Open Graph locale (`OG_LOCALE`), e.g. `de: 'de_DE'`.
 4. Language names for the switcher (`locale.<code>` in every message file) and a flag/label in `LocaleSwitcher`.
 5. Right-to-left language? Add the code to the direction map (see S7-T12) — layout is already logical-property based.
 6. Crowdin → add the target language.
-7. Run `pnpm i18n:check && pnpm test && pnpm e2e && pnpm e2e:visual` (re-baseline with the `update-snapshots` label).
-Sitemap, hreflang, canonical URLs and the consent text follow automatically from the routing config and message files.
-````
+7. Run `pnpm i18n:check && pnpm test && pnpm e2e && pnpm e2e:visual` (re-baseline with the `update-snapshots` label). Sitemap, hreflang, canonical URLs and the consent text follow automatically from the routing config and message files.
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 ```
+
 1. The new config test passes; change `/src/locales/%two_letters_code%.json` in `crowdin.yml` to something wrong → it fails. Revert.
 2. Workflow file lints (`gh workflow view crowdin.yml`), and on the PR it only prints the "not configured" line (no secrets yet) — green.
-3. *(Optional, needs a Crowdin account)* create a project, add the two secrets, run the workflow manually: a PR appears. Corrupt a placeholder in Crowdin (`{email}` → `{mail}`) and approve it → the PR's `Quality` job **fails** on `i18n:check`. That's the guard working.
+3. _(Optional, needs a Crowdin account)_ create a project, add the two secrets, run the workflow manually: a PR appears. Corrupt a placeholder in Crowdin (`{email}` → `{mail}`) and approve it → the PR's `Quality` job **fails** on `i18n:check`. That's the guard working.
 
 **🚢 Ship** — branch `ci/s7-t06-crowdin` · message: `ci(i18n): add crowdin config, sync workflow and translation lifecycle docs`
 
@@ -1757,6 +2098,7 @@ pnpm dlx shadcn@latest add skeleton
 ### 1. Strings
 
 📄 **`src/locales/en.json`** — `common`: add `"loading": "Loading…"`; new object:
+
 ```json
   "empty": {
     "projects": { "title": "No projects yet", "description": "Projects group the work of your organization. Create the first one to get started.", "action": "Create a project" },
@@ -1766,7 +2108,9 @@ pnpm dlx shadcn@latest add skeleton
     "users": { "title": "No users found", "description": "Try another search term." }
   }
 ```
+
 📄 **`src/locales/fr.json`** — `common`: `"loading": "Chargement…"`;
+
 ```json
   "empty": {
     "projects": { "title": "Aucun projet pour l'instant", "description": "Les projets regroupent le travail de votre organisation. Créez le premier pour commencer.", "action": "Créer un projet" },
@@ -1780,6 +2124,7 @@ pnpm dlx shadcn@latest add skeleton
 ### 2. Reusable pieces
 
 📄 **Create `src/components/layout/empty-state.tsx`:**
+
 ```tsx
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -1799,13 +2144,17 @@ export function EmptyState({
     <div className="flex flex-col items-center rounded-lg border border-dashed p-10 text-center">
       <Icon className="text-muted-foreground mb-4 size-10" aria-hidden />
       <h2 className="font-medium">{title}</h2>
-      {description ? <p className="text-muted-foreground mt-1 max-w-sm text-sm">{description}</p> : null}
+      {description ? (
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">{description}</p>
+      ) : null}
       {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 }
 ```
+
 📄 **Create `src/components/layout/skeletons.tsx`** — shapes close to the real pages, so content **doesn't jump** when it arrives (CLS):
+
 ```tsx
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -1865,7 +2214,9 @@ export function FormSkeleton({ label, fields = 3 }: { label: string; fields?: nu
   );
 }
 ```
+
 Route-level skeletons (Next shows `loading.tsx` while the page's data streams in):
+
 ```tsx
 // src/app/[locale]/(app)/dashboard/[orgSlug]/projects/loading.tsx
 // (the same two lines for members/loading.tsx and (admin)/admin/users/loading.tsx)
@@ -1877,6 +2228,7 @@ export default function Loading() {
   return <ListSkeleton label={useTranslations('common')('loading')} />;
 }
 ```
+
 ```tsx
 // …/[orgSlug]/settings/loading.tsx  and  …/dashboard/account/loading.tsx
 import { useTranslations } from 'next-intl';
@@ -1887,11 +2239,13 @@ export default function Loading() {
   return <FormSkeleton label={useTranslations('common')('loading')} />;
 }
 ```
+
 > `useTranslations` in a server component only needs `setRequestLocale` (done in the layouts) — no client JavaScript.
 
 ### 3. Use `EmptyState` where lists can be empty
 
 Replace the plain "nothing here" text in each place (pattern shown for projects):
+
 ```tsx
 import { FolderPlus, SearchX } from 'lucide-react';
 import { EmptyState } from '@/components/layout/empty-state';
@@ -1911,17 +2265,19 @@ import { EmptyState } from '@/components/layout/empty-state';
   /* …the table… */
 )}
 ```
+
 | Where | Icon | Message keys |
-|---|---|---|
+| --- | --- | --- |
 | Projects list | `FolderPlus` / `SearchX` | `empty.projects.*` / `empty.search.*` |
 | Pending invitations | `MailCheck` | `empty.invitations.*` |
 | Passkeys card | `KeyRound` | `empty.passkeys.*` |
 | Admin users (search) | `UserSearch` | `empty.users.*` |
-Members and sessions can't be empty (you are in the list), so they don't need one.
+| Members and sessions can't be empty (you are in the list), so they don't need one. |
 
 ### 4. One place for toasts
 
 📄 **Create `src/libs/notify.ts`:**
+
 ```ts
 import { toast } from 'sonner';
 
@@ -1932,28 +2288,37 @@ export const notify = {
   info: (message: string) => toast(message, { duration: 5000 }),
 };
 ```
+
 Move existing calls over (Git Bash, GNU sed — on macOS use `sed -i ''`):
+
 ```bash
 for f in $(git grep -l "from 'sonner'" -- 'src/**/*.tsx' ':!src/components/ui/sonner.tsx'); do
   sed -i "s#import { toast } from 'sonner';#import { notify } from '@/libs/notify';#; s#toast\.success(#notify.success(#g; s#toast\.error(#notify.error(#g" "$f"
 done
 git grep -n "toast" -- 'src/**/*.tsx' ':!src/components/ui/sonner.tsx'    # anything left needs a manual look (toast.promise, toast.info…)
 ```
+
 📄 **Create `src/libs/notify.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { expect, it } from 'vitest';
 
-const ALLOWED = new Set([path.join('src', 'libs', 'notify.ts'), path.join('src', 'components', 'ui', 'sonner.tsx')]);
+const ALLOWED = new Set([
+  path.join('src', 'libs', 'notify.ts'),
+  path.join('src', 'components', 'ui', 'sonner.tsx'),
+]);
 
 it('only notify.ts talks to sonner, so every toast behaves the same', () => {
   const files = (readdirSync('src', { recursive: true }) as string[])
     .filter((file) => /\.(ts|tsx)$/.test(file) && !/\.test\.tsx?$/.test(file))
     .map((file) => path.join('src', file));
 
-  const offenders = files.filter((file) => !ALLOWED.has(file) && /from ['"]sonner['"]/.test(readFileSync(file, 'utf8')));
+  const offenders = files.filter(
+    (file) => !ALLOWED.has(file) && /from ['"]sonner['"]/.test(readFileSync(file, 'utf8')),
+  );
   expect(offenders, `Use notify from '@/libs/notify':\n${offenders.join('\n')}`).toEqual([]);
 });
 ```
@@ -1961,6 +2326,7 @@ it('only notify.ts talks to sonner, so every toast behaves the same', () => {
 ### 5. Stories and tests
 
 📄 **Create `src/components/layout/states.stories.tsx`:**
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { FolderPlus } from 'lucide-react';
@@ -1969,16 +2335,30 @@ import { EmptyState } from '@/components/layout/empty-state';
 import { FormSkeleton, ListSkeleton } from '@/components/layout/skeletons';
 import { Button } from '@/components/ui/button';
 
-const meta = { title: 'Layout/States', component: EmptyState, parameters: { layout: 'padded' } } satisfies Meta<typeof EmptyState>;
+const meta = {
+  title: 'Layout/States',
+  component: EmptyState,
+  parameters: { layout: 'padded' },
+} satisfies Meta<typeof EmptyState>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = { args: { icon: FolderPlus, title: 'No projects yet', description: 'Create the first one to get started.' } };
-export const EmptyWithAction: Story = { args: { icon: FolderPlus, title: 'No projects yet', action: <Button>Create a project</Button> } };
+export const Empty: Story = {
+  args: {
+    icon: FolderPlus,
+    title: 'No projects yet',
+    description: 'Create the first one to get started.',
+  },
+};
+export const EmptyWithAction: Story = {
+  args: { icon: FolderPlus, title: 'No projects yet', action: <Button>Create a project</Button> },
+};
 export const LoadingList: Story = { render: () => <ListSkeleton label="Loading…" /> };
 export const LoadingForm: Story = { render: () => <FormSkeleton label="Loading…" /> };
 ```
+
 📄 **Create `src/components/layout/empty-state.test.tsx`:**
+
 ```tsx
 import { FolderPlus } from 'lucide-react';
 import { expect, test } from 'vitest';
@@ -1988,7 +2368,14 @@ import { EmptyState } from './empty-state';
 import { ListSkeleton } from './skeletons';
 
 test('an empty state explains and offers the next step', async () => {
-  const screen = await render(<EmptyState icon={FolderPlus} title="No projects yet" description="Create one." action={<button type="button">Create</button>} />);
+  const screen = await render(
+    <EmptyState
+      icon={FolderPlus}
+      title="No projects yet"
+      description="Create one."
+      action={<button type="button">Create</button>}
+    />,
+  );
   await expect.element(screen.getByRole('heading', { name: 'No projects yet' })).toBeVisible();
   await expect.element(screen.getByRole('button', { name: 'Create' })).toBeVisible();
 });
@@ -1999,13 +2386,18 @@ test('a skeleton is announced once to assistive technology', async () => {
   await expect.element(screen.getByText('Loading…')).toBeInTheDocument();
 });
 ```
+
 📄 **Add to `e2e/rbac-ui.spec.ts`** (or a new `e2e/empty-states.spec.ts`) — a brand-new user has an empty organization:
+
 ```ts
 import { apiContext, signInApi } from './helpers/api';
 import { queryDb } from './helpers/db';
 import { createUser } from './helpers/users';
 
-test('a brand-new organization shows a helpful empty state with a call to action', async ({ browser, baseURL }) => {
+test('a brand-new organization shows a helpful empty state with a call to action', async ({
+  browser,
+  baseURL,
+}) => {
   const api = await apiContext(baseURL!);
   const person = await createUser(api, baseURL!);
   await signInApi(api, person.email, person.password);
@@ -2023,14 +2415,17 @@ test('a brand-new organization shows a helpful empty state with a call to action
   await context.close();
 });
 ```
-*(add the consent cookie to that context as in `openAs` if the banner covers the page)*
+
+_(add the consent cookie to that context as in `openAs` if the banner covers the page)_
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check && pnpm e2e
 pnpm storybook
 ```
-1. DevTools → **Network → Slow 3G** (or *Fast 3G*) and open `/dashboard/<org>/projects`: a skeleton of the **same shape** appears instantly, then the content replaces it **without the page jumping**.
+
+1. DevTools → **Network → Slow 3G** (or _Fast 3G_) and open `/dashboard/<org>/projects`: a skeleton of the **same shape** appears instantly, then the content replaces it **without the page jumping**.
 2. Screen reader/inspector: the skeleton region is `role="status"` with a single "Loading…" announcement.
 3. A new account sees the empty state with a working **Create a project** button (only for roles allowed to create).
 4. Search for a nonsense term in projects → "No results … Nothing matches “xyz”".
@@ -2045,7 +2440,7 @@ pnpm storybook
 
 **Branch:** `ci/s7-t08-lighthouse` · **Story:** US-074 · **3 SP**
 
-> 🎯 *"Fast"* is a claim until a robot checks it on every PR. We run Lighthouse against a **production build** of the four main pages, **record the baseline before tuning** (S7-T09), start with warnings, and only then flip to errors.
+> 🎯 _"Fast"_ is a claim until a robot checks it on every PR. We run Lighthouse against a **production build** of the four main pages, **record the baseline before tuning** (S7-T09), start with warnings, and only then flip to errors.
 
 ```bash
 git switch main && git pull && git switch -c ci/s7-t08-lighthouse
@@ -2057,6 +2452,7 @@ pnpm add -D @lhci/cli
 The Lighthouse server must be the same stack as E2E (own database, own port). Move the constants out of the Playwright config so both can use them.
 
 📄 **Create `e2e/env.ts`** (cut these from `playwright.config.ts`):
+
 ```ts
 export const E2E_PORT = 3100;
 export const E2E_DB_PORT = 5434;
@@ -2081,11 +2477,13 @@ export const appEnv = {
   NEXT_PUBLIC_POSTHOG_HOST: 'https://eu.i.posthog.com',
 };
 ```
+
 📄 **Edit `playwright.config.ts`:** `import { appEnv, baseURL, E2E_DB_PORT } from './e2e/env';` and delete the duplicated constants (keep the rest unchanged).
 
 ### 2. One script runs the whole thing (Windows-safe)
 
 📄 **Create `scripts/lighthouse.ts`:**
+
 ```ts
 // Builds the app, starts the database + app on the E2E ports, runs Lighthouse CI, and cleans up.
 // Usage: pnpm lighthouse            (LH_PREBUILT=1 skips the build)
@@ -2095,11 +2493,22 @@ import { appEnv, baseURL, E2E_DB_PORT } from '../e2e/env';
 
 // Measure what a visitor on a production site gets WITHOUT vendors we can't reach from CI:
 // fake Sentry/PostHog endpoints would log failed requests and pollute "Best practices".
-const env = { ...process.env, ...appEnv, NEXT_PUBLIC_SENTRY_DSN: '', NEXT_PUBLIC_POSTHOG_KEY: '', DB_DATA_DIR: './local.lhci.db' };
+const env = {
+  ...process.env,
+  ...appEnv,
+  NEXT_PUBLIC_SENTRY_DSN: '',
+  NEXT_PUBLIC_POSTHOG_KEY: '',
+  DB_DATA_DIR: './local.lhci.db',
+};
 const children: ChildProcess[] = [];
 
 function start(command: string, extra: Record<string, string> = {}) {
-  const child = spawn(command, { shell: true, stdio: 'inherit', env: { ...env, ...extra }, detached: process.platform !== 'win32' });
+  const child = spawn(command, {
+    shell: true,
+    stdio: 'inherit',
+    env: { ...env, ...extra },
+    detached: process.platform !== 'win32',
+  });
   children.push(child);
   return child;
 }
@@ -2107,7 +2516,8 @@ function start(command: string, extra: Record<string, string> = {}) {
 function stopAll() {
   for (const child of children) {
     if (!child.pid) continue;
-    if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+    if (process.platform === 'win32')
+      spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
     else {
       try {
         process.kill(-child.pid, 'SIGTERM');
@@ -2145,23 +2555,30 @@ try {
   start('pnpm start');
   await waitFor(`${baseURL}/api/health`);
 
-  exitCode = spawnSync('pnpm exec lhci autorun', { shell: true, stdio: 'inherit', env }).status ?? 1;
+  exitCode =
+    spawnSync('pnpm exec lhci autorun', { shell: true, stdio: 'inherit', env }).status ?? 1;
 } finally {
   stopAll();
 }
 process.exit(exitCode);
 ```
-📄 **Edit `package.json`:** `"lighthouse": "tsx scripts/lighthouse.ts"` · 📄 `.gitignore`: add `.lighthouseci` and `local.lhci.db*`.
-📄 **Edit `knip.config.ts`** → `entry`: `'scripts/lighthouse.ts'`.
+
+📄 **Edit `package.json`:** `"lighthouse": "tsx scripts/lighthouse.ts"` · 📄 `.gitignore`: add `.lighthouseci` and `local.lhci.db*`. 📄 **Edit `knip.config.ts`** → `entry`: `'scripts/lighthouse.ts'`.
 
 ### 3. The assertions — as **warnings** first
 
 📄 **Create `lighthouserc.json`:**
+
 ```json
 {
   "ci": {
     "collect": {
-      "url": ["http://localhost:3100/", "http://localhost:3100/fr", "http://localhost:3100/pricing", "http://localhost:3100/sign-in"],
+      "url": [
+        "http://localhost:3100/",
+        "http://localhost:3100/fr",
+        "http://localhost:3100/pricing",
+        "http://localhost:3100/sign-in"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--no-sandbox --headless=new",
@@ -2199,79 +2616,90 @@ process.exit(exitCode);
   }
 }
 ```
-> `/sign-in` is `noindex` by design → its SEO category is switched off. The script budget (150 KB, transferred/compressed) is a **starting guess** — S7-T09 replaces it with *measured + 10 %*.
+
+> `/sign-in` is `noindex` by design → its SEO category is switched off. The script budget (150 KB, transferred/compressed) is a **starting guess** — S7-T09 replaces it with _measured + 10 %_.
 
 ### 4. Record the baseline
 
 ```bash
 pnpm lighthouse
 ```
+
 (the first run builds; ~3–5 min. 🪟 It needs Chrome installed; if `lhci` can't find it: `set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe` — or run it in CI/WSL.)
 
 📄 **Create `docs/guides/performance.md`:**
-````markdown
+
+```markdown
 # Performance
 
 ## How it is measured
-`pnpm lighthouse` builds the app, starts it on the E2E ports and runs Lighthouse CI (mobile profile, simulated slow 4G,
-3 runs per URL, median) on `/`, `/fr`, `/pricing` and `/sign-in`. Reports: `.lighthouseci/`. CI uploads them as an artifact.
-Config: `lighthouserc.json`. Built WITHOUT Sentry/PostHog keys (see `scripts/lighthouse.ts` for why).
+
+`pnpm lighthouse` builds the app, starts it on the E2E ports and runs Lighthouse CI (mobile profile, simulated slow 4G, 3 runs per URL, median) on `/`, `/fr`, `/pricing` and `/sign-in`. Reports: `.lighthouseci/`. CI uploads them as an artifact. Config: `lighthouserc.json`. Built WITHOUT Sentry/PostHog keys (see `scripts/lighthouse.ts` for why).
 
 ## Baseline (before tuning) — fill in from your run
-| Page | Perf | A11y | Best practices | SEO | LCP | CLS | TBT | JS (gz) |
-|---|---|---|---|---|---|---|---|---|
-| `/` | | | | | | | | |
-| `/fr` | | | | | | | | |
-| `/pricing` | | | | | | | | |
-| `/sign-in` | | | | | | | | |
+
+| Page       | Perf | A11y | Best practices | SEO | LCP | CLS | TBT | JS (gz) |
+| ---------- | ---- | ---- | -------------- | --- | --- | --- | --- | ------- |
+| `/`        |      |      |                |     |     |     |     |         |
+| `/fr`      |      |      |                |     |     |     |     |         |
+| `/pricing` |      |      |                |     |     |     |     |         |
+| `/sign-in` |      |      |                |     |     |     |     |         |
 
 ## After tuning (S7-T09)
+
 _(same table)_
 
 ## Budgets
+
 _(filled in S7-T09)_
-````
+```
+
 Fill the **Baseline** table from the terminal summary (or open `.lighthouseci/*.html`).
 
 ### 5. CI job
 
 📄 **Edit `.github/workflows/ci.yml`** — a new job (it builds its own clean copy, in parallel with the rest), and add it to `ci-ok`'s `needs`:
+
 ```yaml
-  lighthouse:
-    name: Lighthouse
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    env:
-      # Blank the dummy vendor keys that the shared workflow env sets for the E2E build
-      NEXT_PUBLIC_SENTRY_DSN: ''
-      NEXT_PUBLIC_POSTHOG_KEY: ''
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: nextjs-lh-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
-          restore-keys: nextjs-lh-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
-      - run: pnpm lighthouse
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: lighthouse-report
-          path: .lighthouseci
-          retention-days: 7
+lighthouse:
+  name: Lighthouse
+  needs: changes
+  if: needs.changes.outputs.code == 'true'
+  runs-on: ubuntu-latest
+  timeout-minutes: 25
+  env:
+    # Blank the dummy vendor keys that the shared workflow env sets for the E2E build
+    NEXT_PUBLIC_SENTRY_DSN: ''
+    NEXT_PUBLIC_POSTHOG_KEY: ''
+  steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/actions/setup
+    - uses: actions/cache@v4
+      with:
+        path: .next/cache
+        key: nextjs-lh-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
+        restore-keys: nextjs-lh-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+    - run: pnpm lighthouse
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lighthouse-report
+        path: .lighthouseci
+        retention-days: 7
 ```
+
 `ci-ok.needs`: `[changes, quality, test, build, storybook, e2e, visual, lighthouse, commitlint]`.
+
 > While assertions are `warn`, the job **passes** and prints the warnings; it fails only if the build/servers fail. S7-T09 turns warnings into errors.
 
 ### ✅ Verify
+
 ```bash
 pnpm check
 pnpm lighthouse
 ```
-1. The run ends with a table of assertions (warnings are fine **now**); `.lighthouseci/` holds HTML reports — open one and look at the *Opportunities*: these are your S7-T09 to-do list.
+
+1. The run ends with a table of assertions (warnings are fine **now**); `.lighthouseci/` holds HTML reports — open one and look at the _Opportunities_: these are your S7-T09 to-do list.
 2. Servers are cleaned up (nothing left on 3100/5434: `netstat -ano | findstr :3100` empty).
 3. CI: the `Lighthouse` job is green and the artifact contains the reports.
 4. The **Baseline** table is filled in and committed.
@@ -2296,6 +2724,7 @@ pnpm analyze        # the bundle analyzer (Sprint 0): note the 5 biggest client 
 Sprint 6 imported `posthog-js` statically — it ships to **every** visitor even if analytics never starts. Load it only when consent is given.
 
 📄 **Rewrite `src/libs/analytics/client.ts`:**
+
 ```ts
 import type { AnalyticsEvents } from '@/libs/analytics/events';
 import { analyticsUrl, posthogUiHost } from '@/libs/analytics/hosts';
@@ -2309,7 +2738,13 @@ let wanted = false; // the latest instruction (activation may finish after conse
 export const isAnalyticsActive = () => active;
 
 /** Called only after the visitor consented. posthog-js is downloaded HERE, never before. */
-export async function activateAnalytics({ key, host }: { key: string; host: string }): Promise<void> {
+export async function activateAnalytics({
+  key,
+  host,
+}: {
+  key: string;
+  host: string;
+}): Promise<void> {
   wanted = true;
   if (!posthog) {
     const loaded = (await import('posthog-js')).default;
@@ -2341,10 +2776,16 @@ export function deactivateAnalytics(): void {
 
 export function capturePageview(pathname: string): void {
   if (!active || !posthog) return;
-  posthog.capture('$pageview', { $current_url: analyticsUrl(window.location.origin, pathname), $pathname: pathname.split(/[?#]/)[0] });
+  posthog.capture('$pageview', {
+    $current_url: analyticsUrl(window.location.origin, pathname),
+    $pathname: pathname.split(/[?#]/)[0],
+  });
 }
 
-export function trackEvent<E extends keyof AnalyticsEvents>(event: E, properties: AnalyticsEvents[E]): void {
+export function trackEvent<E extends keyof AnalyticsEvents>(
+  event: E,
+  properties: AnalyticsEvents[E],
+): void {
   if (!active || !posthog) return;
   posthog.capture(event, properties);
 }
@@ -2364,63 +2805,82 @@ export function resetAnalytics(): void {
   posthog.reset();
 }
 ```
+
 📄 **Edit `src/components/analytics/analytics-provider.tsx`:**
+
 ```tsx
-    if (choice.analytics) {
-      void activateAnalytics({ key, host: Env.NEXT_PUBLIC_POSTHOG_HOST }).then(() => setReady(isAnalyticsActive()));
-    } else {
-      deactivateAnalytics();
-      setReady(false);
-    }
+if (choice.analytics) {
+  void activateAnalytics({ key, host: Env.NEXT_PUBLIC_POSTHOG_HOST }).then(() =>
+    setReady(isAnalyticsActive()),
+  );
+} else {
+  deactivateAnalytics();
+  setReady(false);
+}
 ```
+
 (import `isAnalyticsActive`).
 
 📄 **Update the tests:**
-- `client.test.ts`: `await analytics.activateAnalytics(...)` everywhere, and add the race:
-```ts
-  it('consent withdrawn while the library downloads → analytics never starts', async () => {
-    const analytics = await load();
-    const pending = analytics.activateAnalytics({ key: 'phc_x', host: 'https://eu.i.posthog.com' });
-    analytics.deactivateAnalytics();
-    await pending;
 
-    analytics.trackEvent('org_created', { via: 'form' });
-    expect(posthog.capture).not.toHaveBeenCalled();
-    expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
-  });
+- `client.test.ts`: `await analytics.activateAnalytics(...)` everywhere, and add the race:
+
+```ts
+it('consent withdrawn while the library downloads → analytics never starts', async () => {
+  const analytics = await load();
+  const pending = analytics.activateAnalytics({ key: 'phc_x', host: 'https://eu.i.posthog.com' });
+  analytics.deactivateAnalytics();
+  await pending;
+
+  analytics.trackEvent('org_created', { via: 'form' });
+  expect(posthog.capture).not.toHaveBeenCalled();
+  expect(posthog.opt_in_capturing).not.toHaveBeenCalled();
+});
 ```
+
 - `analytics-provider.test.tsx`: the mock becomes `activateAnalytics: vi.fn().mockResolvedValue(undefined), isAnalyticsActive: () => true,`.
 
 ### 2. Lazy-load what isn't needed on first paint
 
 📄 **Create `src/components/layout/lazy-toaster.tsx`:**
+
 ```tsx
 'use client';
 
 import dynamic from 'next/dynamic';
 
 // Toasts appear after user actions, never during first paint: keep sonner out of the initial bundle.
-const Toaster = dynamic(() => import('@/components/ui/sonner').then((module) => module.Toaster), { ssr: false });
+const Toaster = dynamic(() => import('@/components/ui/sonner').then((module) => module.Toaster), {
+  ssr: false,
+});
 
 export function LazyToaster() {
   return <Toaster richColors />;
 }
 ```
+
 In `src/app/[locale]/layout.tsx` replace `<Toaster richColors />` with `<LazyToaster />`.
 
 📄 **Split the consent dialog** — move `SettingsDialog` from `consent-banner.tsx` into `src/components/consent/consent-settings-dialog.tsx` (named export `ConsentSettingsDialog`, unchanged code), then in the banner:
+
 ```tsx
 import dynamic from 'next/dynamic';
 
 const ConsentSettingsDialog = dynamic(() =>
-  import('@/components/consent/consent-settings-dialog').then((module) => module.ConsentSettingsDialog),
+  import('@/components/consent/consent-settings-dialog').then(
+    (module) => module.ConsentSettingsDialog,
+  ),
 );
 // …in the JSX, instead of <SettingsDialog />:
-      {settingsOpen ? <ConsentSettingsDialog /> : null}
+{
+  settingsOpen ? <ConsentSettingsDialog /> : null;
+}
 ```
+
 (take `settingsOpen` from `useConsent()`). The banner itself stays eager — it is the first thing a new visitor needs.
 
 📄 **Mobile menu** — the navigation drawer (Radix `Sheet`) is only needed after a tap. Keep a tiny button that **loads the drawer on first open**:
+
 ```tsx
 // src/components/layout/mobile-nav.tsx  (adapt to your existing file)
 'use client';
@@ -2431,13 +2891,27 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-const MobileMenu = dynamic(() => import('@/components/layout/mobile-menu').then((module) => module.MobileMenu));
+const MobileMenu = dynamic(() =>
+  import('@/components/layout/mobile-menu').then((module) => module.MobileMenu),
+);
 
-export function MobileNav({ links, label }: { links: { href: string; label: string }[]; label: string }) {
+export function MobileNav({
+  links,
+  label,
+}: {
+  links: { href: string; label: string }[];
+  label: string;
+}) {
   const [opened, setOpened] = useState(false);
   return (
     <>
-      <Button variant="ghost" size="icon" className="md:hidden" aria-label={label} onClick={() => setOpened(true)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        aria-label={label}
+        onClick={() => setOpened(true)}
+      >
         <Menu aria-hidden />
       </Button>
       {opened ? <MobileMenu links={links} defaultOpen onClose={() => setOpened(false)} /> : null}
@@ -2445,16 +2919,24 @@ export function MobileNav({ links, label }: { links: { href: string; label: stri
   );
 }
 ```
+
 (`mobile-menu.tsx` = the existing `Sheet` markup, opened by default and calling `onClose` from `onOpenChange`.)
 
 ### 3. Fonts without layout shift or extra downloads
 
 📄 **Edit the font setup in `src/app/[locale]/layout.tsx`:**
+
 ```tsx
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'], display: 'swap' });
 // Monospace is used in a handful of places (backup codes): don't preload it on every page
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'], display: 'swap', preload: false });
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false,
+});
 ```
+
 (`next/font` self-hosts the files and adjusts the fallback metrics, which is what keeps CLS near zero.)
 
 ### 4. Measure again — and decide about Sentry
@@ -2463,14 +2945,16 @@ const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin']
 pnpm build && pnpm analyze
 pnpm lighthouse
 ```
+
 - Compare the biggest chunks with the baseline: `posthog-js`, `sonner`, `@radix-ui/react-dialog/-dialog` should have left the shared/initial chunks.
 - **Sentry's cost.** Build once with and once without `NEXT_PUBLIC_SENTRY_DSN` (`pnpm bundle:size`), note the difference in `docs/guides/performance.md`. Our decision: **keep early initialisation** (catching errors that happen during load is the point), unless the measurement shows marketing pages cannot reach their targets — in which case lazy-initialise the client SDK after the `load` event on marketing routes only.
-- **Caching decision (write it down):** marketing pages are already fully static and CDN-cacheable; **Cache Components / `"use cache"` is *not* adopted for v1.0** — it changes rendering semantics app-wide and brings no measurable gain here. Revisit when dashboards need data caching.
+- **Caching decision (write it down):** marketing pages are already fully static and CDN-cacheable; **Cache Components / `"use cache"` is _not_ adopted for v1.0** — it changes rendering semantics app-wide and brings no measurable gain here. Revisit when dashboards need data caching.
 - **Images:** none on marketing pages today (icons are SVG, OG images are generated). Rule for the future: use `next/image` with explicit `width/height` (or `sizes`), `priority` only for the single LCP image, AVIF/WebP via Next's optimizer.
 
 ### 5. Turn warnings into errors, set the budget from the measurement
 
 In `lighthouserc.json`:
+
 - change every `"warn"` to `"error"` (`sed -i 's/"warn"/"error"/g' lighthouserc.json`);
 - set `resource-summary:script:size` to **your measured script transfer size + 10 %** (bytes; e.g. measured 105 KB → `115500`).
 
@@ -2479,9 +2963,11 @@ If a page still misses a target, open its report, fix the named cause, and only 
 📄 **Fill the "After tuning" and "Budgets" sections of `docs/guides/performance.md`** (scores, LCP/CLS/TBT, JS size, what changed, the Sentry measurement, the two decisions above).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check && pnpm e2e && pnpm lighthouse
 ```
+
 1. `pnpm lighthouse` ends with **no assertion errors**: performance ≥ 95 on `/`, `/fr`, `/pricing`; LCP ≤ 2.5 s, CLS ≤ 0.05, TBT ≤ 200 ms; JS within budget.
 2. Before/after table in the docs shows a real improvement from the lazy-loading changes (initial JS down by tens of KB).
 3. Analytics still works after consent (E2E `analytics.spec.ts` green): the library downloads **at the moment of "Accept all"** (Network tab).
@@ -2501,18 +2987,30 @@ pnpm test && pnpm test:browser && pnpm check && pnpm e2e && pnpm lighthouse
 ```bash
 git switch main && git pull && git switch -c perf/s7-t10-build-output
 ```
+
 📄 **Create `e2e/build-output.spec.ts`** (E2E runs the **production** build):
+
 ```ts
 import { expect, test } from './fixtures';
 
 type Asset = { url: string; kind: 'js' | 'css' | 'font'; cacheControl: string };
 
-test('production assets are content-hashed, immutable, compressed, minified and carry no source maps', async ({ page, request }) => {
+test('production assets are content-hashed, immutable, compressed, minified and carry no source maps', async ({
+  page,
+  request,
+}) => {
   const assets: Asset[] = [];
   page.on('response', (response) => {
     const url = response.url();
-    const kind = /\.js(\?|$)/.test(url) ? 'js' : /\.css(\?|$)/.test(url) ? 'css' : /\.woff2?(\?|$)/.test(url) ? 'font' : undefined;
-    if (kind && url.includes('/_next/static/')) assets.push({ url, kind, cacheControl: response.headers()['cache-control'] ?? '' });
+    const kind = /\.js(\?|$)/.test(url)
+      ? 'js'
+      : /\.css(\?|$)/.test(url)
+        ? 'css'
+        : /\.woff2?(\?|$)/.test(url)
+          ? 'font'
+          : undefined;
+    if (kind && url.includes('/_next/static/'))
+      assets.push({ url, kind, cacheControl: response.headers()['cache-control'] ?? '' });
   });
 
   await page.goto('/');
@@ -2529,17 +3027,22 @@ test('production assets are content-hashed, immutable, compressed, minified and 
 
   for (const asset of assets.filter((entry) => entry.kind !== 'font')) {
     const response = await request.get(asset.url, { headers: { 'accept-encoding': 'gzip, br' } });
-    expect(['gzip', 'br'], `${asset.url} must be compressed`).toContain(response.headers()['content-encoding']);
+    expect(['gzip', 'br'], `${asset.url} must be compressed`).toContain(
+      response.headers()['content-encoding'],
+    );
 
     const body = await response.text();
     expect(body, `${asset.url} must not reference a source map`).not.toMatch(/sourceMappingURL=/);
     // minified code has very long lines
     const lines = body.split('\n').length;
-    if (body.length > 20_000) expect(body.length / lines, `${asset.url} looks unminified`).toBeGreaterThan(150);
+    if (body.length > 20_000)
+      expect(body.length / lines, `${asset.url} looks unminified`).toBeGreaterThan(150);
   }
 });
 
-test('HTML is compact, cacheable at the edge and free of development leftovers', async ({ request }) => {
+test('HTML is compact, cacheable at the edge and free of development leftovers', async ({
+  request,
+}) => {
   const response = await request.get('/');
   const html = await response.text();
 
@@ -2556,6 +3059,7 @@ test('CSS is minified', async ({ page, request }) => {
   expect(css.length / css.split('\n').length).toBeGreaterThan(150);
 });
 ```
+
 > 🔍 If your host adds/removes `s-maxage` (Vercel manages it at the edge), keep the assertion only for `next start` and note it. Everything else holds on any host.
 
 Manual **dev-mode** counterpart (write the result in the PR): `pnpm dev` → editing a component hot-reloads without a full refresh; an error shows the overlay; **View source** shows readable code and source maps.
@@ -2567,14 +3071,18 @@ The compiler auto-memoises components. It can reduce wasted renders in client-he
 ```bash
 pnpm add -D babel-plugin-react-compiler
 ```
+
 📄 **Edit `next.config.ts`** — an opt-in switch for the experiment:
+
 ```ts
 const nextConfig: NextConfig = {
   // …existing…
   reactCompiler: process.env.REACT_COMPILER === '1', // 🔍 Next 16 stable option; see the React Compiler docs
 };
 ```
+
 Measure **both** ways (🪟 Git Bash syntax; in `cmd.exe` use `set REACT_COMPILER=1&& …`):
+
 ```bash
 # A) without
 pnpm build && pnpm bundle:size
@@ -2582,26 +3090,32 @@ pnpm build && pnpm bundle:size
 REACT_COMPILER=1 pnpm build && REACT_COMPILER=1 pnpm bundle:size
 REACT_COMPILER=1 pnpm test:browser && REACT_COMPILER=1 CI=1 pnpm e2e
 ```
+
 📄 **Record it in `docs/guides/performance.md`:**
-````markdown
+
+```markdown
 ## React Compiler evaluation (TD-09)
-| | Without | With |
-|---|---|---|
-| Build time | | |
-| Total JS (gz) | | |
+
+|  | Without | With |
+| --- | --- | --- |
+| Build time |  |  |
+| Total JS (gz) |  |  |
 | Browser tests | ✅/❌ | ✅/❌ |
 | E2E | ✅/❌ | ✅/❌ |
-| Lighthouse TBT (`/sign-in`) | | |
-**Decision rule:** adopt only if all tests pass, JS grows ≤ 2 %, build time grows ≤ 50 %, and there is a visible benefit.
-**Decision:** _adopted / not adopted_ — _reason_.
-````
+| Lighthouse TBT (`/sign-in`) |  |  |
+| **Decision rule:** adopt only if all tests pass, JS grows ≤ 2 %, build time grows ≤ 50 %, and there is a visible benefit. |
+| **Decision:** _adopted / not adopted_ — _reason_. |
+```
+
 Then apply the decision: **adopted** → hard-code `reactCompiler: true`; **not adopted** → remove the experiment code (`reactCompiler` line and the dependency) and leave the table as the record. Update `TD-09` in `docs/roadmap/04-dependencies-risks.md` accordingly.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && CI=1 pnpm e2e
 ```
-1. `e2e/build-output.spec.ts` is green; sabotage it to prove it bites: set `productionBrowserSourceMaps: true` in `next.config.ts`, rebuild → *"must not reference a source map"* fails. Revert.
+
+1. `e2e/build-output.spec.ts` is green; sabotage it to prove it bites: set `productionBrowserSourceMaps: true` in `next.config.ts`, rebuild → _"must not reference a source map"_ fails. Revert.
 2. `curl -I -H "accept-encoding: gzip" http://localhost:3100/_next/static/chunks/<file>.js` shows `content-encoding: gzip` and `cache-control: public, max-age=31536000, immutable`.
 3. The compiler table is filled in and the decision applied; `pnpm lighthouse` still passes.
 
@@ -2625,6 +3139,7 @@ pnpm add -D @axe-core/playwright culori @types/culori
 📄 **`src/locales/en.json`** → `common`: `"skipToContent": "Skip to content"` · **`fr.json`**: `"skipToContent": "Aller au contenu"`.
 
 📄 **Create `src/components/layout/skip-link.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -2641,11 +3156,15 @@ export function SkipLink() {
   );
 }
 ```
+
 📄 **Render it first** in `src/app/[locale]/layout.tsx` (`<body>` → `<SkipLink />` before everything else) and make sure **every** layout's main region is the target:
+
 ```bash
 git grep -n "<main" src/app          # each of (marketing), (auth), (app), (admin) must have <main id="main" tabIndex={-1} …>
 ```
+
 📄 **Edit `src/styles/global.css`** — respect "reduce motion":
+
 ```css
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -2662,6 +3181,7 @@ git grep -n "<main" src/app          # each of (marketing), (auth), (app), (admi
 ### 2. Contrast, calculated from the real tokens
 
 📄 **Create `src/styles/contrast.test.ts`:**
+
 ```ts
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -2669,13 +3189,17 @@ import { parse, wcagContrast } from 'culori';
 import { describe, expect, it } from 'vitest';
 
 // Reads the same CSS the browser reads — no copy of the colours to keep in sync.
-const css = ['src/styles/global.css', 'src/styles/theme.css'].filter(existsSync).map((file) => readFileSync(file, 'utf8')).join('\n');
+const css = ['src/styles/global.css', 'src/styles/theme.css']
+  .filter(existsSync)
+  .map((file) => readFileSync(file, 'utf8'))
+  .join('\n');
 
 function block(selector: string): Record<string, string> {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const tokens: Record<string, string> = {};
   for (const match of css.matchAll(new RegExp(`(?:^|\\n)\\s*${escaped}\\s*\\{([^}]*)\\}`, 'g'))) {
-    for (const declaration of match[1]!.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g)) tokens[declaration[1]!] = declaration[2]!.trim();
+    for (const declaration of match[1]!.matchAll(/--([\w-]+)\s*:\s*([^;]+);/g))
+      tokens[declaration[1]!] = declaration[2]!.trim();
   }
   return tokens;
 }
@@ -2691,10 +3215,12 @@ const contexts: { name: string; tokens: Record<string, string> }[] = [
   ...ACCENTS.flatMap((accent) => {
     const light = block(`:root[data-accent='${accent}']`);
     const night = block(`.dark[data-accent='${accent}']`);
-    return Object.keys(light).length === 0 ? [] : [
-      { name: `light + ${accent}`, tokens: { ...root, ...light } },
-      { name: `dark + ${accent}`, tokens: { ...root, ...dark, ...light, ...night } },
-    ];
+    return Object.keys(light).length === 0
+      ? []
+      : [
+          { name: `light + ${accent}`, tokens: { ...root, ...light } },
+          { name: `dark + ${accent}`, tokens: { ...root, ...dark, ...light, ...night } },
+        ];
   }),
 ];
 
@@ -2723,14 +3249,17 @@ describe.each(contexts)('contrast · $name', ({ tokens }) => {
   });
 });
 ```
+
 ```bash
 pnpm test src/styles/contrast.test.ts
 ```
-Any red row is a **real** problem: darken the foreground (or lighten the background) token until it passes. S7-T13 finalises the tokens; if a row fails *now*, fix that one value in `global.css` and move on.
+
+Any red row is a **real** problem: darken the foreground (or lighten the background) token until it passes. S7-T13 finalises the tokens; if a row fails _now_, fix that one value in `global.css` and move on.
 
 ### 3. axe in the E2E suite
 
 📄 **Create `e2e/a11y.spec.ts`:**
+
 ```ts
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -2743,15 +3272,35 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 async function blockingViolations(page: Page): Promise<string[]> {
   const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
 
-  for (const violation of violations.filter((v) => v.impact !== 'serious' && v.impact !== 'critical')) {
-    test.info().annotations.push({ type: 'a11y-advisory', description: `${violation.id}: ${violation.help}` });
+  for (const violation of violations.filter(
+    (v) => v.impact !== 'serious' && v.impact !== 'critical',
+  )) {
+    test.info().annotations.push({
+      type: 'a11y-advisory',
+      description: `${violation.id}: ${violation.help}`,
+    });
   }
   return violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    .map((v) => `${v.impact} · ${v.id}: ${v.help}\n    ${v.nodes.slice(0, 3).map((node) => node.target.join(' ')).join('\n    ')}`);
+    .map(
+      (v) =>
+        `${v.impact} · ${v.id}: ${v.help}\n    ${v.nodes
+          .slice(0, 3)
+          .map((node) => node.target.join(' '))
+          .join('\n    ')}`,
+    );
 }
 
-const PUBLIC_PAGES = ['/', '/pricing', '/about', '/contact', '/terms', '/sign-in', '/sign-up', '/forgot-password'];
+const PUBLIC_PAGES = [
+  '/',
+  '/pricing',
+  '/about',
+  '/contact',
+  '/terms',
+  '/sign-in',
+  '/sign-up',
+  '/forgot-password',
+];
 
 for (const prefix of ['', '/fr']) {
   for (const scheme of ['light', 'dark'] as const) {
@@ -2776,7 +3325,9 @@ test.describe('signed-in pages', () => {
       for (const path of ['', '/projects', '/members', '/settings']) {
         await ownerPage.goto(`/dashboard/${world.orgSlug}${path}`);
         await ownerPage.waitForLoadState('networkidle');
-        expect(await blockingViolations(ownerPage), `/dashboard/${world.orgSlug}${path}`).toEqual([]);
+        expect(await blockingViolations(ownerPage), `/dashboard/${world.orgSlug}${path}`).toEqual(
+          [],
+        );
       }
     });
 
@@ -2797,7 +3348,10 @@ test.describe('signed-in pages', () => {
 });
 
 test.describe('interactive states', () => {
-  test('the consent banner and its settings dialog are accessible and keyboard-operable', async ({ page, context }) => {
+  test('the consent banner and its settings dialog are accessible and keyboard-operable', async ({
+    page,
+    context,
+  }) => {
     await context.clearCookies(); // a first-time visitor sees the banner
     await page.goto('/');
     expect(await blockingViolations(page)).toEqual([]);
@@ -2824,7 +3378,9 @@ test.describe('interactive states', () => {
     await expect(page).toHaveURL(/#main$/);
   });
 
-  test('form errors move focus to the first invalid field and are exposed to assistive technology', async ({ page }) => {
+  test('form errors move focus to the first invalid field and are exposed to assistive technology', async ({
+    page,
+  }) => {
     await page.goto('/sign-in');
     await page.getByRole('button', { name: 'Sign in' }).click();
 
@@ -2839,41 +3395,46 @@ test.describe('interactive states', () => {
 ### 4. The human part
 
 📄 **Create `docs/guides/accessibility.md`:**
-````markdown
+
+```markdown
 # Accessibility (WCAG 2.2 AA)
 
 ## Automated (runs in CI)
+
 - `e2e/a11y.spec.ts`: axe on public + signed-in pages × light/dark × en/fr. **Serious/critical = failure**; others are annotated.
 - `src/styles/contrast.test.ts`: every text/background token pair ≥ 4.5:1, focus ring ≥ 3:1, in every theme and accent.
 - Storybook's a11y panel on every component story.
 
 ## Manual checklist (before every release, ~20 minutes)
+
 Keyboard only (unplug the mouse):
+
 - [ ] Tab order is logical on: home, sign-up, sign-in (passkey autofill), 2FA, org switcher, invite, members table, project form.
 - [ ] A focus ring is ALWAYS visible; nothing traps focus except modal dialogs — which trap it **and** return it on close.
 - [ ] Esc closes dialogs, menus and the consent banner's settings.
-- [ ] No keyboard-only dead ends (everything clickable is a button or link).
-Screen reader (NVDA on Windows is free; VoiceOver on macOS):
+- [ ] No keyboard-only dead ends (everything clickable is a button or link). Screen reader (NVDA on Windows is free; VoiceOver on macOS):
 - [ ] Page title and one `<h1>` per page; headings descend without gaps.
 - [ ] Landmarks: banner, navigation, main, contentinfo.
 - [ ] Form errors are announced, tied to their fields; required fields are identified.
 - [ ] Toasts and loading states are announced politely (not stealing focus).
-- [ ] Icon-only buttons have names; decorative icons are `aria-hidden`.
-Visual:
+- [ ] Icon-only buttons have names; decorative icons are `aria-hidden`. Visual:
 - [ ] 200 % zoom and 320 px width: no horizontal scroll, nothing cut off (reflow).
 - [ ] Reduced motion honoured. Not colour alone to convey meaning.
+
 ## Rules for new UI
-Use real `<button>`/`<a>`; label every control; never remove outlines without a replacement; keep tokens in `theme.css`
-(the contrast test will tell you when you break one).
-````
+
+Use real `<button>`/`<a>`; label every control; never remove outlines without a replacement; keep tokens in `theme.css` (the contrast test will tell you when you break one).
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check && pnpm e2e
 ```
+
 1. `pnpm e2e e2e/a11y.spec.ts` — green. If it reports violations, **fix the component** (label, contrast, heading order, landmark…), not the test. Anything that truly can't be fixed this sprint gets a one-line exclusion in the test (`.exclude('selector')`) **plus** a `TD-` entry.
-2. Proof the contrast test bites: set `--muted-foreground: oklch(0.8 0 0)` in the light theme → *muted-foreground on background ≥ 4.5:1* fails. Revert.
-3. Walk through the **manual checklist** once with NVDA/VoiceOver and write findings into `docs/guides/accessibility.md` → *Known issues*.
+2. Proof the contrast test bites: set `--muted-foreground: oklch(0.8 0 0)` in the light theme → _muted-foreground on background ≥ 4.5:1_ fails. Revert.
+3. Walk through the **manual checklist** once with NVDA/VoiceOver and write findings into `docs/guides/accessibility.md` → _Known issues_.
 4. Press Tab on any page: the skip link appears at the top-start corner; Enter jumps to `#main`.
 
 **🚢 Ship** — branch `feat/s7-t11-a11y` · message: `feat(a11y): add skip link, reduced motion, axe e2e gate and token contrast tests`
@@ -2884,7 +3445,7 @@ pnpm test && pnpm check && pnpm e2e
 
 **Branch:** `feat/s7-t12-rtl` · **Story:** US-077 · **2 SP**
 
-> 🎯 We don't ship Arabic or Hebrew — but we make sure *adding one is a translation job, not a redesign*. We use **logical CSS** everywhere (`ms-`, `pe-`, `text-start`…), prove it with a forced-RTL run, and add a test that stops physical properties from creeping back.
+> 🎯 We don't ship Arabic or Hebrew — but we make sure _adding one is a translation job, not a redesign_. We use **logical CSS** everywhere (`ms-`, `pe-`, `text-start`…), prove it with a forced-RTL run, and add a test that stops physical properties from creeping back.
 
 ```bash
 git switch main && git pull && git switch -c feat/s7-t12-rtl
@@ -2894,13 +3455,17 @@ pnpm add @radix-ui/react-direction
 ### 1. Direction as data
 
 📄 **Create `src/i18n/direction.ts`:**
+
 ```ts
 const RTL_LOCALES = new Set(['ar', 'he', 'fa', 'ur']);
 
 /** Add a right-to-left language by listing its code in routing.ts — this function does the rest. */
-export const getDirection = (locale: string): 'ltr' | 'rtl' => (RTL_LOCALES.has(locale.split('-')[0]!) ? 'rtl' : 'ltr');
+export const getDirection = (locale: string): 'ltr' | 'rtl' =>
+  RTL_LOCALES.has(locale.split('-')[0]!) ? 'rtl' : 'ltr';
 ```
+
 📄 **Create `src/i18n/direction.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -2914,9 +3479,11 @@ it('knows which languages read right to left', () => {
   expect(getDirection('fr')).toBe('ltr');
 });
 ```
+
 📄 **Edit `src/libs/Env.ts`** (`client` + `runtimeEnv`): `NEXT_PUBLIC_FORCE_DIR: z.enum(['ltr', 'rtl']).optional(),` · `.env.example`: `# NEXT_PUBLIC_FORCE_DIR=rtl   # review tool only: forces right-to-left on every locale (build-time)`.
 
 📄 **Edit `src/app/[locale]/layout.tsx`:**
+
 ```tsx
 import { DirectionProvider } from '@radix-ui/react-direction';
 import { getDirection } from '@/i18n/direction';
@@ -2928,11 +3495,13 @@ import { Env } from '@/libs/Env';
     <body …>
       <DirectionProvider dir={dir}>{/* …providers and children… */}</DirectionProvider>
 ```
+
 > Radix (dropdowns, selects, tabs, sliders) reads `dir` from this provider: menus open on the correct side and arrow keys move the right way.
 
 ### 2. A guard against physical properties
 
 📄 **Create `src/styles/logical-properties.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -2941,7 +3510,12 @@ import { describe, expect, it } from 'vitest';
 
 const files = (readdirSync('src', { recursive: true }) as string[])
   .map((file) => path.join('src', file))
-  .filter((file) => file.endsWith('.tsx') && !/\.(test|stories)\.tsx$/.test(file) && !file.includes(path.join('components', 'ui')));
+  .filter(
+    (file) =>
+      file.endsWith('.tsx') &&
+      !/\.(test|stories)\.tsx$/.test(file) &&
+      !file.includes(path.join('components', 'ui')),
+  );
 
 // Physical utilities that do NOT flip with the writing direction → use the logical twin
 const PHYSICAL: [RegExp, string][] = [
@@ -2960,10 +3534,14 @@ describe('logical properties only (add `rtl-ok` on a line to allow a deliberate 
   it('no physical margin/padding/position/border/radius/float utilities', () => {
     const offenders: string[] = [];
     for (const file of files) {
-      readFileSync(file, 'utf8').split('\n').forEach((line, index) => {
-        if (line.includes('rtl-ok')) return;
-        for (const [pattern, hint] of PHYSICAL) if (pattern.test(line)) offenders.push(`${file}:${index + 1}  ${hint}\n    ${line.trim()}`);
-      });
+      readFileSync(file, 'utf8')
+        .split('\n')
+        .forEach((line, index) => {
+          if (line.includes('rtl-ok')) return;
+          for (const [pattern, hint] of PHYSICAL)
+            if (pattern.test(line))
+              offenders.push(`${file}:${index + 1}  ${hint}\n    ${line.trim()}`);
+        });
     }
     expect(offenders, `\n${offenders.join('\n')}`).toEqual([]);
   });
@@ -2971,50 +3549,67 @@ describe('logical properties only (add `rtl-ok` on a line to allow a deliberate 
   it('directional icons carry rtl:rotate-180 and no arrow characters are hard-coded', () => {
     const offenders: string[] = [];
     for (const file of files) {
-      readFileSync(file, 'utf8').split('\n').forEach((line, index) => {
-        if (line.includes('rtl-ok')) return;
-        if (DIRECTIONAL_ICON.test(line)) offenders.push(`${file}:${index + 1}  add className="rtl:rotate-180"`);
-        if (ARROW_CHARACTERS.test(line)) offenders.push(`${file}:${index + 1}  use an icon with rtl:rotate-180 instead of ← →`);
-      });
+      readFileSync(file, 'utf8')
+        .split('\n')
+        .forEach((line, index) => {
+          if (line.includes('rtl-ok')) return;
+          if (DIRECTIONAL_ICON.test(line))
+            offenders.push(`${file}:${index + 1}  add className="rtl:rotate-180"`);
+          if (ARROW_CHARACTERS.test(line))
+            offenders.push(`${file}:${index + 1}  use an icon with rtl:rotate-180 instead of ← →`);
+        });
     }
     expect(offenders, `\n${offenders.join('\n')}`).toEqual([]);
   });
 });
 ```
+
 ```bash
 pnpm test src/styles/logical-properties.test.ts
 ```
+
 Fix every offender it lists. Typical conversions: `ml-2 → ms-2`, `pr-4 → pe-4`, `text-left → text-start`, `left-2 → start-2`, `border-l → border-s`, `rounded-r-md → rounded-e-md`. The admin user page's literal `←` back-link becomes:
+
 ```tsx
 <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden />
 ```
+
 (Vendored shadcn files under `components/ui` are excluded from the test — open them once, `git grep -nE "(ml|mr|pl|pr|left|right)-" src/components/ui`, and convert the few that remain.)
 
 ### 3. Prove it with a forced-RTL run
 
 📄 **Edit `e2e/env.ts`** — append to `appEnv`:
+
 ```ts
   // Review mode (`pnpm e2e:rtl`): the direction is baked in at build time
   ...(process.env.E2E_RTL ? { NEXT_PUBLIC_FORCE_DIR: 'rtl' } : {}),
 ```
-📄 **Edit `package.json`:** `"e2e:rtl": "cross-env E2E_RTL=1 playwright test e2e/rtl.spec.ts"`
-📄 **Create `e2e/rtl.spec.ts`:**
+
+📄 **Edit `package.json`:** `"e2e:rtl": "cross-env E2E_RTL=1 playwright test e2e/rtl.spec.ts"` 📄 **Create `e2e/rtl.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 
-test.skip(!process.env.E2E_RTL, 'Runs with E2E_RTL=1 (pnpm e2e:rtl): the direction is fixed at build time');
+test.skip(
+  !process.env.E2E_RTL,
+  'Runs with E2E_RTL=1 (pnpm e2e:rtl): the direction is fixed at build time',
+);
 
 const PAGES = ['/', '/pricing', '/about', '/contact', '/sign-in', '/sign-up', '/terms'];
 
 for (const path of PAGES) {
   for (const width of [1280, 360]) {
-    test(`${path} @${width}px: direction is rtl and nothing overflows horizontally`, async ({ page }) => {
+    test(`${path} @${width}px: direction is rtl and nothing overflows horizontally`, async ({
+      page,
+    }) => {
       await page.setViewportSize({ width, height: 800 });
       await page.goto(path);
       await page.waitForLoadState('networkidle');
 
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
       expect(overflow, 'horizontal scroll bar').toBeLessThanOrEqual(1);
     });
   }
@@ -3034,12 +3629,16 @@ test('the signed-in shell does not overflow either', async ({ ownerPage, world }
   for (const path of ['', '/projects', '/members']) {
     await ownerPage.goto(`/dashboard/${world.orgSlug}${path}`);
     await ownerPage.waitForLoadState('networkidle');
-    const overflow = await ownerPage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    const overflow = await ownerPage.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
     expect(overflow, path).toBeLessThanOrEqual(1);
   }
 });
 ```
+
 📄 **Weekly safety net** — `.github/workflows/rtl.yml`:
+
 ```yaml
 name: RTL review
 
@@ -3076,6 +3675,7 @@ jobs:
 ### 4. Storybook gets a direction switch
 
 📄 **Edit `.storybook/preview.tsx`:**
+
 ```tsx
 import { DirectionProvider } from '@radix-ui/react-direction';
 
@@ -3100,25 +3700,30 @@ const withDirection: Decorator = (Story, context) => {
 ### 5. Document the recipe
 
 📄 **Append to `docs/guides/i18n.md`:**
-````markdown
+
+```markdown
 ## Right-to-left languages
+
 Layout is built with logical properties (a test enforces it). To add Arabic/Hebrew:
+
 1. Add the code to `routing.locales` (the direction map in `src/i18n/direction.ts` already knows `ar`, `he`, `fa`, `ur`).
-2. Create the message file and run the checklist in *Adding a language*.
+2. Create the message file and run the checklist in _Adding a language_.
 3. **Fonts:** Geist has no Arabic/Hebrew glyphs — add a `next/font` family for the script (e.g. Noto Sans Arabic) and apply it for that locale.
-4. Review with `pnpm e2e:rtl` (forces `dir="rtl"` on every page) and the Storybook *Direction* toolbar item.
+4. Review with `pnpm e2e:rtl` (forces `dir="rtl"` on every page) and the Storybook _Direction_ toolbar item.
 5. Numerals, dates and plurals come from ICU/`Intl`; check them with a native speaker.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm e2e:rtl          # 🪟 first run builds the app in RTL mode
 ```
+
 1. `pnpm e2e:rtl` is green: every page is `dir="rtl"`, no horizontal overflow at 1280 and 360 px, the header mirrored.
 2. **Look at it:** run `NEXT_PUBLIC_FORCE_DIR=rtl pnpm dev` (🪟 `set NEXT_PUBLIC_FORCE_DIR=rtl&& pnpm dev`) and click through home, sign-in, dashboard, a dropdown and a dialog: text aligns right, the sidebar/menus appear on the correct side, chevrons point the right way, keyboard arrows in menus follow the direction.
 3. Add `className="ml-2"` to a component → the logical-properties test **fails** with the file and line; revert.
-4. Storybook's *Direction* toolbar flips the stories.
+4. Storybook's _Direction_ toolbar flips the stories.
 5. Remember to run the normal `pnpm e2e` afterwards — it rebuilds in LTR (the RTL flag was only in that process's environment).
 
 **🚢 Ship** — branch `feat/s7-t12-rtl` · message: `feat(i18n): make the layout rtl-ready with logical properties, direction provider and a forced-rtl review run`
@@ -3137,7 +3742,8 @@ git switch main && git pull && git switch -c feat/s7-t13-theme-brand
 
 ### 1. Tokens in their own file
 
-📄 **Create `src/styles/theme.css`** — **move** the `:root { … }` and `.dark { … }` blocks out of `global.css` into this file *as they are* (keep the `--chart-*` and `--sidebar-*` variables), then **set these values** (they are the ones the accessibility tests care about):
+📄 **Create `src/styles/theme.css`** — **move** the `:root { … }` and `.dark { … }` blocks out of `global.css` into this file _as they are_ (keep the `--chart-*` and `--sidebar-*` variables), then **set these values** (they are the ones the accessibility tests care about):
+
 ```css
 /* Design tokens. Everything visual that a rebrand touches is in this file. */
 :root {
@@ -3158,7 +3764,9 @@ git switch main && git pull && git switch -c feat/s7-t13-theme-brand
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.55 0.22 27);
   --border: oklch(0.922 0 0);
-  --input: oklch(0.65 0 0); /* ≥ 3:1 against the background: field edges are "UI components" (WCAG 1.4.11) */
+  --input: oklch(
+    0.65 0 0
+  ); /* ≥ 3:1 against the background: field edges are "UI components" (WCAG 1.4.11) */
   --ring: oklch(0.55 0 0);
 }
 
@@ -3205,23 +3813,25 @@ git switch main && git pull && git switch -c feat/s7-t13-theme-brand
   --ring: oklch(0.723 0.219 149.579);
 }
 ```
+
 📄 **Edit `src/styles/global.css`:** `@import './theme.css';` right after `@import 'tailwindcss';` (the `@theme inline { … }` mapping stays where it is).
 
 📄 **Add the field-edge check** to `src/styles/contrast.test.ts` → `PAIRS`: `['input', 'background', 3], // field borders (WCAG 1.4.11)` — and run it:
+
 ```bash
 pnpm test src/styles/contrast.test.ts      # light, dark, and every accent in both modes
 ```
+
 If an accent row fails, nudge that accent's lightness until it passes.
 
 ### 2. Accent switch and layout wiring
 
-📄 **Edit `src/libs/Env.ts`** (`client` + `runtimeEnv`): `NEXT_PUBLIC_ACCENT: z.enum(['neutral', 'blue', 'green']).default('neutral'),` · `.env.example`: `NEXT_PUBLIC_ACCENT=neutral  # neutral | blue | green`.
-📄 **Edit `src/app/[locale]/layout.tsx`:** on `<html>`: `data-accent={Env.NEXT_PUBLIC_ACCENT === 'neutral' ? undefined : Env.NEXT_PUBLIC_ACCENT}`.
-📄 **Storybook** — add an *Accent* toolbar global in `.storybook/preview.tsx` that sets `document.documentElement.dataset.accent` (same pattern as *Direction*).
+📄 **Edit `src/libs/Env.ts`** (`client` + `runtimeEnv`): `NEXT_PUBLIC_ACCENT: z.enum(['neutral', 'blue', 'green']).default('neutral'),` · `.env.example`: `NEXT_PUBLIC_ACCENT=neutral  # neutral | blue | green`. 📄 **Edit `src/app/[locale]/layout.tsx`:** on `<html>`: `data-accent={Env.NEXT_PUBLIC_ACCENT === 'neutral' ? undefined : Env.NEXT_PUBLIC_ACCENT}`. 📄 **Storybook** — add an _Accent_ toolbar global in `.storybook/preview.tsx` that sets `document.documentElement.dataset.accent` (same pattern as _Direction_).
 
 ### 3. A logo, used everywhere
 
 📄 **Create `src/components/layout/logo.tsx`:**
+
 ```tsx
 import { brand } from '@/config/brand';
 
@@ -3229,7 +3839,10 @@ import { brand } from '@/config/brand';
 export function Logo({ className }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 font-semibold ${className ?? ''}`}>
-      <span aria-hidden className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md text-sm">
+      <span
+        aria-hidden
+        className="bg-primary text-primary-foreground grid size-7 place-items-center rounded-md text-sm"
+      >
         {brand.name.slice(0, 1).toUpperCase()}
       </span>
       <span>{brand.name}</span>
@@ -3237,6 +3850,7 @@ export function Logo({ className }: { className?: string }) {
   );
 }
 ```
+
 Use `<Logo />` in `site-header.tsx`, the auth layout and the app shell instead of the plain brand text.
 
 ### 4. One brand, enforced
@@ -3244,6 +3858,7 @@ Use `<Logo />` in `site-header.tsx`, the auth layout and the app shell instead o
 📄 **Remove `common.appName`** from both message files (`git grep -n "common.appName" src` must return nothing), then:
 
 📄 **Create `src/config/brand.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -3256,23 +3871,34 @@ const ALLOWED = new Set([path.join('src', 'libs', 'Env.ts')]); // the default va
 it('the product name is never hard-coded: it comes from NEXT_PUBLIC_APP_NAME via brand.ts or {appName}', () => {
   const offenders = (readdirSync('src', { recursive: true }) as string[])
     .map((file) => path.join('src', file))
-    .filter((file) => /\.(ts|tsx|json|css)$/.test(file) && !/\.(test|stories)\.tsx?$/.test(file) && !ALLOWED.has(file))
+    .filter(
+      (file) =>
+        /\.(ts|tsx|json|css)$/.test(file) &&
+        !/\.(test|stories)\.tsx?$/.test(file) &&
+        !ALLOWED.has(file),
+    )
     .filter((file) => readFileSync(file, 'utf8').includes(DEFAULT_NAME));
 
-  expect(offenders, `Use brand.name / {appName} instead of the literal name in:\n${offenders.join('\n')}`).toEqual([]);
+  expect(
+    offenders,
+    `Use brand.name / {appName} instead of the literal name in:\n${offenders.join('\n')}`,
+  ).toEqual([]);
 });
 ```
+
 Fix whatever it finds (emails, error pages, metadata…): `brand.name` in code, `{appName}` in messages.
 
 ### 5. The ten-minute rebrand drill
 
 📄 **Create `docs/guides/theming.md`:**
-````markdown
+
+```markdown
 # Theming and rebranding
 
 ## Where things live
+
 | What | Where |
-|---|---|
+| --- | --- |
 | Product name, URL, support email, social links | `.env` (`NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_SUPPORT_EMAIL`) + `src/config/brand.ts` |
 | Colours, radius | `src/styles/theme.css` (OKLCH tokens, light + dark) |
 | Accent colour | `NEXT_PUBLIC_ACCENT=neutral\|blue\|green` (presets in `theme.css`) |
@@ -3282,24 +3908,28 @@ Fix whatever it finds (emails, error pages, metadata…): `brand.name` in code, 
 | Fonts | `src/app/[locale]/layout.tsx` (`next/font`) |
 
 ## The 10-minute rebrand
+
 1. `.env.local`: name, URL, support email, `NEXT_PUBLIC_ACCENT` — **1 min**
 2. `src/config/brand.ts`: social links (leave out what you don't have) — **1 min**
 3. Pick a colour: use a preset, or edit `--primary` / `--primary-foreground` / `--ring` in `theme.css` (both modes) — **3 min**
 4. `logo.tsx`, `icon.tsx`, `apple-icon.tsx`: your mark — **3 min**
 5. `pnpm test` — the **contrast test** tells you at once if your colour is unreadable; `brand.test.ts` finds leftover names — **1 min**
-6. Skim `/`, `/pricing`, `/sign-in` in light and dark — **1 min**
-Then rewrite the copy in `en.json`/`fr.json` (not part of the 10 minutes) and add the `update-snapshots` label to regenerate the visual baselines.
+6. Skim `/`, `/pricing`, `/sign-in` in light and dark — **1 min** Then rewrite the copy in `en.json`/`fr.json` (not part of the 10 minutes) and add the `update-snapshots` label to regenerate the visual baselines.
 
 ## Rules
+
 - Never write a colour literal in a component: use tokens (`bg-primary`, `text-muted-foreground`).
 - A new accent = two blocks in `theme.css` + its name in `contrast.test.ts` and `Env.ts`.
-````
+```
+
 **Do the drill for real**: change the name to something else, pick `blue`, change the logo letter — **time it**, write the minutes in `06-project-state.md` (target ≤ 10 for steps 1–6), then undo.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check && pnpm build
 ```
+
 1. `NEXT_PUBLIC_ACCENT=blue pnpm dev` → buttons, focus rings and links turn blue in light **and** dark; `green` likewise; `neutral` is the monochrome default.
 2. Contrast tests green for all 8 combinations; the visible **input borders** are noticeably firmer than the default shadcn (that's WCAG 1.4.11 at work).
 3. Rename the product via `.env.local` only → header, footer, titles, emails, OG image, manifest, JSON-LD and legal pages all show the new name (and **nothing** shows the old one).
@@ -3313,6 +3943,7 @@ pnpm test && pnpm test:browser && pnpm check && pnpm build
 ## 🧾 Sprint 7 wrap-up
 
 **Branch:** `docs/s7-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s7-wrap-up
 ```
@@ -3320,10 +3951,12 @@ git switch main && git pull && git switch -c docs/s7-wrap-up
 ### 1. SEO guide for the people who add pages later
 
 📄 **Create `docs/guides/seo.md`:**
-````markdown
+
+```markdown
 # SEO
 
 ## Adding a public page
+
 1. Create it under `src/app/[locale]/(marketing)/…` as a **static** server component (`setRequestLocale(locale)`; no `headers()`/`cookies()`).
 2. Strings in both message files, plus `meta.<key>.title|description`.
 3. `export async function generateMetadata` → `siteMetadata({ locale, key, path })` (`legal: true` for legal pages, `noindex: true` for utility pages).
@@ -3332,16 +3965,18 @@ git switch main && git pull && git switch -c docs/s7-wrap-up
 6. Add the path to `e2e/a11y.spec.ts` and, if it matters visually, `e2e/visual/pages.visual.ts`.
 
 ## Switches
+
 `SITE_INDEXING` (true in production **only**) · `LEGAL_NOINDEX` (false only after legal review) · `NEXT_PUBLIC_APP_URL` (canonical base).
 
 ## Checks
-Unit: `seo.test.ts` (canonical/hreflang symmetry), `sitemap.test.ts`, `json-ld.test.ts`. E2E: `e2e/seo.spec.ts`.
-Manual on a deployed preview: Rich Results Test, Facebook/LinkedIn debuggers, Search Console (after launch).
-````
+
+Unit: `seo.test.ts` (canonical/hreflang symmetry), `sitemap.test.ts`, `json-ld.test.ts`. E2E: `e2e/seo.spec.ts`. Manual on a deployed preview: Rich Results Test, Facebook/LinkedIn debuggers, Search Console (after launch).
+```
 
 ### 2. Update `AGENTS.md`
-**Commands:** `pnpm lighthouse`, `pnpm e2e:rtl`.
-**Conventions:**
+
+**Commands:** `pnpm lighthouse`, `pnpm e2e:rtl`. **Conventions:**
+
 ```markdown
 - Public marketing pages must stay STATIC (no headers()/cookies()); metadata via `siteMetadata`, JSON-LD via `src/libs/json-ld.ts`.
 - Brand name only via `brand.name` / `{appName}` — never the literal; colours only via tokens in `src/styles/theme.css`.
@@ -3351,11 +3986,13 @@ Manual on a deployed preview: Rich Results Test, Facebook/LinkedIn debuggers, Se
 - Performance budgets are enforced by Lighthouse CI (`lighthouserc.json`): don't import heavy libraries into marketing pages; lazy-load what isn't needed for first paint.
 - Translations: edit `en.json` + `fr.json` together; Crowdin syncs via PR (`i18n:check` guards it).
 ```
+
 ```bash
 pnpm check:agents
 ```
 
 ### 3. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 7 · **Current sprint:** Sprint 8
 - **New env vars:** `NEXT_PUBLIC_SUPPORT_EMAIL`, `SITE_INDEXING`, `LEGAL_NOINDEX`, `NEXT_PUBLIC_FORCE_DIR`, `NEXT_PUBLIC_ACCENT`
 - **New routes/files:** `/pricing`, `/about`, `/terms`, `/privacy`, `/cookies`, `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, generated icons and OG images
@@ -3364,6 +4001,7 @@ pnpm check:agents
 - **Debt:** `TD-09` outcome, translated legal text needs lawyer review, Arabic fonts not bundled, a11y advisories list (moderate/minor)
 
 Tick the checkboxes in `docs/roadmap/sprint-07-seo-marketing-perf.md`, then:
+
 ```bash
 pnpm check
 git add -A
@@ -3396,7 +4034,7 @@ git push origin v0.8.0-beta
 ### 🎬 Sprint review — measurable acceptance
 
 | Check | Expected |
-|---|---|
+| --- | --- |
 | `pnpm lighthouse` | all four pages meet the budgets; reports in `.lighthouseci/` |
 | View-source of `/fr/pricing` | canonical = itself, hreflang `en`/`fr`/`x-default`, OG + Twitter tags |
 | Rich Results Test on `/` | Organization + FAQ detected, no errors |
@@ -3412,12 +4050,12 @@ git push origin v0.8.0-beta
 ## 🧯 Troubleshooting (Sprint 7)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | A marketing page shows as `ƒ` (dynamic) in the build output | Something reads `headers()`/`cookies()`/`searchParams` — typically a layout calling a session helper; keep marketing layouts free of it, and call `setRequestLocale(locale)` |
 | `og:image` URL 404s on `/` or `/fr` | The metadata image route and next-intl's rewrite disagree → follow next-intl's note on metadata routes; the E2E "OG image renders" test catches it |
 | `robots.txt` says `Disallow: /` in production | `SITE_INDEXING` isn't `true` in the production environment |
 | Pages `noindex` after enabling indexing | Legal pages: `LEGAL_NOINDEX=true` by design; auth/app pages are always `noindex` |
-| Lighthouse "Best practices" < 95 | Console errors (a vendor key set during the run), or deprecated APIs. The script blanks Sentry/PostHog; check the report's *Issues* |
+| Lighthouse "Best practices" < 95 | Console errors (a vendor key set during the run), or deprecated APIs. The script blanks Sentry/PostHog; check the report's _Issues_ |
 | Lighthouse scores differ run to run | Expected ±3; the median of 3 runs is used. Close other heavy programs; compare in CI |
 | `pnpm lighthouse` can't find Chrome | 🪟 `set CHROME_PATH=…chrome.exe`; or run it in CI/WSL |
 | Servers keep running after Lighthouse failed | 🪟 `taskkill /F /IM node.exe` (careful: kills all Node) or find the PIDs with `netstat -ano \| findstr :3100` |

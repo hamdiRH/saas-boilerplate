@@ -1,5 +1,5 @@
-import { createJiti } from "jiti";
-import type { NextConfig } from "next";
+import { createJiti } from 'jiti';
+import type { NextConfig } from 'next';
 
 const jiti = createJiti(import.meta.url);
 
@@ -13,9 +13,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   turbopack: {
     rules: {
-      "*.css": {
-        as: "*.css",
-        loaders: ["@tailwindcss/turbopack"],
+      '*.css': {
+        as: '*.css',
+        loaders: ['@tailwindcss/turbopack'],
       },
     },
   },
@@ -25,9 +25,9 @@ const nextConfig: NextConfig = {
 // Validate environment variables without top-level await.
 const validateEnvironment = async (): Promise<void> => {
   try {
-    await jiti.import("./src/libs/env");
+    await jiti.import('./src/libs/env');
   } catch (error) {
-    console.error("Environment validation failed:", error);
+    console.error('Environment validation failed:', error);
     process.exit(1);
   }
 };

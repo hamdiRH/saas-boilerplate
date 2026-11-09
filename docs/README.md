@@ -1,15 +1,16 @@
 <!-- init:title -->
+
 # SaaS Boilerplate
+
 <!-- /init:title -->
 
 <!-- init:description -->
+
 > A production-minded Next.js 16 SaaS starter: modern authentication, multi-tenant organizations with roles, observability, security hardening and a test suite you can trust — wired together, and optional by design.
+
 <!-- /init:description -->
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/OWNER/REPO/graph/badge.svg)](https://codecov.io/gh/OWNER/REPO)
-[![Release](https://img.shields.io/github/v/release/OWNER/REPO?include_prereleases)](https://github.com/OWNER/REPO/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
+[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/OWNER/REPO/graph/badge.svg)](https://codecov.io/gh/OWNER/REPO) [![Release](https://img.shields.io/github/v/release/OWNER/REPO?include_prereleases)](https://github.com/OWNER/REPO/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 
 <p align="center">
   <picture>
@@ -23,7 +24,7 @@
 ## At a glance
 
 |  |  |
-|---|---|
+| --- | --- |
 | **Stack** | Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 · shadcn/ui |
 | **Auth** | Better Auth: password, magic link, social, passkeys, TOTP, sessions, impersonation |
 | **Data** | Drizzle ORM · PostgreSQL — embedded **PGlite** locally, **Neon** (or any Postgres) in production |
@@ -32,23 +33,17 @@
 | **Ops** | Sentry · Better Stack · Arcjet · Checkly · PostHog — every one optional |
 | **Ship** | Semantic Release · Vercel + Neon pipeline with a migration gate · one-command rebrand |
 
-> **Database: PostgreSQL-first.** SQLite and MySQL are *not* supported in v1.0 (see the [database guide](guides/database.md#portability)).
-> **Not included:** billing/subscriptions (the data model leaves room; see the roadmap).
+> **Database: PostgreSQL-first.** SQLite and MySQL are _not_ supported in v1.0 (see the [database guide](guides/database.md#portability)). **Not included:** billing/subscriptions (the data model leaves room; see the roadmap).
 
 ## Why this exists
 
-Every SaaS spends its first weeks rebuilding the same things: sign-in that doesn't leak accounts, organizations
-and permissions that actually isolate customers, email, error tracking, CI, translations. This starter does that once,
-carefully — and then **proves** it with tests, so you can change it without fear.
+Every SaaS spends its first weeks rebuilding the same things: sign-in that doesn't leak accounts, organizations and permissions that actually isolate customers, email, error tracking, CI, translations. This starter does that once, carefully — and then **proves** it with tests, so you can change it without fear.
 
 Three ideas run through the whole codebase:
 
-1. **Secure by construction.** Authorization lives on the server; tenant data is only reachable through `tenantDb`; a test
-   fails if a new Server Action has no declared protection.
-2. **Optional everywhere.** Each integration sits behind a small adapter that does nothing without its environment variables.
-   Run it with *no* configuration, or strip a module out with one command.
-3. **Documented decisions, verified docs.** The environment table is generated from the code and the commands in the guides are
-   checked in CI.
+1. **Secure by construction.** Authorization lives on the server; tenant data is only reachable through `tenantDb`; a test fails if a new Server Action has no declared protection.
+2. **Optional everywhere.** Each integration sits behind a small adapter that does nothing without its environment variables. Run it with _no_ configuration, or strip a module out with one command.
+3. **Documented decisions, verified docs.** The environment table is generated from the code and the commands in the guides are checked in CI.
 
 ## Try it in 5 minutes
 
@@ -67,8 +62,7 @@ In a second terminal (first run only):
 pnpm db:migrate && pnpm db:seed
 ```
 
-Sign in with the seeded demo — `demo@example.com` / `Demo-Password-123` — or create an account: verification emails are
-**printed in the terminal**, no email service needed. Then make it yours:
+Sign in with the seeded demo — `demo@example.com` / `Demo-Password-123` — or create an account: verification emails are **printed in the terminal**, no email service needed. Then make it yours:
 
 ```bash
 pnpm init:template    # name, slug, repository, default language, accent colour
@@ -77,9 +71,9 @@ pnpm init:template    # name, slug, repository, default language, accent colour
 <details>
 <summary><b>Screenshots</b></summary>
 
-| Projects (organization workspace) | Account security |
-|---|---|
-| ![Projects](images/projects.png) | ![Security](images/security.png) |
+| Projects (organization workspace) | Account security                 |
+| --------------------------------- | -------------------------------- |
+| ![Projects](images/projects.png)  | ![Security](images/security.png) |
 
 </details>
 
@@ -157,7 +151,7 @@ Legend: ✅ core · 🔌 optional (works with zero configuration; enable with en
 <summary><b>Release & deployment</b></summary>
 
 - ✅ **Semantic Release**: Conventional Commits decide the version, the changelog and GitHub Releases
-- ✅ Production deploys through a gated workflow: *approve → migrate → deploy (not live) → smoke test → promote*; instant rollback runbook
+- ✅ Production deploys through a gated workflow: _approve → migrate → deploy (not live) → smoke test → promote_; instant rollback runbook
 - ✅ Vercel previews with their own Neon database branch; expand/contract migration lint
 - ✅ Dependabot (grouped, patch auto-merge), CodeRabbit config, PR/issue templates, branch rules as code
 
@@ -189,7 +183,7 @@ e2e/  tests/  .storybook/  docs/  scripts/  loadtest/
 ## Everyday commands
 
 | I want to… | Run |
-|---|---|
+| --- | --- |
 | start developing | `pnpm dev` |
 | run everything CI runs, locally | `pnpm check` |
 | run tests | `pnpm test` (unit) · `pnpm test:browser` (components) · `pnpm test:coverage` |
@@ -207,11 +201,10 @@ Prefer a full list? Open `package.json` → `scripts`; every command used in the
 
 ## Configure only what you need
 
-Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/Env.ts`); the full,
-generated table is in the **[environment reference](guides/environment.md)**.
+Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/Env.ts`); the full, generated table is in the **[environment reference](guides/environment.md)**.
 
 | Service | Set these | What you get | Guide |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Database (production)** | `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (migrations) | Neon or any PostgreSQL | [database](guides/database.md) |
 | **Email** | `EMAIL_TRANSPORT=resend`, `EMAIL_FROM`, `RESEND_API_KEY` | real verification, reset, invitation emails | [deployment](guides/deployment.md#email) |
 | **Social sign-in** | `<PROVIDER>_CLIENT_ID` + `_CLIENT_SECRET` | the provider's button appears | [social auth](guides/social-auth.md) |
@@ -222,8 +215,7 @@ generated table is in the **[environment reference](guides/environment.md)**.
 | **Crowdin** | CI secrets `CROWDIN_PROJECT_ID`, `CROWDIN_PERSONAL_TOKEN` | translation sync PRs | [i18n](guides/i18n.md) |
 | **Codecov / Checkly** | CI secrets `CODECOV_TOKEN`, `CHECKLY_*` | coverage reports, uptime checks | [testing](guides/testing.md) · [observability](guides/observability.md) |
 
-Don't want a module at all? `pnpm init:template --remove sentry,posthog` deletes its code, dependencies and CI wiring
-(see [optional modules](guides/modules.md)).
+Don't want a module at all? `pnpm init:template --remove sentry,posthog` deletes its code, dependencies and CI wiring (see [optional modules](guides/modules.md)).
 
 ## Make it yours
 
@@ -235,26 +227,22 @@ Don't want a module at all? `pnpm init:template --remove sentry,posthog` deletes
 
 ## Quality gates
 
-Pull requests cannot merge until **`CI OK`** passes: types, lint, format, Knip, env and docs checks, `i18n-check`, migration lint,
-unit + component tests with coverage thresholds, production build with a bundle budget, Storybook build, two E2E shards,
-visual regression, Lighthouse budgets and accessibility checks. Secret scanning and CodeQL run alongside.
+Pull requests cannot merge until **`CI OK`** passes: types, lint, format, Knip, env and docs checks, `i18n-check`, migration lint, unit + component tests with coverage thresholds, production build with a bundle budget, Storybook build, two E2E shards, visual regression, Lighthouse budgets and accessibility checks. Secret scanning and CodeQL run alongside.
 
-> Visual-regression baselines are produced by CI on Linux — never commit screenshots from your own machine. Add the
-> `update-snapshots` label to a PR instead ([how](guides/visual-testing.md)).
+> Visual-regression baselines are produced by CI on Linux — never commit screenshots from your own machine. Add the `update-snapshots` label to a PR instead ([how](guides/visual-testing.md)).
 
 ## Deploy
 
 1. Create a **Neon** project (branches `main` and `staging`) and a **Vercel** project — [one-time setup](guides/deployment.md#one-time-setup--30-minutes).
-2. Merge a `feat:` or `fix:` commit: CI runs, **Semantic Release** tags `vX.Y.Z`, the **Deploy** workflow waits for your approval, runs migrations,
-   deploys without going live, smoke-tests `/api/health`, then promotes.
+2. Merge a `feat:` or `fix:` commit: CI runs, **Semantic Release** tags `vX.Y.Z`, the **Deploy** workflow waits for your approval, runs migrations, deploys without going live, smoke-tests `/api/health`, then promotes.
 3. If something is wrong, roll back in one click — the [runbook](guides/deployment.md#rollback-runbook) covers app and database.
 
-Migrations are **expand/contract only**: production runs them *before* the new code is live, so the previous version must keep working.
+Migrations are **expand/contract only**: production runs them _before_ the new code is live, so the previous version must keep working.
 
 ## Documentation
 
 | Start here | Build | Operate |
-|---|---|---|
+| --- | --- | --- |
 | [Getting started](guides/getting-started.md) | [Adding a feature](guides/adding-a-feature.md) | [Deployment](guides/deployment.md) |
 | [Environment](guides/environment.md) | [Authentication](guides/auth.md) · [advanced](guides/auth-security.md) | [Releasing](guides/releasing.md) |
 | [Database](guides/database.md) | [Multi-tenancy](guides/multi-tenancy.md) · [RBAC](guides/rbac.md) | [Observability](guides/observability.md) |
@@ -265,15 +253,11 @@ Working with an AI coding agent? Point it at [`AGENTS.md`](../AGENTS.md): archit
 
 ## FAQ
 
-**Can I use it without any third-party account?** Yes. Database, email (printed to the terminal) and all tooling run locally.
-**Do I need Vercel and Neon?** No — they are the documented path. Any host and any PostgreSQL work; a Docker/standalone appendix is in the deployment guide.
-**Where is billing?** Not in v1.0. **Windows?** Supported through Git Bash or WSL; the repository is LF-normalised.
-**How do I report a vulnerability?** Privately — see [SECURITY.md](../SECURITY.md).
+**Can I use it without any third-party account?** Yes. Database, email (printed to the terminal) and all tooling run locally. **Do I need Vercel and Neon?** No — they are the documented path. Any host and any PostgreSQL work; a Docker/standalone appendix is in the deployment guide. **Where is billing?** Not in v1.0. **Windows?** Supported through Git Bash or WSL; the repository is LF-normalised. **How do I report a vulnerability?** Privately — see [SECURITY.md](../SECURITY.md).
 
 ## Contributing
 
-Issues and pull requests are welcome — start with [CONTRIBUTING.md](../CONTRIBUTING.md) and the [code of conduct](../CODE_OF_CONDUCT.md).
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/): the type of your commit decides the next version.
+Issues and pull requests are welcome — start with [CONTRIBUTING.md](../CONTRIBUTING.md) and the [code of conduct](../CODE_OF_CONDUCT.md). Commits follow [Conventional Commits](https://www.conventionalcommits.org/): the type of your commit decides the next version.
 
 ## License
 
