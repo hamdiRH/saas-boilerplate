@@ -11,7 +11,9 @@
     "check": "ultracite check",
     "fix": "ultracite fix",
     "lint": "oxlint",
-    "lint:fix": "oxlint --fix"
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

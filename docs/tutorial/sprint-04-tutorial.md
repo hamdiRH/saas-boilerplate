@@ -2,12 +2,11 @@
 
 ## Sprint 4 — Multi-tenancy, RBAC, Admin & Impersonation
 
-> Companion to `docs/roadmap/sprint-04-tenancy-rbac-admin.md`. Every `S4-Txx` section is one ticket. Tickets follow the sprint file's order.
-> **Release gate: 0.5 MVP** — at the end of this sprint the product is a real multi-tenant app.
+> Companion to `docs/roadmap/sprint-04-tenancy-rbac-admin.md`. Every `S4-Txx` section is one ticket. Tickets follow the sprint file's order. **Release gate: 0.5 MVP** — at the end of this sprint the product is a real multi-tenant app.
 
 🪟 **Windows + Cmder:** use the **Git Bash tab**. Bash syntax and Node scripts only. Paths with `[brackets]` or `(parentheses)` **must be quoted**. Windows-specific notes are marked 🪟.
 
-> ⚠️ **About versions.** The Better Auth **organization** and **admin** plugins are large and change between releases (option names, hooks, method names). Spots likely to differ are marked **🔍 Verify against docs**. The tests describe behaviour that must hold — *tenant isolation, role enforcement, last owner, no cross-tenant leaks* — if a method name differs, fix the **name**, never the **assertion**.
+> ⚠️ **About versions.** The Better Auth **organization** and **admin** plugins are large and change between releases (option names, hooks, method names). Spots likely to differ are marked **🔍 Verify against docs**. The tests describe behaviour that must hold — _tenant isolation, role enforcement, last owner, no cross-tenant leaks_ — if a method name differs, fix the **name**, never the **assertion**.
 
 ---
 
@@ -24,13 +23,13 @@
 ## 🧭 Decisions & deviations (made once, here)
 
 | Topic | Decision | Why |
-|---|---|---|
-| Permission names | We use Better Auth's **default statement names** (`organization`, `member`, `invitation`) + our own `project` | The plugin enforces them on *its* endpoints; renaming would desync UI and API. Mapping: invite → `invitation:create`, remove → `member:delete`, change role → `member:update` |
+| --- | --- | --- |
+| Permission names | We use Better Auth's **default statement names** (`organization`, `member`, `invitation`) + our own `project` | The plugin enforces them on _its_ endpoints; renaming would desync UI and API. Mapping: invite → `invitation:create`, remove → `member:delete`, change role → `member:update` |
 | Where checks live | Org management → Better Auth AC **and** our Server Actions; `project` → our `requirePermission` | Defence in depth; one source of truth (`src/libs/permissions.ts`) |
 | Role source | Read from the **database on every request**, never from the cookie cache | A demoted admin loses access on the next request |
 | 404 vs 403 | Foreign tenant → **404** (never confirm existence); same tenant, missing permission → redirect/403 | Prevents enumeration of other tenants' resources |
 | Postgres RLS | **Spike (≤ 3 h), then deferred** → `TD-02` | PGlite/Neon superuser bypass and per-request transaction plumbing cost more than they add today |
-| Admin bootstrap | **Script** `pnpm admin:grant` using `ADMIN_EMAILS` on *verified* users — **not** a sign-up hook | A hook would hand admin to whoever registers an admin address first |
+| Admin bootstrap | **Script** `pnpm admin:grant` using `ADMIN_EMAILS` on _verified_ users — **not** a sign-up hook | A hook would hand admin to whoever registers an admin address first |
 | Audit log | Plain text ids (no FKs) + DB trigger forbidding `UPDATE`/`DELETE` | Records must survive user/org deletion and can't be edited |
 | Member actions | Server Actions wrapping the Better Auth API | We must enforce "last owner" and "admins can't touch owners" ourselves |
 | Slug changes | Old slug simply 404s | Keeping redirects is a post-launch nicety |
@@ -52,6 +51,7 @@ gh pr checks --watch
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line. Run `pnpm pin` after adding dependencies. Schema migrations are **sequential** (T01 org tables, T09 project, T13 admin columns, T14 audit): merge one before starting the next.
 
 ---
@@ -63,6 +63,7 @@ git switch main && git pull
 pnpm install
 pnpm check              # Sprint 3 must be green
 ```
+
 Set **Current sprint: Sprint 4** in `docs/roadmap/06-project-state.md`.
 
 ---
@@ -77,11 +78,12 @@ git switch -c feat/s4-t01-organizations
 
 ### 1. Every string of the sprint — in one patch
 
-Later tickets only *use* these keys. Edit **both** locale files (placement in prose, then JSON).
+Later tickets only _use_ these keys. Edit **both** locale files (placement in prose, then JSON).
 
 📄 **`src/locales/en.json`**
 
 **(a)** In `validation` add:
+
 ```json
     "orgName": "Enter a name (2–60 characters)",
     "slugFormat": "Use lowercase letters, numbers and hyphens (3–40 characters)",
@@ -89,7 +91,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
     "projectName": "Enter a project name (1–80 characters)",
     "projectDescription": "The description is too long (500 characters max)"
 ```
+
 **(b)** In `emails` add:
+
 ```json
     "invitation": {
       "subject": "{inviter} invited you to {org}",
@@ -100,7 +104,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
       "ignore": "If you weren't expecting this, you can ignore this email."
     }
 ```
+
 **(c)** In `admin` (existing object with `consoleTitle`, `title`) add:
+
 ```json
     "users": {
       "title": "Users",
@@ -140,7 +146,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
       "stop": "Stop impersonating"
     }
 ```
+
 **(d)** New **top-level** object `org`:
+
 ```json
   "org": {
     "nav": { "overview": "Overview", "projects": "Projects", "members": "Members", "settings": "Settings" },
@@ -264,9 +272,11 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
     }
   }
 ```
+
 📄 **`src/locales/fr.json`** — same placements:
 
 **(a)** `validation`:
+
 ```json
     "orgName": "Saisissez un nom (2 à 60 caractères)",
     "slugFormat": "Utilisez des minuscules, des chiffres et des tirets (3 à 40 caractères)",
@@ -274,7 +284,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
     "projectName": "Saisissez un nom de projet (1 à 80 caractères)",
     "projectDescription": "La description est trop longue (500 caractères max)"
 ```
+
 **(b)** `emails.invitation`:
+
 ```json
     "invitation": {
       "subject": "{inviter} vous invite à rejoindre {org}",
@@ -285,7 +297,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
       "ignore": "Si vous n'attendiez pas ce message, ignorez-le."
     }
 ```
+
 **(c)** `admin`:
+
 ```json
     "users": {
       "title": "Utilisateurs",
@@ -325,7 +339,9 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
       "stop": "Arrêter l'usurpation"
     }
 ```
+
 **(d)** top-level `org`:
+
 ```json
   "org": {
     "nav": { "overview": "Aperçu", "projects": "Projets", "members": "Membres", "settings": "Paramètres" },
@@ -449,6 +465,7 @@ Later tickets only *use* these keys. Edit **both** locale files (placement in pr
     }
   }
 ```
+
 ```bash
 pnpm test        # parity test: both files must have identical keys
 ```
@@ -456,6 +473,7 @@ pnpm test        # parity test: both files must have identical keys
 ### 2. Environment
 
 📄 **Edit `src/libs/Env.ts`** (+ `runtimeEnv`):
+
 ```ts
     AUTO_CREATE_PERSONAL_ORG: flag('true'),
     ORG_CREATION_LIMIT_PER_USER: z.coerce.number().int().positive().default(5),
@@ -465,7 +483,9 @@ pnpm test        # parity test: both files must have identical keys
     // When true, platform admins must have two-factor enabled to use /admin
     ADMIN_REQUIRE_MFA: flag('false'),
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Organizations & admin ──────────────────────────
 AUTO_CREATE_PERSONAL_ORG=true
@@ -479,10 +499,13 @@ ADMIN_REQUIRE_MFA=false
 ### 3. Schema
 
 Run the generator and compare (**the CLI wins** when columns differ):
+
 ```bash
 pnpm auth:schema
 ```
+
 📄 **Create `src/db/schema/org.ts`:**
+
 ```ts
 import { index, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 
@@ -538,15 +561,20 @@ export const invitation = pgTable(
   (table) => [index('invitation_email_idx').on(table.email)],
 );
 ```
+
 📄 **Edit `src/db/schema/index.ts`:**
+
 ```ts
 export * from './auth';
 export * from './org';
 ```
+
 📄 **Edit `src/db/schema/auth.ts`** — in `session` add the plugin's column:
+
 ```ts
     activeOrganizationId: text('active_organization_id'),
 ```
+
 ```bash
 rm src/db/schema/auth.generated.ts 2>/dev/null; pnpm db:generate    # 0004_….sql
 pnpm db:check
@@ -555,14 +583,32 @@ pnpm db:check
 ### 4. Pure helpers (slugs and roles)
 
 📄 **Create `src/libs/slug.ts`:**
+
 ```ts
 export const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 // Words that would collide with routes or confuse users. Locale codes included.
 const RESERVED = new Set([
-  'admin', 'api', 'account', 'dashboard', 'new', 'new-organization', 'settings', 'sign-in', 'sign-up',
-  'verify-email', 'forgot-password', 'reset-password', 'two-factor', 'accept-invitation',
-  'en', 'fr', 'www', 'app', 'support', 'help',
+  'admin',
+  'api',
+  'account',
+  'dashboard',
+  'new',
+  'new-organization',
+  'settings',
+  'sign-in',
+  'sign-up',
+  'verify-email',
+  'forgot-password',
+  'reset-password',
+  'two-factor',
+  'accept-invitation',
+  'en',
+  'fr',
+  'www',
+  'app',
+  'support',
+  'help',
 ]);
 
 export const isReservedSlug = (slug: string) => RESERVED.has(slug);
@@ -585,7 +631,9 @@ export function checkSlug(slug: string): SlugCheck {
   return isReservedSlug(slug) ? 'reserved' : 'ok';
 }
 ```
+
 📄 **Create `src/libs/slug.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -618,11 +666,16 @@ describe('checkSlug', () => {
   });
 });
 ```
+
 📄 **Create `src/libs/org-members.ts`** (grows in T05 and T12):
+
 ```ts
 /** Better Auth stores roles as a string; several roles may be comma-separated. */
 export const rolesOf = (role: string | null | undefined): string[] =>
-  (role ?? '').split(',').map((value) => value.trim()).filter(Boolean);
+  (role ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
 
 export const hasRole = (role: string | null | undefined, wanted: string): boolean =>
   rolesOf(role).includes(wanted);
@@ -631,9 +684,11 @@ export const hasRole = (role: string | null | undefined, wanted: string): boolea
 ### 5. Queries (database-agnostic → testable on PGlite)
 
 📄 **Create `src/data/org-queries.ts`:**
+
 ```ts
-import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+
+import { and, eq } from 'drizzle-orm';
 
 import { member, organization } from '@/db/schema';
 import type { DbLike } from '@/db/types';
@@ -648,12 +703,17 @@ export async function createOrganizationWithOwner(
 ) {
   const id = randomUUID();
   await database.insert(organization).values({ id, name: input.name, slug: input.slug });
-  await database.insert(member).values({ id: randomUUID(), organizationId: id, userId: input.ownerId, role: 'owner' });
+  await database
+    .insert(member)
+    .values({ id: randomUUID(), organizationId: id, userId: input.ownerId, role: 'owner' });
   return { id, name: input.name, slug: input.slug };
 }
 
 async function slugTaken(database: DbLike, slug: string) {
-  const rows = await database.select({ id: organization.id }).from(organization).where(eq(organization.slug, slug));
+  const rows = await database
+    .select({ id: organization.id })
+    .from(organization)
+    .where(eq(organization.slug, slug));
   return rows.length > 0;
 }
 
@@ -661,7 +721,11 @@ async function slugTaken(database: DbLike, slug: string) {
 export async function uniqueSlug(database: DbLike, base: string): Promise<string> {
   const root = slugify(base) || 'workspace';
   let candidate = root;
-  while (candidate.length < 3 || isReservedSlug(candidate) || (await slugTaken(database, candidate))) {
+  while (
+    candidate.length < 3 ||
+    isReservedSlug(candidate) ||
+    (await slugTaken(database, candidate))
+  ) {
     candidate = `${root.slice(0, 34)}-${suffix()}`;
   }
   return candidate;
@@ -684,7 +748,10 @@ export async function createPersonalOrganization(
  * Organizations the user could NOT leave without orphaning other members:
  * they are the only owner AND other people belong to it.
  */
-export async function findBlockingOrganizations(database: DbLike, userId: string): Promise<string[]> {
+export async function findBlockingOrganizations(
+  database: DbLike,
+  userId: string,
+): Promise<string[]> {
   const owned = await database
     .select({ organizationId: member.organizationId, role: member.role })
     .from(member)
@@ -696,38 +763,48 @@ export async function findBlockingOrganizations(database: DbLike, userId: string
       .select({ userId: member.userId, role: member.role })
       .from(member)
       .where(eq(member.organizationId, row.organizationId));
-    const otherOwners = members.filter((item) => item.userId !== userId && hasRole(item.role, 'owner'));
+    const otherOwners = members.filter(
+      (item) => item.userId !== userId && hasRole(item.role, 'owner'),
+    );
     if (members.length > 1 && otherOwners.length === 0) blocking.push(row.organizationId);
   }
   return blocking;
 }
 
 /** Organizations where the user is the ONLY member → they'd be empty after deletion, so delete them. */
-export async function deleteSoleMemberOrganizations(database: DbLike, userId: string): Promise<void> {
+export async function deleteSoleMemberOrganizations(
+  database: DbLike,
+  userId: string,
+): Promise<void> {
   const mine = await database
     .select({ organizationId: member.organizationId })
     .from(member)
     .where(eq(member.userId, userId));
 
   for (const { organizationId } of mine) {
-    const members = await database.select({ id: member.id }).from(member).where(eq(member.organizationId, organizationId));
+    const members = await database
+      .select({ id: member.id })
+      .from(member)
+      .where(eq(member.organizationId, organizationId));
     if (members.length === 1) {
       await database.delete(organization).where(and(eq(organization.id, organizationId))); // cascades
     }
   }
 }
 ```
+
 📄 **Create `src/data/org-queries.test.ts`:**
+
 ```ts
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { member, organization, user } from '@/db/schema';
 
-import { createTestDb, type TestDb } from '../../tests/utils/test-db';
 import { userFactory } from '../../tests/factories/user.factory';
-
+import { createTestDb, type TestDb } from '../../tests/utils/test-db';
 import {
   createOrganizationWithOwner,
   createPersonalOrganization,
@@ -753,9 +830,17 @@ async function newUser() {
 describe('personal organizations', () => {
   it('creates a workspace owned by the user, with a unique valid slug', async () => {
     const ada = await newUser();
-    const first = await createPersonalOrganization(db, { id: ada.id, name: 'Ada', email: ada.email });
+    const first = await createPersonalOrganization(db, {
+      id: ada.id,
+      name: 'Ada',
+      email: ada.email,
+    });
     const other = await newUser();
-    const second = await createPersonalOrganization(db, { id: other.id, name: 'Ada', email: other.email });
+    const second = await createPersonalOrganization(db, {
+      id: other.id,
+      name: 'Ada',
+      email: other.email,
+    });
 
     expect(first.slug).toBe('ada');
     expect(second.slug).not.toBe('ada'); // collision → suffix
@@ -772,8 +857,14 @@ describe('deleting an account', () => {
   it('blocks when the user is the only owner of an organization with other members', async () => {
     const owner = await newUser();
     const teammate = await newUser();
-    const org = await createOrganizationWithOwner(db, { name: 'Team', slug: `team-${randomUUID().slice(0, 6)}`, ownerId: owner.id });
-    await db.insert(member).values({ id: randomUUID(), organizationId: org.id, userId: teammate.id, role: 'member' });
+    const org = await createOrganizationWithOwner(db, {
+      name: 'Team',
+      slug: `team-${randomUUID().slice(0, 6)}`,
+      ownerId: owner.id,
+    });
+    await db
+      .insert(member)
+      .values({ id: randomUUID(), organizationId: org.id, userId: teammate.id, role: 'member' });
 
     expect(await findBlockingOrganizations(db, owner.id)).toEqual([org.id]);
     expect(await findBlockingOrganizations(db, teammate.id)).toEqual([]);
@@ -782,15 +873,25 @@ describe('deleting an account', () => {
   it('does not block when another owner exists, and removes empty organizations', async () => {
     const a = await newUser();
     const b = await newUser();
-    const shared = await createOrganizationWithOwner(db, { name: 'Shared', slug: `shared-${randomUUID().slice(0, 6)}`, ownerId: a.id });
-    await db.insert(member).values({ id: randomUUID(), organizationId: shared.id, userId: b.id, role: 'owner' });
+    const shared = await createOrganizationWithOwner(db, {
+      name: 'Shared',
+      slug: `shared-${randomUUID().slice(0, 6)}`,
+      ownerId: a.id,
+    });
+    await db
+      .insert(member)
+      .values({ id: randomUUID(), organizationId: shared.id, userId: b.id, role: 'owner' });
     const solo = await createPersonalOrganization(db, { id: a.id, name: 'Solo A', email: a.email });
 
     expect(await findBlockingOrganizations(db, a.id)).toEqual([]);
 
     await deleteSoleMemberOrganizations(db, a.id);
-    expect(await db.select().from(organization).where(eq(organization.id, solo.id))).toHaveLength(0);
-    expect(await db.select().from(organization).where(eq(organization.id, shared.id))).toHaveLength(1);
+    expect(await db.select().from(organization).where(eq(organization.id, solo.id))).toHaveLength(
+      0,
+    );
+    expect(await db.select().from(organization).where(eq(organization.id, shared.id))).toHaveLength(
+      1,
+    );
   });
 });
 ```
@@ -798,6 +899,7 @@ describe('deleting an account', () => {
 ### 6. The plugin, the hooks, the client
 
 📄 **Edit `src/libs/Auth.ts`:**
+
 ```ts
 import { APIError } from 'better-auth/api';
 import { organization } from 'better-auth/plugins';
@@ -808,7 +910,9 @@ import {
   findBlockingOrganizations,
 } from '@/data/org-queries';
 ```
+
 Replace the `user: { … deleteUser … }` block's `deleteUser` (keep `changeEmail`):
+
 ```ts
       deleteUser: {
         enabled: true,
@@ -824,7 +928,9 @@ Replace the `user: { … deleteUser … }` block's `deleteUser` (keep `changeEma
         },
       },
 ```
+
 Add a sibling option at the top level of the config:
+
 ```ts
     databaseHooks: {
       user: {
@@ -846,7 +952,9 @@ Add a sibling option at the top level of the config:
       },
     },
 ```
+
 and in `plugins` (before `nextCookies()`; roles/permissions are added in S4-T06):
+
 ```ts
       organization({
         allowUserToCreateOrganization: true,
@@ -856,25 +964,32 @@ and in `plugins` (before `nextCookies()`; roles/permissions are added in S4-T06)
         // Filled in by S4-T04: sendInvitationEmail
       }),
 ```
+
 📄 **Edit `src/libs/AuthClient.ts`:** `import { organizationClient } from 'better-auth/client/plugins';` and add `organizationClient()` to `plugins`.
 
 📄 **Edit `src/libs/auth-error-keys.ts`** — add to `KEYS`:
+
 ```ts
   SOLE_OWNER: 'org.errors.soleOwner',
 ```
+
 📄 **Update the demo seed** — `src/db/seed.ts`: after inserting the demo user and account, give them a workspace:
+
 ```ts
 import { createOrganizationWithOwner } from './../data/org-queries';
 // …at the end of seed():
-  await createOrganizationWithOwner(db, { name: 'Demo workspace', slug: 'demo', ownerId: userId });
+await createOrganizationWithOwner(db, { name: 'Demo workspace', slug: 'demo', ownerId: userId });
 ```
+
 (S4-T09 extends the seed with more users and projects.)
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip
 pnpm db:reset && pnpm dev
 ```
+
 1. Sign up a brand-new user and verify the email. In Studio: one `organization` ("<name>'s workspace") and one `member` row with `role = 'owner'`.
 2. `AUTO_CREATE_PERSONAL_ORG=false` (restart) → a new user has **no** organization.
 3. Make a user the sole owner of an organization with a second member (insert a `member` row in Studio) → **Delete account** now fails with "You are the only owner…" (the message is in the form error). Remove the extra member → deletion works and the empty workspace is removed too.
@@ -896,12 +1011,17 @@ mkdir -p "src/app/[locale]/(app)/dashboard/new-organization" src/components/org
 ### 1. Validation
 
 📄 **Create `src/validations/org.ts`:**
+
 ```ts
 import { z } from 'zod';
 
 import { checkSlug } from '@/libs/slug';
 
-const orgName = z.string().trim().min(2, { message: 'validation.orgName' }).max(60, { message: 'validation.orgName' });
+const orgName = z
+  .string()
+  .trim()
+  .min(2, { message: 'validation.orgName' })
+  .max(60, { message: 'validation.orgName' });
 
 export const orgSlug = z.string().superRefine((value, ctx) => {
   const result = checkSlug(value);
@@ -914,7 +1034,9 @@ export const updateOrgSchema = createOrgSchema;
 
 export type CreateOrgInput = z.infer<typeof createOrgSchema>;
 ```
+
 📄 **Create `src/validations/org.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -939,12 +1061,15 @@ it('returns translation keys for every failure', () => {
 ### 2. Error keys and a debounce hook
 
 📄 **Edit `src/libs/auth-error-keys.ts`** — add codes (🔍 confirm names against the plugin's error codes):
+
 ```ts
   SLUG_IS_TAKEN: 'org.create.slugTaken',
   ORGANIZATION_SLUG_ALREADY_TAKEN: 'org.create.slugTaken',
   YOU_HAVE_REACHED_THE_MAXIMUM_NUMBER_OF_ORGANIZATIONS: 'org.errors.limit',
 ```
+
 and make **403** responses read "forbidden" when the code isn't otherwise mapped:
+
 ```ts
 export function authErrorKey(error, fallback = 'errors.internal'): string {
   if (error?.status === 429) return 'errors.rateLimited';
@@ -954,14 +1079,20 @@ export function authErrorKey(error, fallback = 'errors.internal'): string {
   return fallback;
 }
 ```
+
 📄 **Add to `auth-error-keys.test.ts`:**
+
 ```ts
 it('maps a bare 403 to "forbidden" but keeps specific codes', () => {
   expect(authErrorKey({ status: 403 })).toBe('errors.forbidden');
-  expect(authErrorKey({ status: 403, code: 'EMAIL_NOT_VERIFIED' })).toBe('auth.errors.emailNotVerified');
+  expect(authErrorKey({ status: 403, code: 'EMAIL_NOT_VERIFIED' })).toBe(
+    'auth.errors.emailNotVerified',
+  );
 });
 ```
+
 📄 **Create `src/hooks/use-debounced-value.ts`:**
+
 ```ts
 'use client';
 
@@ -980,6 +1111,7 @@ export function useDebouncedValue<T>(value: T, delayMs = 400): T {
 ### 3. The form
 
 📄 **Create `src/components/org/create-organization-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1064,8 +1196,12 @@ export function CreateOrganizationForm() {
             onInput={() => setSlugTouched(true)}
           />
           <p className="text-muted-foreground text-xs" aria-live="polite">
-            {availability === 'available' ? <span className="text-green-600">{t('slugAvailable')}</span> : null}
-            {availability === 'taken' ? <span className="text-destructive">{t('slugTaken')}</span> : null}
+            {availability === 'available' ? (
+              <span className="text-green-600">{t('slugAvailable')}</span>
+            ) : null}
+            {availability === 'taken' ? (
+              <span className="text-destructive">{t('slugTaken')}</span>
+            ) : null}
             {availability === 'unknown' ? t('slugHint', { slug: slug || '…' }) : null}
           </p>
         </div>
@@ -1075,14 +1211,15 @@ export function CreateOrganizationForm() {
   );
 }
 ```
+
 > 🔍 `checkSlug` returns an error (not data) when the slug is taken in current versions. If yours returns `{ status: false }` instead, adapt the one line that sets `availability`.
 
 ### 4. Data for the onboarding page
 
 📄 **Create `src/data/organizations.ts`** (session-aware wrappers over the queries; grows later):
+
 ```ts
 import 'server-only';
-
 import { db } from '@/db/client';
 
 import { listUserOrganizations } from './org-queries';
@@ -1101,25 +1238,38 @@ export async function getDefaultOrganizationSlug(): Promise<string | null> {
   return (active ?? organizations[0])?.slug ?? null;
 }
 ```
+
 📄 **Add `listUserOrganizations` to `src/data/org-queries.ts`:**
+
 ```ts
 export async function listUserOrganizations(database: DbLike, userId: string) {
   return database
-    .select({ id: organization.id, name: organization.name, slug: organization.slug, role: member.role })
+    .select({
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      role: member.role,
+    })
     .from(member)
     .innerJoin(organization, eq(member.organizationId, organization.id))
     .where(eq(member.userId, userId))
     .orderBy(organization.name);
 }
 ```
+
 Test (append to `org-queries.test.ts`):
+
 ```ts
 import { listUserOrganizations } from './org-queries';
 
 it('lists only the organizations a user belongs to, with their role', async () => {
   const ada = await newUser();
   const stranger = await newUser();
-  const org = await createPersonalOrganization(db, { id: ada.id, name: 'Lister', email: ada.email });
+  const org = await createPersonalOrganization(db, {
+    id: ada.id,
+    name: 'Lister',
+    email: ada.email,
+  });
   await createPersonalOrganization(db, { id: stranger.id, name: 'Other', email: stranger.email });
 
   const mine = await listUserOrganizations(db, ada.id);
@@ -1131,6 +1281,7 @@ it('lists only the organizations a user belongs to, with their role', async () =
 ### 5. Pages
 
 📄 **Rewrite `src/app/[locale]/(app)/dashboard/page.tsx`** — now only a router:
+
 ```tsx
 import { setRequestLocale } from 'next-intl/server';
 import { getLocale } from 'next-intl/server';
@@ -1151,14 +1302,20 @@ export default async function DashboardRouter({ params }: { params: Promise<{ lo
   });
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/dashboard/new-organization/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { CreateOrganizationForm } from '@/components/org/create-organization-form';
 import { requireSession } from '@/data/session';
 
-export default async function NewOrganizationPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function NewOrganizationPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
   await requireSession();
@@ -1175,13 +1332,16 @@ export default async function NewOrganizationPage({ params }: { params: Promise<
   );
 }
 ```
+
 (Pending invitations are added to this page in S4-T04.)
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. `/dashboard` redirects to your workspace slug (it 404s until S4-T03 adds `[orgSlug]` — that's expected right now). For a user with **no** organization it lands on `/dashboard/new-organization`.
 2. Type a name → the slug fills itself; edit the slug manually → it stops following the name.
 3. Slug `admin` / `ab` / `Mixed Case` → translated errors. A slug that exists (e.g. `demo`) → "already taken" appears while typing.
@@ -1206,6 +1366,7 @@ mkdir -p "src/app/[locale]/(app)/dashboard/[orgSlug]"
 ### 1. Membership lookup
 
 📄 **Add to `src/data/org-queries.ts`:**
+
 ```ts
 export type Membership = {
   org: { id: string; name: string; slug: string };
@@ -1213,7 +1374,11 @@ export type Membership = {
 };
 
 /** The caller's membership in the organization with this slug — `undefined` for non-members. */
-export async function findMembership(database: DbLike, userId: string, slug: string): Promise<Membership | undefined> {
+export async function findMembership(
+  database: DbLike,
+  userId: string,
+  slug: string,
+): Promise<Membership | undefined> {
   const [row] = await database
     .select({
       orgId: organization.id,
@@ -1233,14 +1398,20 @@ export async function findMembership(database: DbLike, userId: string, slug: str
   };
 }
 ```
+
 Test (append to `org-queries.test.ts`):
+
 ```ts
 import { findMembership } from './org-queries';
 
 it('findMembership answers only for members', async () => {
   const ada = await newUser();
   const eve = await newUser();
-  const org = await createPersonalOrganization(db, { id: ada.id, name: 'Private Co', email: ada.email });
+  const org = await createPersonalOrganization(db, {
+    id: ada.id,
+    name: 'Private Co',
+    email: ada.email,
+  });
 
   expect((await findMembership(db, ada.id, org.slug))?.member.role).toBe('owner');
   expect(await findMembership(db, eve.id, org.slug)).toBeUndefined(); // not a member → nothing
@@ -1251,9 +1422,9 @@ it('findMembership answers only for members', async () => {
 ### 2. The guard (full permission helpers arrive in S4-T07)
 
 📄 **Create `src/data/authz.ts`:**
+
 ```ts
 import 'server-only';
-
 import { notFound } from 'next/navigation';
 
 import { db } from '@/db/client';
@@ -1275,7 +1446,9 @@ export async function requireOrgMember(orgSlug: string) {
 
 export type OrgContext = Awaited<ReturnType<typeof requireOrgMember>>;
 ```
+
 Update the guard-coverage test regex (`src/data/guard-coverage.test.ts`) — pages may now use any of our guards:
+
 ```ts
 const GUARD = /require(Session|Admin|OrgMember|PagePermission)\(/;
 // …
@@ -1285,6 +1458,7 @@ const unguarded = pages.filter((file) => !GUARD.test(readFileSync(file, 'utf8'))
 ### 3. Org layout, overview and navigation
 
 📄 **Create `src/app/[locale]/(app)/dashboard/[orgSlug]/layout.tsx`** (no UI of its own yet — the provider arrives in S4-T08):
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -1302,7 +1476,9 @@ export default async function OrgLayout({
   return children;
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/dashboard/[orgSlug]/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -1322,20 +1498,24 @@ export default async function OrgOverviewPage({
   return (
     <PageHeader
       title={t('overview.welcome', { org: org.name })}
-      description={t('overview.role', { role: t(`roles.${member.role as 'owner' | 'admin' | 'member'}`) })}
+      description={t('overview.role', {
+        role: t(`roles.${member.role as 'owner' | 'admin' | 'member'}`),
+      })}
     />
   );
 }
 ```
+
 > The cast is safe for our three roles; custom multi-role strings are out of scope.
 
 📄 **Create `src/components/org/org-switcher.tsx`:**
+
 ```tsx
 'use client';
 
 import { ChevronsUpDown } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -1365,7 +1545,12 @@ export function OrgSwitcher({ organizations }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" aria-label={t('label')} className="max-w-52 justify-between gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label={t('label')}
+          className="max-w-52 justify-between gap-2"
+        >
           <span className="truncate">{current?.name ?? t('label')}</span>
           <ChevronsUpDown className="size-4 shrink-0 opacity-50" aria-hidden />
         </Button>
@@ -1373,7 +1558,11 @@ export function OrgSwitcher({ organizations }: Props) {
       <DropdownMenuContent align="start" className="w-60">
         <DropdownMenuLabel>{t('label')}</DropdownMenuLabel>
         {organizations.map((org) => (
-          <DropdownMenuItem key={org.id} onSelect={() => select(org)} aria-current={org.slug === orgSlug ? 'true' : undefined}>
+          <DropdownMenuItem
+            key={org.id}
+            onSelect={() => select(org)}
+            aria-current={org.slug === orgSlug ? 'true' : undefined}
+          >
             {org.name}
           </DropdownMenuItem>
         ))}
@@ -1386,12 +1575,14 @@ export function OrgSwitcher({ organizations }: Props) {
   );
 }
 ```
+
 📄 **Create `src/components/org/app-nav.tsx`** — one list used by the sidebar **and** the mobile sheet:
+
 ```tsx
 'use client';
 
-import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 
 import { Link, usePathname } from '@/i18n/navigation';
 import { cn } from '@/utils/cn';
@@ -1425,7 +1616,9 @@ export function AppNav() {
           aria-current={pathname === link.href ? 'page' : undefined}
           className={cn(
             'rounded px-2 py-1.5',
-            pathname === link.href ? 'bg-muted font-medium' : 'text-muted-foreground hover:text-foreground',
+            pathname === link.href
+              ? 'bg-muted font-medium'
+              : 'text-muted-foreground hover:text-foreground',
           )}
         >
           {link.label}
@@ -1435,16 +1628,20 @@ export function AppNav() {
   );
 }
 ```
+
 Make `MobileNav` fetch the same links (so the hamburger matches the sidebar) — **edit `src/components/layout/mobile-nav.tsx`**: make `links` optional and default to `useAppLinks()` when omitted:
+
 ```tsx
 import { useAppLinks } from '@/components/org/app-nav';
 // props: { links?: readonly NavLink[] }
 const appLinks = useAppLinks();
-const items = links ?? appLinks;   // render `items` instead of `links`
+const items = links ?? appLinks; // render `items` instead of `links`
 ```
+
 (the marketing header keeps passing its own `links`).
 
 📄 **Rewrite `src/app/[locale]/(app)/layout.tsx`:**
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -1471,7 +1668,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center gap-2 border-b px-4">
           <MobileNav />
-          <OrgSwitcher organizations={organizations.map(({ id, name, slug }) => ({ id, name, slug }))} />
+          <OrgSwitcher
+            organizations={organizations.map(({ id, name, slug }) => ({ id, name, slug }))}
+          />
           <div className="ms-auto flex items-center gap-2">
             <ThemeToggle />
             <UserMenu user={{ name: user.name, email: user.email }} />
@@ -1485,13 +1684,16 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   );
 }
 ```
+
 Delete the S2 account sidebar link constants if any remain; the dashboard greeting page from S2 (`dashboard/page.tsx`) was replaced by the router in S4-T02, so the guard-coverage test must still pass (`requireSession(` is present).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. `/dashboard` → `/dashboard/<your-slug>` showing "Welcome to <org>" and your role.
 2. The header switcher lists your organizations; choosing one navigates and (Studio) updates `session.active_organization_id`. `/dashboard` later returns to the last active one.
 3. **Tamper:** open `/dashboard/some-other-users-slug` (use a slug from Studio that isn't yours) → a **404**, identical to `/dashboard/does-not-exist`.
@@ -1515,6 +1717,7 @@ mkdir -p "src/app/[locale]/(auth)/accept-invitation/[invitationId]" "src/app/[lo
 ### 1. The email
 
 📄 **Append to `src/templates/emails/templates.tsx`:**
+
 ```tsx
 export function InvitationEmail({
   locale,
@@ -1543,7 +1746,9 @@ export function InvitationEmail({
   );
 }
 ```
+
 📄 **Append to `src/libs/auth-emails.tsx`:**
+
 ```tsx
 export async function sendInvitationEmail({
   to,
@@ -1562,7 +1767,9 @@ export async function sendInvitationEmail({
 }) {
   const locale = localeFromRequest(request);
   const t = getEmailTranslator(locale);
-  const { html, text } = await renderEmail(<InvitationEmail locale={locale} inviter={inviter} org={org} role={role} url={url} />);
+  const { html, text } = await renderEmail(
+    <InvitationEmail locale={locale} inviter={inviter} org={org} role={role} url={url} />,
+  );
   await sendEmail({
     to,
     subject: t('invitation.subject', { inviter, org }),
@@ -1576,6 +1783,7 @@ export async function sendInvitationEmail({
 ### 2. Wire it in Better Auth
 
 📄 **Edit the `organization({ … })` call in `src/libs/Auth.ts`:**
+
 ```ts
         // 🔍 callback payload: { id, role, email, organization, inviter }
         sendInvitationEmail: async (data, request) => {
@@ -1593,9 +1801,11 @@ export async function sendInvitationEmail({
         },
         cancelPendingInvitationsOnReInvite: true,
 ```
+
 (import `sendInvitationEmail` from `@/libs/auth-emails`)
 
 📄 **Add error keys** to `src/libs/auth-error-keys.ts`:
+
 ```ts
   USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION: 'org.errors.alreadyMember',
   USER_IS_ALREADY_INVITED_TO_THIS_ORGANIZATION: 'org.errors.alreadyInvited',
@@ -1604,6 +1814,7 @@ export async function sendInvitationEmail({
 ### 3. Queries for invitations
 
 📄 **Add to `src/data/org-queries.ts`** (imports: `invitation`, `user`, `gt`, `desc`):
+
 ```ts
 export async function listPendingInvitations(database: DbLike, organizationId: string) {
   return database
@@ -1630,7 +1841,13 @@ export async function listInvitationsForEmail(database: DbLike, email: string) {
     .from(invitation)
     .innerJoin(organization, eq(invitation.organizationId, organization.id))
     .innerJoin(user, eq(invitation.inviterId, user.id))
-    .where(and(eq(invitation.email, email.toLowerCase()), eq(invitation.status, 'pending'), gt(invitation.expiresAt, new Date())));
+    .where(
+      and(
+        eq(invitation.email, email.toLowerCase()),
+        eq(invitation.status, 'pending'),
+        gt(invitation.expiresAt, new Date()),
+      ),
+    );
 }
 
 export async function findInvitationDetails(database: DbLike, id: string) {
@@ -1652,11 +1869,13 @@ export async function findInvitationDetails(database: DbLike, id: string) {
   return row;
 }
 ```
+
 (update the drizzle import: `import { and, desc, eq, gt } from 'drizzle-orm';` and the schema import `invitation, user`.)
 
 ### 4. The accept page
 
 📄 **Create `src/components/org/accept-invitation-buttons.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1681,7 +1900,9 @@ export function AcceptInvitationButtons({ invitationId, orgName, orgSlug }: Prop
   async function accept() {
     setBusy(true);
     setError(null);
-    const { data, error: failure } = await authClient.organization.acceptInvitation({ invitationId });
+    const { data, error: failure } = await authClient.organization.acceptInvitation({
+      invitationId,
+    });
     if (failure) {
       setBusy(false);
       return setError(authErrorKey(failure));
@@ -1715,7 +1936,9 @@ export function AcceptInvitationButtons({ invitationId, orgName, orgSlug }: Prop
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/(auth)/accept-invitation/[invitationId]/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -1777,16 +2000,23 @@ export default async function AcceptInvitationPage({
   return (
     <>
       <header className="space-y-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('title', { org: details.orgName })}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {t('title', { org: details.orgName })}
+        </h1>
         <p className="text-muted-foreground text-sm">
           {t('description', { inviter: details.inviterName, role: tRoles(role) })}
         </p>
       </header>
-      <AcceptInvitationButtons invitationId={details.id} orgName={details.orgName} orgSlug={details.orgSlug} />
+      <AcceptInvitationButtons
+        invitationId={details.id}
+        orgName={details.orgName}
+        orgSlug={details.orgSlug}
+      />
     </>
   );
 }
 ```
+
 > 🔒 For a signed-in user whose email doesn't match, we show the **same** "wrong account" notice for "doesn't exist" **and** "someone else's" — nothing distinguishes a valid id from a guess. (We use `wrongAccount` only when the invitation exists; swap to `invalid` for both if you want zero leakage even to signed-in users.)
 
 > The guard-coverage test only scans `(app)` — this page lives in `(auth)` on purpose.
@@ -1794,6 +2024,7 @@ export default async function AcceptInvitationPage({
 ### 5. Pending invitations on the onboarding page
 
 📄 **Add to `src/data/organizations.ts`:**
+
 ```ts
 import { listInvitationsForEmail } from './org-queries';
 
@@ -1802,42 +2033,47 @@ export async function listMyInvitations() {
   return listInvitationsForEmail(db, user.email);
 }
 ```
+
 📄 **Edit `new-organization/page.tsx`** — show them above the form:
+
 ```tsx
+import { Button } from '@/components/ui/button';
 import { listMyInvitations } from '@/data/organizations';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/components/ui/button';
 // …
 const invitations = await listMyInvitations();
 const tOnboarding = await getTranslations('org.onboarding');
 const tRoles = await getTranslations('org.roles');
 // …before <header>:
-{invitations.length > 0 ? (
-  <section className="space-y-2 rounded-md border p-4">
-    <h2 className="font-medium">{tOnboarding('invitationsTitle')}</h2>
-    <ul className="space-y-2">
-      {invitations.map((item) => (
-        <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
-          <span>
-            {tOnboarding('invitationLine', {
-              inviter: item.inviterName,
-              org: item.orgName,
-              role: tRoles((item.role ?? 'member') as 'owner' | 'admin' | 'member'),
-            })}
-          </span>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/accept-invitation/${item.id}`}>{tOnboarding('view')}</Link>
-          </Button>
-        </li>
-      ))}
-    </ul>
-  </section>
-) : null}
+{
+  invitations.length > 0 ? (
+    <section className="space-y-2 rounded-md border p-4">
+      <h2 className="font-medium">{tOnboarding('invitationsTitle')}</h2>
+      <ul className="space-y-2">
+        {invitations.map((item) => (
+          <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
+            <span>
+              {tOnboarding('invitationLine', {
+                inviter: item.inviterName,
+                org: item.orgName,
+                role: tRoles((item.role ?? 'member') as 'owner' | 'admin' | 'member'),
+              })}
+            </span>
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/accept-invitation/${item.id}`}>{tOnboarding('view')}</Link>
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ) : null;
+}
 ```
 
 ### 6. The invite form (members page, first version)
 
 📄 **Create `src/validations/invitation.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -1847,7 +2083,9 @@ export const inviteSchema = z.object({
 });
 export type InviteInput = z.infer<typeof inviteSchema>;
 ```
+
 📄 **Create `src/components/org/invite-member-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1861,13 +2099,25 @@ import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
 import { type InviteInput, inviteSchema } from '@/validations/invitation';
 
-export function InviteMemberForm({ organizationId, roles }: { organizationId: string; roles: ('admin' | 'member')[] }) {
+export function InviteMemberForm({
+  organizationId,
+  roles,
+}: {
+  organizationId: string;
+  roles: ('admin' | 'member')[];
+}) {
   const t = useTranslations('org.invitations');
   const tRoles = useTranslations('org.roles');
   const router = useRouter();
@@ -1927,12 +2177,14 @@ export function InviteMemberForm({ organizationId, roles }: { organizationId: st
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/dashboard/[orgSlug]/members/page.tsx`** (first version; S4-T12 adds the members table):
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import { InviteMemberForm } from '@/components/org/invite-member-form';
 import { PageHeader } from '@/components/layout/page-header';
+import { InviteMemberForm } from '@/components/org/invite-member-form';
 import { requireOrgMember } from '@/data/authz';
 
 export default async function MembersPage({
@@ -1956,21 +2208,26 @@ export default async function MembersPage({
   );
 }
 ```
+
 Add the rate limit for inviting (per IP) in `src/libs/auth-rate-limit.ts`:
+
 ```ts
   // 🔍 confirm the route name in your version
   '/organization/invite-member': { window: 60, max: 5 },
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 Use two browsers (or one + a private window):
-1. As the demo user: **Members** → invite `new@example.com` as *member* → the terminal prints the invitation email (link `/accept-invitation/<id>`).
+
+1. As the demo user: **Members** → invite `new@example.com` as _member_ → the terminal prints the invitation email (link `/accept-invitation/<id>`).
 2. Open the link **signed out** → "You've been invited" with sign-in / create-account buttons — and **no** organization name.
-3. Create a *new* account with that email (verify it) → `/dashboard` redirects to onboarding (no org if `AUTO_CREATE_PERSONAL_ORG=false`; otherwise they have a workspace) → the **pending invitation appears** → open it → **Accept invitation** → you land in the demo organization. Studio: a new `member` row; invitation `status = 'accepted'`.
+3. Create a _new_ account with that email (verify it) → `/dashboard` redirects to onboarding (no org if `AUTO_CREATE_PERSONAL_ORG=false`; otherwise they have a workspace) → the **pending invitation appears** → open it → **Accept invitation** → you land in the demo organization. Studio: a new `member` row; invitation `status = 'accepted'`.
 4. Open the invitation link as a **different** signed-in user → "different email address" notice, no way to accept.
 5. Invite the same person twice → the first invitation is cancelled (setting `cancelPendingInvitationsOnReInvite`).
 6. Invite an existing member → "This person is already a member."
@@ -1991,6 +2248,7 @@ git switch main && git pull && git switch -c feat/s4-t05-invitation-lifecycle
 ### 1. The last-owner and "who may manage whom" rules (pure)
 
 📄 **Append to `src/libs/org-members.ts`:**
+
 ```ts
 export type MemberLike = { id: string; role: string };
 
@@ -1998,7 +2256,11 @@ export type MemberLike = { id: string; role: string };
  * Would this change leave the organization without an owner?
  * `nextRole` omitted → the member is being REMOVED; provided → their role is being CHANGED.
  */
-export function wouldLeaveNoOwner(members: MemberLike[], targetId: string, nextRole?: string): boolean {
+export function wouldLeaveNoOwner(
+  members: MemberLike[],
+  targetId: string,
+  nextRole?: string,
+): boolean {
   const owners = members.filter((item) => hasRole(item.role, 'owner'));
   const targetIsOwner = owners.some((item) => item.id === targetId);
   if (!targetIsOwner) return false;
@@ -2009,7 +2271,8 @@ export function wouldLeaveNoOwner(members: MemberLike[], targetId: string, nextR
 }
 
 const ORDER = { owner: 3, admin: 2, member: 1 } as const;
-const rank = (role: string) => Math.max(0, ...rolesOf(role).map((value) => ORDER[value as keyof typeof ORDER] ?? 0));
+const rank = (role: string) =>
+  Math.max(0, ...rolesOf(role).map((value) => ORDER[value as keyof typeof ORDER] ?? 0));
 
 /** Owners manage everyone; admins manage only members; nobody manages someone of equal/higher rank (except owners). */
 export function canManageTarget(actorRole: string, targetRole: string): boolean {
@@ -2024,11 +2287,19 @@ export function assignableRoles(actorRole: string): ('admin' | 'member')[] {
   return [];
 }
 ```
+
 📄 **Create `src/libs/org-members.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
-import { assignableRoles, canManageTarget, hasRole, rolesOf, wouldLeaveNoOwner } from './org-members';
+import {
+  assignableRoles,
+  canManageTarget,
+  hasRole,
+  rolesOf,
+  wouldLeaveNoOwner,
+} from './org-members';
 
 const members = [
   { id: 'a', role: 'owner' },
@@ -2075,11 +2346,13 @@ it('parses comma-separated roles', () => {
   expect(hasRole(null, 'owner')).toBe(false);
 });
 ```
+
 > Role assignment through the **invite** form for an admin: the form received `roles` from the page; in S4-T12 the page passes `assignableRoles(member.role)`.
 
 ### 2. Pending invitations: expiry, resend, revoke
 
 📄 **Create `src/components/org/pending-invitations.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2104,7 +2377,10 @@ export function PendingInvitations({ invitations, organizationId, canManage }: P
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  function run(task: () => Promise<{ error: { code?: string; status?: number } | null }>, success: string) {
+  function run(
+    task: () => Promise<{ error: { code?: string; status?: number } | null }>,
+    success: string,
+  ) {
     startTransition(async () => {
       const { error } = await task();
       if (error) {
@@ -2134,7 +2410,9 @@ export function PendingInvitations({ invitations, organizationId, canManage }: P
               <p className="text-muted-foreground text-xs">
                 {expired
                   ? t('expired')
-                  : t('expires', { date: format.dateTime(new Date(item.expiresAt), { dateStyle: 'medium' }) })}
+                  : t('expires', {
+                      date: format.dateTime(new Date(item.expiresAt), { dateStyle: 'medium' }),
+                    })}
               </p>
             </div>
             {canManage ? (
@@ -2146,7 +2424,13 @@ export function PendingInvitations({ invitations, organizationId, canManage }: P
                   onClick={() =>
                     run(
                       // 🔍 `resend: true` re-sends instead of failing with "already invited"
-                      () => authClient.organization.inviteMember({ email: item.email, role: role === 'owner' ? 'admin' : role, organizationId, resend: true }),
+                      () =>
+                        authClient.organization.inviteMember({
+                          email: item.email,
+                          role: role === 'owner' ? 'admin' : role,
+                          organizationId,
+                          resend: true,
+                        }),
                       t('resent'),
                     )
                   }
@@ -2157,7 +2441,12 @@ export function PendingInvitations({ invitations, organizationId, canManage }: P
                   size="sm"
                   variant="outline"
                   disabled={pending}
-                  onClick={() => run(() => authClient.organization.cancelInvitation({ invitationId: item.id }), t('revoked'))}
+                  onClick={() =>
+                    run(
+                      () => authClient.organization.cancelInvitation({ invitationId: item.id }),
+                      t('revoked'),
+                    )
+                  }
                 >
                   {t('revoke')}
                 </Button>
@@ -2170,11 +2459,13 @@ export function PendingInvitations({ invitations, organizationId, canManage }: P
   );
 }
 ```
+
 📄 **Edit the members page** — load and show the list (the proper permission check replaces `true` in S4-T08/T12):
+
 ```tsx
 import { PendingInvitations } from '@/components/org/pending-invitations';
-import { db } from '@/db/client';
 import { listPendingInvitations } from '@/data/org-queries';
+import { db } from '@/db/client';
 // …
 const invitations = await listPendingInvitations(db, org.id);
 // …under the invite form:
@@ -2185,16 +2476,18 @@ const invitations = await listPendingInvitations(db, org.id);
     canManage
     invitations={invitations.map((item) => ({ ...item, expiresAt: item.expiresAt.toISOString() }))}
   />
-</section>
+</section>;
 ```
 
 ### 3. Tests for the account-deletion rule against the real plugin
 
 📄 **Append to `tests/integration/account.test.ts`:**
+
 ```ts
-import { member } from '@/db/schema';
-import { createOrganizationWithOwner } from '@/data/org-queries';
 import { randomUUID } from 'node:crypto';
+
+import { createOrganizationWithOwner } from '@/data/org-queries';
+import { member } from '@/db/schema';
 
 describe('account deletion and organizations', () => {
   it('refuses to delete the only owner of an organization that has other members', async () => {
@@ -2205,8 +2498,14 @@ describe('account deletion and organizations', () => {
     const [ownerRow] = await db.select().from(user).where(eq(user.email, owner));
     const [mateRow] = await db.select().from(user).where(eq(user.email, mate));
 
-    const org = await createOrganizationWithOwner(db, { name: 'Team', slug: `t-${randomUUID().slice(0, 6)}`, ownerId: ownerRow!.id });
-    await db.insert(member).values({ id: randomUUID(), organizationId: org.id, userId: mateRow!.id, role: 'member' });
+    const org = await createOrganizationWithOwner(db, {
+      name: 'Team',
+      slug: `t-${randomUUID().slice(0, 6)}`,
+      ownerId: ownerRow!.id,
+    });
+    await db
+      .insert(member)
+      .values({ id: randomUUID(), organizationId: org.id, userId: mateRow!.id, role: 'member' });
 
     const device = await signIn(auth, owner);
     await expect(
@@ -2218,10 +2517,12 @@ describe('account deletion and organizations', () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. **Members** shows pending invitations with role badge and an expiry date; an expired one shows "Expired".
 2. **Resend** prints a fresh email; **Revoke** removes the row (Studio: `status = 'canceled'`); the old link then says "This invitation is no longer valid."
 3. Click **Resend** quickly 6 times with `AUTH_RATE_LIMIT=on` → "Too many requests…" (per-IP limit).
@@ -2244,6 +2545,7 @@ git switch main && git pull && git switch -c feat/s4-t06-permissions
 ### 1. The single source of truth
 
 📄 **Create `src/libs/permissions.ts`:**
+
 ```ts
 import { createAccessControl } from 'better-auth/plugins/access'; // 🔍 import path varies by version
 
@@ -2289,7 +2591,10 @@ export type PermissionRequest = {
 };
 
 /** True if ANY of the user's roles grants EVERY requested permission. Unknown roles grant nothing. */
-export function hasPermission(role: string | null | undefined, request: PermissionRequest): boolean {
+export function hasPermission(
+  role: string | null | undefined,
+  request: PermissionRequest,
+): boolean {
   return rolesOf(role).some((name) => {
     const definition = roles[name as RoleName];
     // `authorize` is typed against the statement map; our request type is a safe subset
@@ -2301,20 +2606,25 @@ export function hasPermission(role: string | null | undefined, request: Permissi
 ### 2. Register it on the server and the client
 
 📄 **Edit `src/libs/Auth.ts`** — `import { ac, roles } from '@/libs/permissions';` and in `organization({ … })`:
+
 ```ts
         ac,
         roles,
 ```
+
 📄 **Edit `src/libs/AuthClient.ts`:**
+
 ```ts
 import { ac, roles } from '@/libs/permissions';
 // plugins: [..., organizationClient({ ac, roles }), ...]
 ```
+
 > The client needs the same `ac`/`roles` so `authClient.organization.checkRolePermission(...)` and type inference agree with the server.
 
 ### 3. A first sanity test (the exhaustive matrix comes in S4-T08)
 
 📄 **Create `src/libs/permissions.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -2346,47 +2656,58 @@ describe('hasPermission', () => {
 ### 4. The matrix, documented
 
 📄 **Create `docs/guides/rbac.md`:**
-````markdown
+
+```markdown
 # Roles & permissions (RBAC)
 
 Defined **once** in `src/libs/permissions.ts`. Enforced on the **server**; the UI only mirrors it.
 
-| Permission | owner | admin | member |
-|---|:-:|:-:|:-:|
-| `organization:update` | ✅ | ✅ | — |
-| `organization:delete` | ✅ | — | — |
-| `member:create` (invite/add) | ✅ | ✅ | — |
-| `member:update` (change role) | ✅ | ✅ | — |
-| `member:delete` (remove) | ✅ | ✅ | — |
-| `invitation:create` / `invitation:cancel` | ✅ | ✅ | — |
-| `project:create` / `read` / `update` | ✅ | ✅ | ✅ |
-| `project:delete` | ✅ | ✅ | — |
+| Permission                                | owner | admin | member |
+| ----------------------------------------- | :---: | :---: | :----: |
+| `organization:update`                     |  ✅   |  ✅   |   —    |
+| `organization:delete`                     |  ✅   |   —   |   —    |
+| `member:create` (invite/add)              |  ✅   |  ✅   |   —    |
+| `member:update` (change role)             |  ✅   |  ✅   |   —    |
+| `member:delete` (remove)                  |  ✅   |  ✅   |   —    |
+| `invitation:create` / `invitation:cancel` |  ✅   |  ✅   |   —    |
+| `project:create` / `read` / `update`      |  ✅   |  ✅   |   ✅   |
+| `project:delete`                          |  ✅   |  ✅   |   —    |
 
 ## Extra rules (beyond the matrix) — `src/libs/org-members.ts`
+
 - An organization always keeps **at least one owner**.
 - **Admins manage only plain members**; only owners manage owners/admins.
 - `owner` is never handed out by invitation or role change — only by **transfer ownership**.
 
 ## Platform role (separate!)
+
 `user.role` = `user` | `admin` is a **platform** role (admin console). It is unrelated to organization roles.
 
 ## How to add a permission
+
 1. Add the action to `statements`, then to each role that should have it.
 2. Add a row to the matrix test (`permissions.test.ts`) — it fails until you do.
 3. Enforce it: Server Action → `withOrgPermission({ resource: ['action'] }, …)`; page → `requirePagePermission`.
 4. Mirror it in the UI with `<Can>` (hiding is **not** security).
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip
 pnpm dev
 ```
-Sign in as the demo user and invite someone as *member* → works (owner has `invitation:create`). Sign in as a plain member (S4-T04 flow) and call the invite endpoint from DevTools:
+
+Sign in as the demo user and invite someone as _member_ → works (owner has `invitation:create`). Sign in as a plain member (S4-T04 flow) and call the invite endpoint from DevTools:
+
 ```js
-fetch('/api/auth/organization/invite-member', { method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ email: 'x@example.com', role: 'member', organizationId: '<org id>' }) }).then(r => r.status)
+fetch('/api/auth/organization/invite-member', {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ email: 'x@example.com', role: 'member', organizationId: '<org id>' }),
+}).then((r) => r.status);
 ```
+
 → **403**. The plugin enforces the roles you registered, even without our UI.
 
 **🚢 Ship** — branch `feat/s4-t06-permissions` · message: `feat(rbac): define access-control statements and roles, register on server and client`
@@ -2402,17 +2723,18 @@ git switch main && git pull && git switch -c feat/s4-t07-authz-helpers
 ```
 
 > 🎯 Two families of helpers, because pages and actions fail differently:
-> - **Pages** → *redirect / 404* (`requireOrgMember`, `requirePagePermission`)
-> - **Server Actions** → *throw typed errors* (`getOrgMembershipOrThrow`, `requirePermission`, `withOrgPermission`)
+>
+> - **Pages** → _redirect / 404_ (`requireOrgMember`, `requirePagePermission`)
+> - **Server Actions** → _throw typed errors_ (`getOrgMembershipOrThrow`, `requirePermission`, `withOrgPermission`)
 
 ### 1. Rewrite `src/data/authz.ts`
 
 📄 **Replace the file:**
+
 ```ts
 import 'server-only';
-
-import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
 import { db } from '@/db/client';
 import { redirect } from '@/i18n/navigation';
@@ -2457,7 +2779,10 @@ export async function getOrgMembershipOrThrow(orgSlug: string) {
 
 export type OrgContext = Awaited<ReturnType<typeof getOrgMembershipOrThrow>>;
 
-export async function requirePermission(orgSlug: string, request: PermissionRequest): Promise<OrgContext> {
+export async function requirePermission(
+  orgSlug: string,
+  request: PermissionRequest,
+): Promise<OrgContext> {
   const context = await getOrgMembershipOrThrow(orgSlug);
   if (!hasPermission(context.member.role, request)) throw new AuthorizationError();
   return context;
@@ -2475,11 +2800,13 @@ export function withOrgPermission<Input extends { orgSlug: string }, Result>(
     handler(input, await requirePermission(input.orgSlug, request));
 }
 ```
+
 (The `OrgContext` type moved from `requireOrgMember` to the throwing variant — nothing else imported it yet.)
 
 ### 2. Tests with mocks (no proxy, no real DB)
 
 📄 **Create `src/data/authz.test.ts`:**
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -2512,7 +2839,10 @@ import {
 } from './authz';
 
 const session = { user: { id: 'u1' }, session: { id: 's1' } };
-const as = (role: string) => ({ org: { id: 'o1', name: 'Acme', slug: 'acme' }, member: { id: 'm1', role } });
+const as = (role: string) => ({
+  org: { id: 'o1', name: 'Acme', slug: 'acme' },
+  member: { id: 'm1', role },
+});
 
 beforeEach(() => {
   sessionMock.mockReset().mockResolvedValue(session);
@@ -2523,29 +2853,37 @@ describe('actions (throwing helpers)', () => {
   it('treats a non-member as "not found", never "forbidden"', async () => {
     membershipMock.mockResolvedValue(undefined);
     await expect(getOrgMembershipOrThrow('acme')).rejects.toBeInstanceOf(NotFoundError);
-    await expect(requirePermission('acme', { project: ['read'] })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(requirePermission('acme', { project: ['read'] })).rejects.toBeInstanceOf(
+      NotFoundError,
+    );
   });
 
   it('forbids members without the permission, allows owners', async () => {
     membershipMock.mockResolvedValue(as('member'));
-    await expect(requirePermission('acme', { project: ['delete'] })).rejects.toBeInstanceOf(AuthorizationError);
+    await expect(requirePermission('acme', { project: ['delete'] })).rejects.toBeInstanceOf(
+      AuthorizationError,
+    );
 
     membershipMock.mockResolvedValue(as('owner'));
-    await expect(requirePermission('acme', { project: ['delete'] })).resolves.toMatchObject({ org: { id: 'o1' } });
+    await expect(requirePermission('acme', { project: ['delete'] })).resolves.toMatchObject({
+      org: { id: 'o1' },
+    });
   });
 
   it('reads the role fresh on EVERY call (a demotion applies immediately)', async () => {
     membershipMock.mockResolvedValueOnce(as('admin')).mockResolvedValueOnce(as('member'));
     await expect(requirePermission('acme', { organization: ['update'] })).resolves.toBeDefined();
-    await expect(requirePermission('acme', { organization: ['update'] })).rejects.toBeInstanceOf(AuthorizationError);
+    await expect(requirePermission('acme', { organization: ['update'] })).rejects.toBeInstanceOf(
+      AuthorizationError,
+    );
   });
 
   it('withOrgPermission never runs the handler without the permission', async () => {
     membershipMock.mockResolvedValue(as('member'));
     const handler = vi.fn();
-    await expect(withOrgPermission({ project: ['delete'] }, handler)({ orgSlug: 'acme' })).rejects.toBeInstanceOf(
-      AuthorizationError,
-    );
+    await expect(
+      withOrgPermission({ project: ['delete'] }, handler)({ orgSlug: 'acme' }),
+    ).rejects.toBeInstanceOf(AuthorizationError);
     expect(handler).not.toHaveBeenCalled();
   });
 });
@@ -2566,9 +2904,11 @@ describe('pages', () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 ```
+
 Mutation check: in `requirePermission` change `!hasPermission(` to `hasPermission(` → the tests fail loudly. Revert.
 
 **🚢 Ship** — branch `feat/s4-t07-authz-helpers` · message: `feat(rbac): add page and action authorization helpers with tests`
@@ -2583,11 +2923,12 @@ Mutation check: in `requirePermission` change `!hasPermission(` to `hasPermissio
 git switch main && git pull && git switch -c feat/s4-t08-client-permissions
 ```
 
-> 🔒 **"UI hides, server enforces."** These helpers only decide what to *render*. Every sensitive operation is re-checked on the server (S4-T07).
+> 🔒 **"UI hides, server enforces."** These helpers only decide what to _render_. Every sensitive operation is re-checked on the server (S4-T07).
 
 ### 1. Provider, hook and `<Can>`
 
 📄 **Create `src/components/org/org-provider.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2626,7 +2967,9 @@ export function Can({
   return usePermission(request) ? children : fallback;
 }
 ```
+
 📄 **Edit `src/app/[locale]/(app)/dashboard/[orgSlug]/layout.tsx`** — provide the org to client components:
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -2652,6 +2995,7 @@ export default async function OrgLayout({
 The expected truth table is written **by hand** (not derived from the implementation), so a silent change of a role fails the test.
 
 📄 **Replace `src/libs/permissions.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -2663,22 +3007,43 @@ const F = false;
 // resource:action → allowed?   (mirror of docs/guides/rbac.md)
 const MATRIX: Record<RoleName, Record<string, boolean>> = {
   owner: {
-    'organization:update': T, 'organization:delete': T,
-    'member:create': T, 'member:update': T, 'member:delete': T,
-    'invitation:create': T, 'invitation:cancel': T,
-    'project:create': T, 'project:read': T, 'project:update': T, 'project:delete': T,
+    'organization:update': T,
+    'organization:delete': T,
+    'member:create': T,
+    'member:update': T,
+    'member:delete': T,
+    'invitation:create': T,
+    'invitation:cancel': T,
+    'project:create': T,
+    'project:read': T,
+    'project:update': T,
+    'project:delete': T,
   },
   admin: {
-    'organization:update': T, 'organization:delete': F,
-    'member:create': T, 'member:update': T, 'member:delete': T,
-    'invitation:create': T, 'invitation:cancel': T,
-    'project:create': T, 'project:read': T, 'project:update': T, 'project:delete': T,
+    'organization:update': T,
+    'organization:delete': F,
+    'member:create': T,
+    'member:update': T,
+    'member:delete': T,
+    'invitation:create': T,
+    'invitation:cancel': T,
+    'project:create': T,
+    'project:read': T,
+    'project:update': T,
+    'project:delete': T,
   },
   member: {
-    'organization:update': F, 'organization:delete': F,
-    'member:create': F, 'member:update': F, 'member:delete': F,
-    'invitation:create': F, 'invitation:cancel': F,
-    'project:create': T, 'project:read': T, 'project:update': T, 'project:delete': F,
+    'organization:update': F,
+    'organization:delete': F,
+    'member:create': F,
+    'member:update': F,
+    'member:delete': F,
+    'invitation:create': F,
+    'invitation:cancel': F,
+    'project:create': T,
+    'project:read': T,
+    'project:update': T,
+    'project:delete': F,
   },
 };
 
@@ -2721,6 +3086,7 @@ describe('edge cases', () => {
 ### 3. Browser test for `<Can>`
 
 📄 **Create `src/components/org/org-provider.test.tsx`:**
+
 ```tsx
 import { expect, test } from 'vitest';
 import { render } from 'vitest-browser-react';
@@ -2752,9 +3118,11 @@ test('renders the fallback for roles that do not', async () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check
 ```
+
 Mutation check: change `'project:delete': F` to `T` for `member` in the matrix → fails; add a new action to `statements` → the "row for EVERY permission" test fails. Revert.
 
 **🚢 Ship** — branch `feat/s4-t08-client-permissions` · message: `feat(rbac): add org provider, Can component and exhaustive permission matrix test`
@@ -2765,7 +3133,7 @@ Mutation check: change `'project:delete': F` to `T` for `member` in the matrix �
 
 **Branch:** `feat/s4-t09-projects-tenantdb` · **Story:** US-043 · **3 SP** · 🔒 security-critical · risk **R-04**
 
-> 🎯 **Isolation by construction.** Feature code never writes `where organization_id = …` by hand — it receives a repository that *can't* leave its tenant. A test forbids importing the raw database from feature code.
+> 🎯 **Isolation by construction.** Feature code never writes `where organization_id = …` by hand — it receives a repository that _can't_ leave its tenant. A test forbids importing the raw database from feature code.
 
 ```bash
 git switch main && git pull && git switch -c feat/s4-t09-projects-tenantdb
@@ -2774,6 +3142,7 @@ git switch main && git pull && git switch -c feat/s4-t09-projects-tenantdb
 ### 1. Schema + migration
 
 📄 **Create `src/db/schema/project.ts`:**
+
 ```ts
 import { index, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
@@ -2802,7 +3171,9 @@ export const project = pgTable(
   (table) => [index('project_org_created_idx').on(table.organizationId, table.createdAt)],
 );
 ```
+
 📄 **Edit `src/db/schema/index.ts`:** add `export * from './project';`
+
 ```bash
 pnpm db:generate && pnpm db:check      # 0005_….sql
 ```
@@ -2810,9 +3181,9 @@ pnpm db:generate && pnpm db:check      # 0005_….sql
 ### 2. The tenant-scoped repository
 
 📄 **Create `src/data/tenant-db.ts`:**
+
 ```ts
 import 'server-only';
-
 import { randomUUID } from 'node:crypto';
 
 import { and, count, desc, eq, ilike } from 'drizzle-orm';
@@ -2834,7 +3205,11 @@ function projectRepo(database: DbLike, organizationId: string) {
   const inOrg = eq(project.organizationId, organizationId);
 
   return {
-    async list({ search, page = 1, pageSize = 10 }: { search?: string; page?: number; pageSize?: number } = {}) {
+    async list({
+      search,
+      page = 1,
+      pageSize = 10,
+    }: { search?: string; page?: number; pageSize?: number } = {}) {
       const where = search ? and(inOrg, ilike(project.name, `%${escapeLike(search)}%`)) : inOrg;
       const [items, totals] = await Promise.all([
         database
@@ -2850,7 +3225,10 @@ function projectRepo(database: DbLike, organizationId: string) {
     },
 
     async get(id: string) {
-      const [row] = await database.select().from(project).where(and(inOrg, eq(project.id, id)));
+      const [row] = await database
+        .select()
+        .from(project)
+        .where(and(inOrg, eq(project.id, id)));
       return row;
     },
 
@@ -2883,7 +3261,10 @@ function projectRepo(database: DbLike, organizationId: string) {
     },
 
     async delete(id: string) {
-      const rows = await database.delete(project).where(and(inOrg, eq(project.id, id))).returning({ id: project.id });
+      const rows = await database
+        .delete(project)
+        .where(and(inOrg, eq(project.id, id)))
+        .returning({ id: project.id });
       return rows.length > 0;
     },
   };
@@ -2896,11 +3277,13 @@ export function createTenantDb(database: DbLike, organizationId: string) {
 /** The ONLY way feature code reaches tenant data. */
 export const tenantDb = (organizationId: string) => createTenantDb(db, organizationId);
 ```
+
 > `server-only` makes this file unimportable from client components. Tests import `createTenantDb` through the Vitest stub.
 
 ### 3. A rule that keeps it that way
 
 📄 **Create `src/data/tenant-boundary.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -2921,14 +3304,18 @@ function files(dir: string): string[] {
 }
 
 it('no feature code imports the database client or tables directly', () => {
-  const offenders = FEATURE_DIRS.flatMap(files).filter((file) => FORBIDDEN.test(readFileSync(file, 'utf8')));
+  const offenders = FEATURE_DIRS.flatMap(files).filter((file) =>
+    FORBIDDEN.test(readFileSync(file, 'utf8')),
+  );
 
   expect(offenders, `Import via src/data instead:\n${offenders.join('\n')}`).toEqual([]);
 });
 ```
+
 This **will fail** on two files we wrote earlier (they used `db` directly). Fix them now by going through `src/data/organizations.ts`:
 
 📄 **Add to `src/data/organizations.ts`:**
+
 ```ts
 import { findInvitationDetails, listPendingInvitations } from './org-queries';
 
@@ -2940,10 +3327,9 @@ export async function getInvitationDetails(invitationId: string) {
   return findInvitationDetails(db, invitationId);
 }
 ```
-📄 **Members page** (`…/members/page.tsx`): remove `import { db } …` and `listPendingInvitations`; use
-`import { getPendingInvitations } from '@/data/organizations';` and `const invitations = await getPendingInvitations(org.id);`.
-📄 **Accept-invitation page**: remove `import { db } …`/`findInvitationDetails`; use
-`import { getInvitationDetails } from '@/data/organizations';` and `const details = await getInvitationDetails(invitationId);`.
+
+📄 **Members page** (`…/members/page.tsx`): remove `import { db } …` and `listPendingInvitations`; use `import { getPendingInvitations } from '@/data/organizations';` and `const invitations = await getPendingInvitations(org.id);`. 📄 **Accept-invitation page**: remove `import { db } …`/`findInvitationDetails`; use `import { getInvitationDetails } from '@/data/organizations';` and `const details = await getInvitationDetails(invitationId);`.
+
 ```bash
 pnpm test        # tenant-boundary now passes
 ```
@@ -2951,17 +3337,22 @@ pnpm test        # tenant-boundary now passes
 ### 4. Seed: two tenants, three users, a platform of examples
 
 📄 **Replace `src/db/seed.ts`:**
+
 ```ts
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
-import { createOrganizationWithOwner } from '../data/org-queries';
+import { eq } from 'drizzle-orm';
 
+import { createOrganizationWithOwner } from '../data/org-queries';
 import { account, member, organization, project, user } from './schema';
 import type { DbLike } from './types';
 
 export const DEMO_PASSWORD = 'Demo-Password-123'; // local development ONLY — seed refuses to run in production
-export const DEMO_USER = { email: 'demo@example.com', name: 'Demo User', password: DEMO_PASSWORD } as const;
+export const DEMO_USER = {
+  email: 'demo@example.com',
+  name: 'Demo User',
+  password: DEMO_PASSWORD,
+} as const;
 
 const PEOPLE = {
   demo: { email: DEMO_USER.email, name: DEMO_USER.name },
@@ -2972,12 +3363,21 @@ const PEOPLE = {
 type SeedOptions = { hashPassword: (password: string) => Promise<string> };
 
 async function ensureUser(db: DbLike, hash: string, person: { email: string; name: string }) {
-  const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, person.email));
+  const [existing] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, person.email));
   if (existing) return existing.id;
 
   const id = randomUUID();
   await db.insert(user).values({ id, name: person.name, email: person.email, emailVerified: true });
-  await db.insert(account).values({ id: randomUUID(), accountId: id, providerId: 'credential', userId: id, password: hash });
+  await db.insert(account).values({
+    id: randomUUID(),
+    accountId: id,
+    providerId: 'credential',
+    userId: id,
+    password: hash,
+  });
   return id;
 }
 
@@ -2997,32 +3397,43 @@ export async function seed(db: DbLike, { hashPassword }: SeedOptions) {
   const otherOrg = await ensureOrg(db, 'other-co', 'Other Co', otherId);
 
   // teammate belongs to the demo organization as a plain member
-  const [membership] = await db.select({ id: member.id }).from(member).where(eq(member.userId, teammateId));
+  const [membership] = await db
+    .select({ id: member.id })
+    .from(member)
+    .where(eq(member.userId, teammateId));
   if (!membership) {
-    await db.insert(member).values({ id: randomUUID(), organizationId: demoOrg.id, userId: teammateId, role: 'member' });
+    await db
+      .insert(member)
+      .values({ id: randomUUID(), organizationId: demoOrg.id, userId: teammateId, role: 'member' });
   }
 
   for (const [org, names] of [
     [demoOrg, ['Website redesign', 'Mobile app', 'Quarterly report']],
     [otherOrg, ['Secret project', 'Acquisition plan']],
   ] as const) {
-    const existing = await db.select({ id: project.id }).from(project).where(eq(project.organizationId, org.id));
+    const existing = await db
+      .select({ id: project.id })
+      .from(project)
+      .where(eq(project.organizationId, org.id));
     if (existing.length === 0) {
       for (const name of names) {
-        await db.insert(project).values({ id: randomUUID(), organizationId: org.id, name, createdBy: demoId });
+        await db
+          .insert(project)
+          .values({ id: randomUUID(), organizationId: org.id, name, createdBy: demoId });
       }
     }
   }
 }
 ```
+
 📄 **Replace `src/db/seed.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
 import { account, member, organization, project, user } from '@/db/schema';
 
 import { createTestDb, type TestDb } from '../../tests/utils/test-db';
-
 import { seed } from './seed';
 
 let db: TestDb;
@@ -3045,6 +3456,7 @@ it('is idempotent, never stores plain passwords, and creates two separate tenant
   for (const row of await db.select().from(account)) expect(row.password).toMatch(/^hashed:/);
 });
 ```
+
 Update `scripts/seed.ts`'s log line to print the three accounts (`demo@`, `teammate@`, `other@` — all `Demo-Password-123`).
 
 ### 5. The RLS spike (time-box: 3 hours) — and the decision
@@ -3052,6 +3464,7 @@ Update `scripts/seed.ts`'s log line to print the three accounts (`demo@`, `teamm
 Postgres **Row-Level Security** could be a second wall. Evaluate it, then decide.
 
 📄 **Create `scripts/rls-spike.ts`** (an experiment — not shipped to users):
+
 ```ts
 import { PGlite } from '@electric-sql/pglite';
 
@@ -3084,29 +3497,36 @@ async function main() {
 
 void main();
 ```
+
 ```bash
 pnpm tsx scripts/rls-spike.ts
 ```
+
 What you should observe — and why we **defer**:
+
 - ✅ RLS works when the runtime uses a **non-owner, non-superuser** role inside a transaction with `SET LOCAL`.
 - ⚠️ The default role on PGlite **and** Neon's owner role **bypass** RLS. Using it for real means: a dedicated runtime role, `FORCE ROW LEVEL SECURITY`, **every** query wrapped in a transaction that sets `app.org_id`, and care with the connection pooler (transaction mode only).
 - 📉 Today `tenantDb` + the boundary test + the isolation tests (S4-T15) give the same guarantee for far less moving parts.
 
 📄 **Record the decision** in `docs/adr/005-tenant-scoping-via-tenantdb-helper-rls-evaluated.md` — append:
+
 ```markdown
 ## Outcome (Sprint 4 spike)
+
 - Decision: application-level scoping via `tenantDb` + boundary and isolation tests. **RLS deferred (TD-02).**
-- RLS works with a non-superuser runtime role + `SET LOCAL app.org_id` in a transaction (see scripts/rls-spike.ts),
-  but owner/superuser roles bypass it and every query would need transaction plumbing.
+- RLS works with a non-superuser runtime role + `SET LOCAL app.org_id` in a transaction (see scripts/rls-spike.ts), but owner/superuser roles bypass it and every query would need transaction plumbing.
 - Revisit when: multiple services share the database, or a compliance requirement asks for DB-enforced isolation.
 ```
+
 (`scripts/rls-spike.ts` can stay as documentation; Knip treats `scripts/**` as entries.)
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm db:reset && pnpm db:studio
 ```
+
 Studio: `project` has 3 rows in `demo`'s org and 2 in `other-co`'s; `pnpm db:seed` twice creates no duplicates. Log in as `other@example.com` / `Demo-Password-123` → `/dashboard` redirects to `/dashboard/other-co`.
 
 **🚢 Ship** — branch `feat/s4-t09-projects-tenantdb` · message: `feat(tenancy): add project resource, tenantDb repository, boundary test and RLS decision`
@@ -3125,11 +3545,16 @@ mkdir -p "src/app/[locale]/(app)/dashboard/[orgSlug]/projects/[projectId]"
 ### 1. Validation
 
 📄 **Create `src/validations/project.ts`:**
+
 ```ts
 import { z } from 'zod';
 
 export const projectSchema = z.object({
-  name: z.string().trim().min(1, { message: 'validation.projectName' }).max(80, { message: 'validation.projectName' }),
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: 'validation.projectName' })
+    .max(80, { message: 'validation.projectName' }),
   description: z.string().trim().max(500, { message: 'validation.projectDescription' }),
   status: z.enum(['active', 'archived']),
 });
@@ -3148,6 +3573,7 @@ export type DeleteProjectInput = z.output<typeof deleteProjectSchema>;
 ### 2. Server Actions — the permission is part of the declaration
 
 📄 **Create `src/actions/projects.ts`:**
+
 ```ts
 'use server';
 
@@ -3166,13 +3592,16 @@ import {
 
 const handleCreate = createAction(
   createProjectSchema,
-  withOrgPermission({ project: ['create'] }, async (input: CreateProjectInput, { org, session }) => {
-    const row = await tenantDb(org.id).projects.create(
-      { name: input.name, description: input.description || null, status: input.status },
-      session.user.id,
-    );
-    return { id: row.id };
-  }),
+  withOrgPermission(
+    { project: ['create'] },
+    async (input: CreateProjectInput, { org, session }) => {
+      const row = await tenantDb(org.id).projects.create(
+        { name: input.name, description: input.description || null, status: input.status },
+        session.user.id,
+      );
+      return { id: row.id };
+    },
+  ),
 );
 
 const handleUpdate = createAction(
@@ -3211,6 +3640,7 @@ export async function deleteProject(input: unknown) {
 ### 3. Components
 
 📄 **Create `src/components/org/project-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3223,10 +3653,16 @@ import { toast } from 'sonner';
 import { createProject, updateProject } from '@/actions/projects';
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
-import { TextareaField } from '@/components/forms/textarea-field';
 import { TextField } from '@/components/forms/text-field';
+import { TextareaField } from '@/components/forms/textarea-field';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useRouter } from '@/i18n/navigation';
 import { applyActionError } from '@/utils/form-errors';
 import { type ProjectFormInput, projectSchema } from '@/validations/project';
@@ -3245,7 +3681,11 @@ export function ProjectForm({ orgSlug, project, onDone }: Props) {
 
   const form = useForm<ProjectFormInput>({
     resolver: zodResolver(projectSchema),
-    defaultValues: { name: project?.name ?? '', description: project?.description ?? '', status: project?.status ?? 'active' },
+    defaultValues: {
+      name: project?.name ?? '',
+      description: project?.description ?? '',
+      status: project?.status ?? 'active',
+    },
   });
 
   async function onSubmit(values: ProjectFormInput) {
@@ -3297,7 +3737,9 @@ export function ProjectForm({ orgSlug, project, onDone }: Props) {
   );
 }
 ```
+
 📄 **Create `src/components/org/create-project-dialog.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3306,7 +3748,13 @@ import { useState } from 'react';
 
 import { ProjectForm } from '@/components/org/project-form';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 export function CreateProjectDialog({ orgSlug }: { orgSlug: string }) {
   const t = useTranslations('org.projects');
@@ -3327,7 +3775,9 @@ export function CreateProjectDialog({ orgSlug }: { orgSlug: string }) {
   );
 }
 ```
+
 📄 **Create `src/components/org/delete-project-button.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3388,12 +3838,13 @@ export function DeleteProjectButton({ orgSlug, id }: { orgSlug: string; id: stri
 ### 4. Pages
 
 📄 **Create `…/projects/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { PageHeader } from '@/components/layout/page-header';
 import { CreateProjectDialog } from '@/components/org/create-project-dialog';
 import { Can } from '@/components/org/org-provider';
-import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { requirePagePermission } from '@/data/authz';
@@ -3415,11 +3866,16 @@ export default async function ProjectsPage({
 
   const { q, page: rawPage } = await searchParams;
   const page = Math.max(1, Number.parseInt(rawPage ?? '1', 10) || 1);
-  const { items, total } = await tenantDb(org.id).projects.list({ search: q, page, pageSize: PAGE_SIZE });
+  const { items, total } = await tenantDb(org.id).projects.list({
+    search: q,
+    page,
+    pageSize: PAGE_SIZE,
+  });
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const t = await getTranslations('org.projects');
 
-  const pageHref = (target: number) => `/dashboard/${orgSlug}/projects?${new URLSearchParams({ ...(q ? { q } : {}), page: String(target) })}`;
+  const pageHref = (target: number) =>
+    `/dashboard/${orgSlug}/projects?${new URLSearchParams({ ...(q ? { q } : {}), page: String(target) })}`;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -3434,7 +3890,12 @@ export default async function ProjectsPage({
       />
 
       <form className="flex gap-2" role="search">
-        <Input name="q" defaultValue={q} placeholder={t('searchPlaceholder')} aria-label={t('searchPlaceholder')} />
+        <Input
+          name="q"
+          defaultValue={q}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
+        />
         <Button type="submit" variant="outline">
           {t('searchPlaceholder')}
         </Button>
@@ -3447,10 +3908,15 @@ export default async function ProjectsPage({
           {items.map((item) => (
             <li key={item.id} className="flex items-center justify-between gap-4 p-3">
               <div className="min-w-0">
-                <Link href={`/dashboard/${orgSlug}/projects/${item.id}`} className="font-medium hover:underline">
+                <Link
+                  href={`/dashboard/${orgSlug}/projects/${item.id}`}
+                  className="font-medium hover:underline"
+                >
                   {item.name}
                 </Link>
-                {item.description ? <p className="text-muted-foreground truncate text-sm">{item.description}</p> : null}
+                {item.description ? (
+                  <p className="text-muted-foreground truncate text-sm">{item.description}</p>
+                ) : null}
               </div>
               <span className="text-muted-foreground text-xs uppercase">
                 {item.status === 'active' ? t('statusActive') : t('statusArchived')}
@@ -3479,10 +3945,12 @@ export default async function ProjectsPage({
   );
 }
 ```
+
 📄 **Create `…/projects/[projectId]/page.tsx`:**
+
 ```tsx
-import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
 import { PageHeader } from '@/components/layout/page-header';
 import { DeleteProjectButton } from '@/components/org/delete-project-button';
@@ -3517,28 +3985,39 @@ export default async function ProjectPage({
           </Can>
         }
       />
-      <Can request={{ project: ['update'] }} fallback={<p className="text-muted-foreground text-sm">{row.description}</p>}>
+      <Can
+        request={{ project: ['update'] }}
+        fallback={<p className="text-muted-foreground text-sm">{row.description}</p>}
+      >
         <ProjectForm
           orgSlug={orgSlug}
-          project={{ id: row.id, name: row.name, description: row.description ?? '', status: row.status }}
+          project={{
+            id: row.id,
+            name: row.name,
+            description: row.description ?? '',
+            status: row.status,
+          }}
         />
       </Can>
     </div>
   );
 }
 ```
+
 > The two pages call `requirePagePermission` themselves (the guard-coverage test checks it); `<Can>` only decides what to **render**.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 As `demo@example.com`:
+
 1. **Projects** lists 3 seeded projects; search "mobile" filters; with > 10 projects the pager works (`?page=2`).
 2. **New project** → dialog → empty name shows the translated error → valid → you land on the project page.
-3. Edit and save → toast; **Delete** → confirm → back to the list.
-As `teammate@example.com` (a *member* of `demo`):
+3. Edit and save → toast; **Delete** → confirm → back to the list. As `teammate@example.com` (a _member_ of `demo`):
 4. Can create/edit, but the project page shows **no Delete button**.
 5. Tamper: copy a project id from `other-co` (Studio) and open `/dashboard/demo/projects/<that id>` → **404**; the same id under `/dashboard/other-co/...` → **404** (not a member).
 6. From DevTools, replay a delete request for a member (the server action returns `FORBIDDEN`) — the UI hiding was only cosmetic.
@@ -3559,6 +4038,7 @@ mkdir -p "src/app/[locale]/(app)/dashboard/[orgSlug]/settings"
 ### 1. Rename / change the URL name
 
 📄 **Create `src/components/org/org-settings-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3592,7 +4072,10 @@ export function OrgSettingsForm({ org }: Props) {
   async function onSubmit(values: CreateOrgInput) {
     setFormError(null);
     // The server re-checks organization:update — a member calling this endpoint gets 403
-    const { error } = await authClient.organization.update({ data: values, organizationId: org.id });
+    const { error } = await authClient.organization.update({
+      data: values,
+      organizationId: org.id,
+    });
     if (error) {
       setFormError(authErrorKey(error));
       return;
@@ -3622,6 +4105,7 @@ export function OrgSettingsForm({ org }: Props) {
 ### 2. Delete the organization — owner only, recent sign-in, typed name
 
 📄 **Create `src/actions/organization.ts`** (grows in S4-T12):
+
 ```ts
 'use server';
 
@@ -3630,8 +4114,8 @@ import { z } from 'zod';
 
 import { requirePermission } from '@/data/authz';
 import { requireFreshSession } from '@/data/session';
-import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { auth } from '@/libs/Auth';
+import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { ValidationError } from '@/libs/errors';
 import { createAction } from '@/utils/action';
 
@@ -3648,7 +4132,10 @@ const handleDeleteOrganization = createAction(deleteOrganizationSchema, async (i
 
   try {
     // 🔍 method name: deleteOrganization. Members, invitations and projects cascade via foreign keys.
-    await auth.api.deleteOrganization({ body: { organizationId: org.id }, headers: await headers() });
+    await auth.api.deleteOrganization({
+      body: { organizationId: org.id },
+      headers: await headers(),
+    });
   } catch (error) {
     throw mapAuthApiError(error);
   }
@@ -3659,7 +4146,9 @@ export async function deleteOrganization(input: unknown) {
   return handleDeleteOrganization(input);
 }
 ```
+
 📄 **Create `src/components/org/delete-organization-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3726,10 +4215,19 @@ export function DeleteOrganizationForm({ orgSlug, orgName }: { orgSlug: string; 
           <FormError messageKey={error} />
           <div className="space-y-2">
             <Label htmlFor="confirm-org-name">{t('confirmLabel')}</Label>
-            <Input id="confirm-org-name" autoComplete="off" value={confirm} onChange={(event) => setConfirm(event.target.value)} />
+            <Input
+              id="confirm-org-name"
+              autoComplete="off"
+              value={confirm}
+              onChange={(event) => setConfirm(event.target.value)}
+            />
           </div>
           <DialogFooter>
-            <Button type="submit" variant="destructive" disabled={busy || confirm.trim() !== orgName}>
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={busy || confirm.trim() !== orgName}
+            >
               {t('submit')}
             </Button>
           </DialogFooter>
@@ -3743,6 +4241,7 @@ export function DeleteOrganizationForm({ orgSlug, orgName }: { orgSlug: string; 
 ### 3. The page
 
 📄 **Create `…/settings/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3794,11 +4293,14 @@ export default async function OrgSettingsPage({
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 As `demo@example.com` (owner):
+
 1. **Settings** → rename the organization → toast; the switcher shows the new name.
 2. Change the URL name to an existing slug → "already taken"; to a valid new one → you are redirected to `/dashboard/<new>/settings`; the **old** URL is a 404.
 3. As `teammate@example.com` (member) open `/dashboard/demo/settings` → bounced to the overview.
@@ -3813,7 +4315,7 @@ As `demo@example.com` (owner):
 
 **Branch:** `feat/s4-t12-members` · **Story:** US-044 · **3 SP** · 🔒 security-critical
 
-> 🎯 The rules that **aren't in the permission matrix** live here: *last owner*, *admins manage only members*, *owner is never handed out by role change*. All enforced in Server Actions; the UI only mirrors them.
+> 🎯 The rules that **aren't in the permission matrix** live here: _last owner_, _admins manage only members_, _owner is never handed out by role change_. All enforced in Server Actions; the UI only mirrors them.
 
 ```bash
 git switch main && git pull && git switch -c feat/s4-t12-members
@@ -3822,15 +4324,19 @@ git switch main && git pull && git switch -c feat/s4-t12-members
 ### 1. Errors may carry their own message key
 
 📄 **Edit `src/libs/errors.ts`:** `type Init = { message?: string; cause?: unknown; messageKey?: string };` — every subclass already spreads `...init` after its default `messageKey`, so `new ConflictError({ messageKey: 'org.errors.lastOwner' })` now works. Add a test row to `errors.test.ts`:
+
 ```ts
 it('lets a call site pick a more specific message key', () => {
-  expect(new ConflictError({ messageKey: 'org.errors.lastOwner' }).messageKey).toBe('org.errors.lastOwner');
+  expect(new ConflictError({ messageKey: 'org.errors.lastOwner' }).messageKey).toBe(
+    'org.errors.lastOwner',
+  );
 });
 ```
 
 ### 2. Queries
 
 📄 **Add to `src/data/org-queries.ts`:**
+
 ```ts
 export async function listMembers(database: DbLike, organizationId: string) {
   return database
@@ -3848,7 +4354,9 @@ export async function listMembers(database: DbLike, organizationId: string) {
     .orderBy(member.createdAt);
 }
 ```
+
 📄 **Add to `src/data/organizations.ts`:**
+
 ```ts
 import { listMembers } from './org-queries';
 
@@ -3860,9 +4368,10 @@ export async function getMembers(organizationId: string) {
 ### 3. Server Actions
 
 📄 **Append to `src/actions/organization.ts`:**
+
 ```ts
-import { getMembers } from '@/data/organizations';
 import { getOrgMembershipOrThrow, withOrgPermission } from '@/data/authz';
+import { getMembers } from '@/data/organizations';
 import { AuthorizationError, ConflictError, NotFoundError } from '@/libs/errors';
 import { assignableRoles, canManageTarget, hasRole, wouldLeaveNoOwner } from '@/libs/org-members';
 
@@ -3885,7 +4394,10 @@ const handleUpdateRole = createAction(
   withOrgPermission({ member: ['update'] }, async (input: RoleInput, { org, member: actor }) => {
     const { members, target } = await loadMembers(org.id, input.memberId);
 
-    if (!canManageTarget(actor.role, target.role) || !assignableRoles(actor.role).includes(input.role)) {
+    if (
+      !canManageTarget(actor.role, target.role) ||
+      !assignableRoles(actor.role).includes(input.role)
+    ) {
       throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
     }
     if (wouldLeaveNoOwner(members, target.memberId, input.role)) {
@@ -3916,7 +4428,8 @@ const handleRemoveMember = createAction(
     if (target.memberId === actor.id || !canManageTarget(actor.role, target.role)) {
       throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
     }
-    if (wouldLeaveNoOwner(members, target.memberId)) throw new ConflictError({ messageKey: 'org.errors.lastOwner' });
+    if (wouldLeaveNoOwner(members, target.memberId))
+      throw new ConflictError({ messageKey: 'org.errors.lastOwner' });
 
     try {
       await auth.api.removeMember({
@@ -3934,12 +4447,19 @@ const leaveSchema = z.object({ orgSlug: z.string().min(1) });
 
 const handleLeave = createAction(leaveSchema, async (input) => {
   const { org, member: me } = await getOrgMembershipOrThrow(input.orgSlug); // any member may leave
-  const members = (await getMembers(org.id)).map((item) => ({ id: item.memberId, role: item.role }));
+  const members = (await getMembers(org.id)).map((item) => ({
+    id: item.memberId,
+    role: item.role,
+  }));
 
-  if (wouldLeaveNoOwner(members, me.id)) throw new ConflictError({ messageKey: 'org.errors.lastOwner' });
+  if (wouldLeaveNoOwner(members, me.id))
+    throw new ConflictError({ messageKey: 'org.errors.lastOwner' });
 
   try {
-    await auth.api.leaveOrganization({ body: { organizationId: org.id }, headers: await headers() });
+    await auth.api.leaveOrganization({
+      body: { organizationId: org.id },
+      headers: await headers(),
+    });
   } catch (error) {
     throw mapAuthApiError(error);
   }
@@ -3951,16 +4471,24 @@ const transferSchema = z.object({ orgSlug: z.string().min(1), memberId: z.string
 const handleTransfer = createAction(transferSchema, async (input) => {
   await requireFreshSession();
   const { org, member: me } = await getOrgMembershipOrThrow(input.orgSlug);
-  if (!hasRole(me.role, 'owner')) throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
+  if (!hasRole(me.role, 'owner'))
+    throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
 
   const { target } = await loadMembers(org.id, input.memberId);
-  if (target.memberId === me.id) throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
+  if (target.memberId === me.id)
+    throw new AuthorizationError({ messageKey: 'org.errors.notAllowed' });
 
   const requestHeaders = await headers();
   try {
     // Promote FIRST, demote second: the organization is never without an owner
-    await auth.api.updateMemberRole({ body: { memberId: target.memberId, role: 'owner', organizationId: org.id }, headers: requestHeaders });
-    await auth.api.updateMemberRole({ body: { memberId: me.id, role: 'admin', organizationId: org.id }, headers: requestHeaders });
+    await auth.api.updateMemberRole({
+      body: { memberId: target.memberId, role: 'owner', organizationId: org.id },
+      headers: requestHeaders,
+    });
+    await auth.api.updateMemberRole({
+      body: { memberId: me.id, role: 'admin', organizationId: org.id },
+      headers: requestHeaders,
+    });
   } catch (error) {
     throw mapAuthApiError(error);
   }
@@ -3980,11 +4508,13 @@ export async function transferOwnership(input: unknown) {
   return handleTransfer(input);
 }
 ```
+
 (`handleDeleteOrganization` from S4-T11 stays in the same file; merge the imports.)
 
 ### 4. The UI
 
 📄 **Create `src/components/org/members-table.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3995,7 +4525,13 @@ import { toast } from 'sonner';
 import { leaveOrganization, removeMember, updateMemberRole } from '@/actions/organization';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useRouter } from '@/i18n/navigation';
 import { assignableRoles, canManageTarget } from '@/libs/org-members';
 import { hasPermission } from '@/libs/permissions';
@@ -4015,7 +4551,11 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
   const canRemove = hasPermission(actorRole, { member: ['delete'] });
   const options = assignableRoles(actorRole);
 
-  function run(task: () => Promise<{ ok: boolean; error?: { messageKey: string } }>, success: string, afterOk?: () => void) {
+  function run(
+    task: () => Promise<{ ok: boolean; error?: { messageKey: string } }>,
+    success: string,
+    afterOk?: () => void,
+  ) {
     startTransition(async () => {
       const result = await task();
       if (!result.ok) {
@@ -4049,7 +4589,8 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
               <tr key={row.memberId}>
                 <td className="p-3">
                   <p className="font-medium">
-                    {row.name || row.email} {isMe ? <Badge variant="secondary">{t('you')}</Badge> : null}
+                    {row.name || row.email}{' '}
+                    {isMe ? <Badge variant="secondary">{t('you')}</Badge> : null}
                   </p>
                   <p className="text-muted-foreground text-xs">{row.email}</p>
                 </td>
@@ -4059,10 +4600,16 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
                       value={role}
                       disabled={pending}
                       onValueChange={(value) =>
-                        run(() => updateMemberRole({ orgSlug, memberId: row.memberId, role: value }), t('roleUpdated'))
+                        run(
+                          () => updateMemberRole({ orgSlug, memberId: row.memberId, role: value }),
+                          t('roleUpdated'),
+                        )
                       }
                     >
-                      <SelectTrigger className="w-32" aria-label={`${t('role')}: ${row.name || row.email}`}>
+                      <SelectTrigger
+                        className="w-32"
+                        aria-label={`${t('role')}: ${row.name || row.email}`}
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -4086,7 +4633,13 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
                       size="sm"
                       variant="outline"
                       disabled={pending}
-                      onClick={() => run(() => leaveOrganization({ orgSlug }), t('left'), () => router.replace('/dashboard'))}
+                      onClick={() =>
+                        run(
+                          () => leaveOrganization({ orgSlug }),
+                          t('left'),
+                          () => router.replace('/dashboard'),
+                        )
+                      }
                     >
                       {t('leave')}
                     </Button>
@@ -4095,7 +4648,9 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
                       size="sm"
                       variant="outline"
                       disabled={pending}
-                      onClick={() => run(() => removeMember({ orgSlug, memberId: row.memberId }), t('removed'))}
+                      onClick={() =>
+                        run(() => removeMember({ orgSlug, memberId: row.memberId }), t('removed'))
+                      }
                     >
                       {t('remove')}
                     </Button>
@@ -4110,7 +4665,9 @@ export function MembersTable({ orgSlug, members, currentMemberId, actorRole }: P
   );
 }
 ```
+
 📄 **Create `src/components/org/transfer-ownership-dialog.tsx`:**
+
 ```tsx
 'use client';
 
@@ -4122,9 +4679,23 @@ import { transferOwnership } from '@/actions/organization';
 import { ReauthNotice } from '@/components/account/reauth-notice';
 import { FormError } from '@/components/forms/form-error';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useRouter } from '@/i18n/navigation';
 
 type Props = { orgSlug: string; candidates: { memberId: string; label: string }[] };
@@ -4194,7 +4765,9 @@ export function TransferOwnershipDialog({ orgSlug, candidates }: Props) {
   );
 }
 ```
+
 📄 **Rewrite the members page** (`…/members/page.tsx`):
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -4234,7 +4807,10 @@ export default async function MembersPage({
               orgSlug={orgSlug}
               candidates={members
                 .filter((item) => item.memberId !== member.id)
-                .map((item) => ({ memberId: item.memberId, label: `${item.name || item.email} (${item.email})` }))}
+                .map((item) => ({
+                  memberId: item.memberId,
+                  label: `${item.name || item.email} (${item.email})`,
+                }))}
             />
           ) : null
         }
@@ -4260,7 +4836,10 @@ export default async function MembersPage({
           <PendingInvitations
             organizationId={org.id}
             canManage={canCancel}
-            invitations={invitations.map((item) => ({ ...item, expiresAt: item.expiresAt.toISOString() }))}
+            invitations={invitations.map((item) => ({
+              ...item,
+              expiresAt: item.expiresAt.toISOString(),
+            }))}
           />
         </section>
       ) : null}
@@ -4270,13 +4849,15 @@ export default async function MembersPage({
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. As owner: change `teammate`'s role to **Admin** → toast; role badge updates. Back to **Member** → works.
 2. Try to demote **yourself** while you're the only owner → there's no select on your own row; **Leave organization** → "An organization must keep at least one owner."
-3. **Transfer ownership** → pick the teammate → (fresh session) succeeds: you become *Admin*, they become *Owner*. Run it with a stale session → "Please sign in again".
+3. **Transfer ownership** → pick the teammate → (fresh session) succeeds: you become _Admin_, they become _Owner_. Run it with a stale session → "Please sign in again".
 4. As that **admin**: the select offers only **Member**, owners/admins show a badge (no controls), **Remove** only on plain members. Invite form offers **Member** only.
 5. As a **member**: no controls at all, no invitation sections — but the member list is visible.
 6. DevTools replay of `removeMember`/`updateMemberRole` as a member or against an owner → `FORBIDDEN` / "You are not allowed to manage this member."
@@ -4299,19 +4880,25 @@ mkdir -p "src/app/[locale]/(admin)/admin/users/[userId]" src/components/admin
 ```bash
 pnpm auth:schema        # compare, then delete the generated file
 ```
+
 📄 **Edit `src/db/schema/auth.ts`:** in `user` add
+
 ```ts
   role: text('role').default('user'),
   banned: boolean('banned').default(false),
   banReason: text('ban_reason'),
   banExpires: tz('ban_expires'),
 ```
+
 and in `session` add `impersonatedBy: text('impersonated_by'),`
+
 ```bash
 rm src/db/schema/auth.generated.ts 2>/dev/null; pnpm db:generate     # 0006_….sql
 pnpm db:check
 ```
+
 📄 **Edit `src/libs/Auth.ts`:**
+
 ```ts
 import { admin } from 'better-auth/plugins';
 // plugins (before nextCookies):
@@ -4321,23 +4908,27 @@ import { admin } from 'better-auth/plugins';
         impersonationSessionDuration: 60 * 60, // 1 hour, then the session simply expires
       }),
 ```
+
 📄 **Edit `src/libs/AuthClient.ts`:** `import { adminClient } …` and add `adminClient()` to `plugins`.
 
 📄 **Add two strings** — `auth.errors` in both locale files:
+
 ```json
       "banned": "This account has been suspended. Contact support if you think this is a mistake."
 ```
+
 ```json
       "banned": "Ce compte a été suspendu. Contactez le support si vous pensez à une erreur."
 ```
+
 📄 **Edit `src/libs/auth-error-keys.ts`** — `KEYS`: `BANNED_USER: 'auth.errors.banned',`
 
 ### 2. Bootstrap: the first admin — by script, not by hook
 
 📄 **Create `scripts/grant-admin.ts`:**
+
 ```ts
 import './_env';
-
 import { Pool } from 'pg';
 
 import { buildPoolConfig } from '../src/db/pool-config';
@@ -4358,13 +4949,22 @@ async function main() {
     return;
   }
 
-  const pool = new Pool(buildPoolConfig(process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL, Number(process.env.DB_SERVER_PORT ?? 5433)));
+  const pool = new Pool(
+    buildPoolConfig(
+      process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL,
+      Number(process.env.DB_SERVER_PORT ?? 5433),
+    ),
+  );
   for (const email of emails) {
     const { rowCount } = await pool.query(
       `UPDATE "user" SET role = 'admin', updated_at = now() WHERE lower(email) = $1 AND email_verified = true`,
       [email],
     );
-    console.log(rowCount ? `✅ ${email} is a platform admin` : `⚠️  ${email}: no VERIFIED user with this email (yet)`);
+    console.log(
+      rowCount
+        ? `✅ ${email} is a platform admin`
+        : `⚠️  ${email}: no VERIFIED user with this email (yet)`,
+    );
   }
   await pool.end();
 }
@@ -4374,9 +4974,11 @@ main().catch((error) => {
   process.exit(1);
 });
 ```
+
 📄 **Edit `package.json`:** `"admin:grant": "tsx scripts/grant-admin.ts"` · `.env.example` already lists `ADMIN_EMAILS`.
 
 📄 **Seed an admin for development** — edit `src/db/seed.ts`:
+
 ```ts
 // ensureUser: accept an optional role
 async function ensureUser(db: DbLike, hash: string, person: { email: string; name: string; role?: string }) {
@@ -4385,14 +4987,16 @@ async function ensureUser(db: DbLike, hash: string, person: { email: string; nam
 }
 // PEOPLE: add
   admin: { email: 'admin@example.com', name: 'Ada Admin', role: 'admin' },
-// in seed(): 
+// in seed():
   await ensureUser(db, hash, PEOPLE.admin);
 ```
+
 Update `seed.test.ts` expectations: **4** users (members/orgs/projects unchanged).
 
 ### 3. The data layer for admins
 
 📄 **Create `src/data/admin-queries.ts`:**
+
 ```ts
 import { count, desc, eq, ilike, or } from 'drizzle-orm';
 
@@ -4462,7 +5066,9 @@ export async function listSessionsForUser(database: DbLike, userId: string) {
     .orderBy(desc(session.updatedAt));
 }
 ```
+
 📄 **Create `src/data/admin-queries.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
@@ -4470,7 +5076,6 @@ import { user } from '@/db/schema';
 
 import { userFactory } from '../../tests/factories/user.factory';
 import { createTestDb, type TestDb } from '../../tests/utils/test-db';
-
 import { findUserById, searchUsers } from './admin-queries';
 
 let db: TestDb;
@@ -4478,15 +5083,19 @@ let destroy: () => Promise<void>;
 
 beforeAll(async () => {
   ({ db, destroy } = await createTestDb());
-  await db.insert(user).values([
-    userFactory.build({ name: 'Alice Wonder', email: 'alice@example.com' }),
-    userFactory.build({ name: 'Bob 100%', email: 'bob@example.com' }),
-  ]);
+  await db
+    .insert(user)
+    .values([
+      userFactory.build({ name: 'Alice Wonder', email: 'alice@example.com' }),
+      userFactory.build({ name: 'Bob 100%', email: 'bob@example.com' }),
+    ]);
 }, 30_000);
 afterAll(() => destroy());
 
 it('searches by email or name and escapes LIKE wildcards', async () => {
-  expect((await searchUsers(db, { search: 'alice' })).items.map((u) => u.email)).toEqual(['alice@example.com']);
+  expect((await searchUsers(db, { search: 'alice' })).items.map((u) => u.email)).toEqual([
+    'alice@example.com',
+  ]);
   expect((await searchUsers(db, { search: 'wonder' })).total).toBe(1);
   expect((await searchUsers(db, { search: '%' })).total).toBe(0); // a literal "%" is not a wildcard…
   expect((await searchUsers(db, { search: '100%' })).total).toBe(1); // …but matches a real one
@@ -4498,16 +5107,17 @@ it('finds a user by id and returns undefined otherwise', async () => {
   expect(await findUserById(db, 'nope')).toBeUndefined();
 });
 ```
+
 📄 **Create `src/data/admin.ts`:**
+
 ```ts
 import 'server-only';
-
-import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
 import { redirect } from '@/i18n/navigation';
-import { AuthorizationError } from '@/libs/errors';
 import { Env } from '@/libs/Env';
+import { AuthorizationError } from '@/libs/errors';
 
 import { getSessionOrThrow, requireSession, type Session } from './session';
 
@@ -4535,13 +5145,17 @@ export async function getAdminOrThrow(): Promise<Session> {
   return session;
 }
 ```
+
 📄 **Banned users get no session, ever** — edit `src/data/session.ts`: in both `requireSession` and `getSessionOrThrow` change the condition to also reject banned accounts:
+
 ```ts
   if (!session?.user.emailVerified || session.user.banned) { … }
 ```
+
 and extend `session.test.ts` with a case: a `banned: true` user is redirected / throws `AuthenticationError`.
 
 Extend the **guard-coverage test** to the admin pages — in `src/data/guard-coverage.test.ts` add:
+
 ```ts
 it('every page under (admin) calls requireAdmin() itself', () => {
   const root = path.join('src', 'app', '[locale]', '(admin)');
@@ -4557,6 +5171,7 @@ it('every page under (admin) calls requireAdmin() itself', () => {
 ### 4. Server Actions (ban, unban, revoke, role)
 
 📄 **Create `src/actions/admin.ts`** (S4-T14 extends it with audit + impersonation):
+
 ```ts
 'use server';
 
@@ -4565,8 +5180,8 @@ import { z } from 'zod';
 
 import { getAdminOrThrow, isPlatformAdmin } from '@/data/admin';
 import { findAdminTarget } from '@/data/admin-targets';
-import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { auth } from '@/libs/Auth';
+import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { AuthorizationError } from '@/libs/errors';
 import { createAction } from '@/utils/action';
 
@@ -4577,7 +5192,10 @@ async function loadTarget(adminId: string, userId: string) {
   return target;
 }
 
-const banSchema = z.object({ userId: z.string().min(1), reason: z.string().trim().max(200).optional() });
+const banSchema = z.object({
+  userId: z.string().min(1),
+  reason: z.string().trim().max(200).optional(),
+});
 const userIdSchema = z.object({ userId: z.string().min(1) });
 const roleSchema = z.object({ userId: z.string().min(1), role: z.enum(['user', 'admin']) });
 
@@ -4586,7 +5204,10 @@ const handleBan = createAction(banSchema, async ({ userId, reason }) => {
   await loadTarget(admin.user.id, userId);
   try {
     // Better Auth also revokes every session of the banned user
-    await auth.api.banUser({ body: { userId, banReason: reason || undefined }, headers: await headers() });
+    await auth.api.banUser({
+      body: { userId, banReason: reason || undefined },
+      headers: await headers(),
+    });
   } catch (error) {
     throw mapAuthApiError(error);
   }
@@ -4639,12 +5260,13 @@ export async function setUserRole(input: unknown) {
   return handleSetRole(input);
 }
 ```
+
 > Note `loadTarget` blocks acting on **other admins** (ban/revoke) — promoting/demoting is the explicit `setUserRole`. Un-banning an admin is blocked too; fix that in Studio if a rare case happens.
 
 📄 **Create `src/data/admin-targets.ts`** (actions can't touch the DB directly):
+
 ```ts
 import 'server-only';
-
 import { db } from '@/db/client';
 import { NotFoundError } from '@/libs/errors';
 
@@ -4656,15 +5278,17 @@ export async function findAdminTarget(userId: string) {
   return row;
 }
 ```
+
 📄 **Create thin wrappers for pages** — `src/data/admin-pages.ts`:
+
 ```ts
 import 'server-only';
-
 import { db } from '@/db/client';
 
 import { findUserById, listSessionsForUser, searchUsers } from './admin-queries';
 
-export const adminSearchUsers = (options: Parameters<typeof searchUsers>[1]) => searchUsers(db, options);
+export const adminSearchUsers = (options: Parameters<typeof searchUsers>[1]) =>
+  searchUsers(db, options);
 export const adminFindUser = (id: string) => findUserById(db, id);
 export const adminListSessions = (userId: string) => listSessionsForUser(db, userId);
 ```
@@ -4672,6 +5296,7 @@ export const adminListSessions = (userId: string) => listSessionsForUser(db, use
 ### 5. The console
 
 📄 **Rewrite `src/app/[locale]/(admin)/layout.tsx`:**
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -4697,7 +5322,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   );
 }
 ```
+
 📄 **Rewrite `…/(admin)/admin/page.tsx`:**
+
 ```tsx
 import { getLocale } from 'next-intl/server';
 
@@ -4709,7 +5336,9 @@ export default async function AdminHome() {
   return redirect({ href: '/admin/users', locale: await getLocale() });
 }
 ```
+
 📄 **Create `…/admin/users/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -4740,14 +5369,20 @@ export default async function AdminUsersPage({
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const t = await getTranslations('admin.users');
 
-  const href = (target: number) => `/admin/users?${new URLSearchParams({ ...(q ? { q } : {}), page: String(target) })}`;
+  const href = (target: number) =>
+    `/admin/users?${new URLSearchParams({ ...(q ? { q } : {}), page: String(target) })}`;
 
   return (
     <div className="space-y-6">
       <PageHeader title={t('title')} description={t('description')} />
 
       <form className="flex gap-2" role="search">
-        <Input name="q" defaultValue={q} placeholder={t('searchPlaceholder')} aria-label={t('searchPlaceholder')} />
+        <Input
+          name="q"
+          defaultValue={q}
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
+        />
         <Button type="submit" variant="outline">
           {t('searchPlaceholder')}
         </Button>
@@ -4775,7 +5410,9 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="p-3">{row.role}</td>
                   <td className="p-3">
-                    <Badge variant={row.banned ? 'destructive' : 'secondary'}>{row.banned ? t('banned') : t('active')}</Badge>
+                    <Badge variant={row.banned ? 'destructive' : 'secondary'}>
+                      {row.banned ? t('banned') : t('active')}
+                    </Badge>
                   </td>
                   <td className="p-3 text-end">
                     <Button asChild size="sm" variant="outline">
@@ -4808,7 +5445,9 @@ export default async function AdminUsersPage({
   );
 }
 ```
+
 📄 **Create `src/components/admin/user-actions.tsx`:**
+
 ```tsx
 'use client';
 
@@ -4820,7 +5459,13 @@ import { banUser, revokeUserSessions, setUserRole, unbanUser } from '@/actions/a
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useRouter } from '@/i18n/navigation';
 
 type Props = { userId: string; banned: boolean; role: string; isSelf: boolean; isAdmin: boolean };
@@ -4833,7 +5478,10 @@ export function UserActions({ userId, banned, role, isSelf, isAdmin }: Props) {
   const [reason, setReason] = useState('');
   const [nextRole, setNextRole] = useState(role);
 
-  function run(task: () => Promise<{ ok: boolean; error?: { messageKey: string } }>, success: string) {
+  function run(
+    task: () => Promise<{ ok: boolean; error?: { messageKey: string } }>,
+    success: string,
+  ) {
     startTransition(async () => {
       const result = await task();
       if (!result.ok) {
@@ -4849,24 +5497,43 @@ export function UserActions({ userId, banned, role, isSelf, isAdmin }: Props) {
 
   return (
     <div className="space-y-6">
-      {protectedTarget ? <p className="text-muted-foreground text-sm">{t('cannotImpersonate')}</p> : null}
+      {protectedTarget ? (
+        <p className="text-muted-foreground text-sm">{t('cannotImpersonate')}</p>
+      ) : null}
 
       {!protectedTarget ? (
         <div className="space-y-3">
           {banned ? (
-            <Button variant="outline" disabled={pending} onClick={() => run(() => unbanUser({ userId }), t('unbanned'))}>
+            <Button
+              variant="outline"
+              disabled={pending}
+              onClick={() => run(() => unbanUser({ userId }), t('unbanned'))}
+            >
               {t('unban')}
             </Button>
           ) : (
             <div className="space-y-2">
               <Label htmlFor="ban-reason">{t('banReason')}</Label>
-              <Input id="ban-reason" value={reason} maxLength={200} onChange={(event) => setReason(event.target.value)} />
-              <Button variant="destructive" disabled={pending} onClick={() => run(() => banUser({ userId, reason }), t('banned'))}>
+              <Input
+                id="ban-reason"
+                value={reason}
+                maxLength={200}
+                onChange={(event) => setReason(event.target.value)}
+              />
+              <Button
+                variant="destructive"
+                disabled={pending}
+                onClick={() => run(() => banUser({ userId, reason }), t('banned'))}
+              >
                 {t('ban')}
               </Button>
             </div>
           )}
-          <Button variant="outline" disabled={pending} onClick={() => run(() => revokeUserSessions({ userId }), t('revoked'))}>
+          <Button
+            variant="outline"
+            disabled={pending}
+            onClick={() => run(() => revokeUserSessions({ userId }), t('revoked'))}
+          >
             {t('revoke')}
           </Button>
         </div>
@@ -4886,7 +5553,11 @@ export function UserActions({ userId, banned, role, isSelf, isAdmin }: Props) {
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" disabled={pending || nextRole === role} onClick={() => run(() => setUserRole({ userId, role: nextRole }), t('roleSaved'))}>
+          <Button
+            variant="outline"
+            disabled={pending || nextRole === role}
+            onClick={() => run(() => setUserRole({ userId, role: nextRole }), t('roleSaved'))}
+          >
             {t('saveRole')}
           </Button>
         </div>
@@ -4895,10 +5566,12 @@ export function UserActions({ userId, banned, role, isSelf, isAdmin }: Props) {
   );
 }
 ```
+
 📄 **Create `…/admin/users/[userId]/page.tsx`:**
+
 ```tsx
-import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 
 import { UserActions } from '@/components/admin/user-actions';
 import { PageHeader } from '@/components/layout/page-header';
@@ -4960,13 +5633,16 @@ export default async function AdminUserPage({
   );
 }
 ```
+
 Add an **Admin** entry for admins in the user menu: in `UserMenu` take an `isAdmin` prop and render `<DropdownMenuItem asChild><Link href="/admin/users">Admin</Link></DropdownMenuItem>` when true; pass `isAdmin={user.role === 'admin'}` from `(app)/layout.tsx`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm db:reset && pnpm dev
 ```
+
 1. Sign in as `admin@example.com` / `Demo-Password-123` → `/admin/users` lists users; search "alice"/an email works; **View** opens a user.
 2. Sign in as `demo@example.com` and open `/admin/users` → a **404** (not 403). Anonymous → redirected to sign-in.
 3. As admin: **Ban** `teammate` with a reason → the teammate's open browser loses its session at the next request, and signing in shows "This account has been suspended". **Unban** → works again.
@@ -4989,6 +5665,7 @@ git switch main && git pull && git switch -c feat/s4-t14-impersonation-audit
 ### 1. The audit table — no foreign keys, no updates, no deletes
 
 📄 **Create `src/db/schema/audit.ts`:**
+
 ```ts
 import { index, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
@@ -5016,12 +5693,16 @@ export const auditLog = pgTable(
   ],
 );
 ```
+
 📄 **Edit `src/db/schema/index.ts`:** `export * from './audit';`
+
 ```bash
 pnpm db:generate && pnpm db:check            # 0007_….sql creates the table
 pnpm drizzle-kit generate --custom --name=audit_log_append_only    # 0008_audit_log_append_only.sql (empty)
 ```
+
 📄 **Fill the custom migration** (`drizzle/0008_audit_log_append_only.sql`):
+
 ```sql
 CREATE OR REPLACE FUNCTION audit_log_immutable() RETURNS trigger AS $$
 BEGIN
@@ -5033,7 +5714,9 @@ CREATE TRIGGER audit_log_no_update_delete
   BEFORE UPDATE OR DELETE ON audit_log
   FOR EACH ROW EXECUTE FUNCTION audit_log_immutable();
 ```
+
 (keep the `--> statement-breakpoint` line: Drizzle splits statements on it)
+
 ```bash
 pnpm db:check
 ```
@@ -5041,9 +5724,9 @@ pnpm db:check
 ### 2. Writing audit events
 
 📄 **Create `src/data/audit.ts`:**
+
 ```ts
 import 'server-only';
-
 import { randomUUID } from 'node:crypto';
 
 import { headers } from 'next/headers';
@@ -5099,12 +5782,21 @@ export function actorOf(session: Session) {
 }
 
 /** Request-aware wrapper used by Server Actions. */
-export async function audit(session: Session, event: Omit<AuditEvent, 'actorUserId' | 'impersonatorId' | 'ip'>) {
+export async function audit(
+  session: Session,
+  event: Omit<AuditEvent, 'actorUserId' | 'impersonatorId' | 'ip'>,
+) {
   const forwarded = (await headers()).get('x-forwarded-for');
-  await writeAuditEvent(db, { ...actorOf(session), ...event, ip: forwarded?.split(',')[0]?.trim() ?? null });
+  await writeAuditEvent(db, {
+    ...actorOf(session),
+    ...event,
+    ip: forwarded?.split(',')[0]?.trim() ?? null,
+  });
 }
 ```
+
 📄 **Create `tests/integration/audit.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -5132,16 +5824,27 @@ it('records events, including who impersonated whom', async () => {
   });
 
   const [row] = await db.select().from(auditLog).where(eq(auditLog.targetId, 'target-1'));
-  expect(row).toMatchObject({ action: 'impersonation.start', impersonatorId: 'admin-1', metadata: { reason: 'support ticket 42' } });
+  expect(row).toMatchObject({
+    action: 'impersonation.start',
+    impersonatorId: 'admin-1',
+    metadata: { reason: 'support ticket 42' },
+  });
 });
 
 it('is append-only at the DATABASE level: updates and deletes are rejected', async () => {
-  await writeAuditEvent(db, { action: 'user.ban', actorUserId: 'admin-1', targetType: 'user', targetId: 'victim' });
+  await writeAuditEvent(db, {
+    action: 'user.ban',
+    actorUserId: 'admin-1',
+    targetType: 'user',
+    targetId: 'victim',
+  });
 
-  await expect(db.update(auditLog).set({ action: 'user.unban' }).where(eq(auditLog.targetId, 'victim'))).rejects.toThrow(
+  await expect(
+    db.update(auditLog).set({ action: 'user.unban' }).where(eq(auditLog.targetId, 'victim')),
+  ).rejects.toThrow(/append-only/);
+  await expect(db.delete(auditLog).where(eq(auditLog.targetId, 'victim'))).rejects.toThrow(
     /append-only/,
   );
-  await expect(db.delete(auditLog).where(eq(auditLog.targetId, 'victim'))).rejects.toThrow(/append-only/);
   expect(await db.select().from(auditLog).where(eq(auditLog.targetId, 'victim'))).toHaveLength(1);
 });
 ```
@@ -5149,6 +5852,7 @@ it('is append-only at the DATABASE level: updates and deletes are rejected', asy
 ### 3. Impersonation: actions with audit (replace `src/actions/admin.ts`)
 
 📄 **Replace the whole file** (the ban/unban/revoke/role actions now write audit events; two new actions):
+
 ```ts
 'use server';
 
@@ -5159,8 +5863,8 @@ import { getAdminOrThrow, isPlatformAdmin } from '@/data/admin';
 import { findAdminTarget } from '@/data/admin-targets';
 import { audit } from '@/data/audit';
 import { getSessionOrThrow } from '@/data/session';
-import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { auth } from '@/libs/Auth';
+import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { AuthorizationError } from '@/libs/errors';
 import { createAction } from '@/utils/action';
 
@@ -5170,7 +5874,10 @@ async function loadTarget(adminId: string, userId: string) {
   return target;
 }
 
-const banSchema = z.object({ userId: z.string().min(1), reason: z.string().trim().max(200).optional() });
+const banSchema = z.object({
+  userId: z.string().min(1),
+  reason: z.string().trim().max(200).optional(),
+});
 const userIdSchema = z.object({ userId: z.string().min(1) });
 const roleSchema = z.object({ userId: z.string().min(1), role: z.enum(['user', 'admin']) });
 
@@ -5178,11 +5885,19 @@ const handleBan = createAction(banSchema, async ({ userId, reason }) => {
   const admin = await getAdminOrThrow();
   await loadTarget(admin.user.id, userId);
   try {
-    await auth.api.banUser({ body: { userId, banReason: reason || undefined }, headers: await headers() });
+    await auth.api.banUser({
+      body: { userId, banReason: reason || undefined },
+      headers: await headers(),
+    });
   } catch (error) {
     throw mapAuthApiError(error);
   }
-  await audit(admin, { action: 'user.ban', targetType: 'user', targetId: userId, metadata: { reason: reason || null } });
+  await audit(admin, {
+    action: 'user.ban',
+    targetType: 'user',
+    targetId: userId,
+    metadata: { reason: reason || null },
+  });
   return { banned: true as const };
 });
 
@@ -5218,7 +5933,12 @@ const handleSetRole = createAction(roleSchema, async ({ userId, role }) => {
   } catch (error) {
     throw mapAuthApiError(error);
   }
-  await audit(admin, { action: 'user.role_change', targetType: 'user', targetId: userId, metadata: { role } });
+  await audit(admin, {
+    action: 'user.role_change',
+    targetType: 'user',
+    targetId: userId,
+    metadata: { role },
+  });
   return { role };
 });
 
@@ -5250,7 +5970,11 @@ const handleStopImpersonation = createAction(z.object({}), async () => {
     throw mapAuthApiError(error);
   }
   // Recorded with the roles reversed: the impersonated user was the "actor" during the session
-  await audit(current, { action: 'impersonation.stop', targetType: 'user', targetId: current.user.id });
+  await audit(current, {
+    action: 'impersonation.stop',
+    targetType: 'user',
+    targetId: current.user.id,
+  });
   return { adminId };
 });
 
@@ -5273,7 +5997,9 @@ export async function stopImpersonation() {
   return handleStopImpersonation({});
 }
 ```
+
 Also audit the organization events — in `src/actions/organization.ts`:
+
 ```ts
 import { audit } from '@/data/audit';
 // in handleDeleteOrganization, after the successful API call (we need the session from requireFreshSession):
@@ -5281,11 +6007,13 @@ import { audit } from '@/data/audit';
 // in handleTransfer, after both role updates (use the session returned by requireFreshSession()):
 //   await audit(session, { action: 'org.ownership_transfer', organizationId: org.id, targetType: 'member', targetId: target.memberId });
 ```
+
 (Change `await requireFreshSession();` to `const session = await requireFreshSession();` in both handlers.)
 
 ### 4. The banner and the buttons
 
 📄 **Create `src/components/admin/stop-impersonation-button.tsx`:**
+
 ```tsx
 'use client';
 
@@ -5320,7 +6048,9 @@ export function StopImpersonationButton() {
   );
 }
 ```
+
 📄 **Create `src/components/admin/impersonation-banner.tsx`** (server component):
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
 
@@ -5334,16 +6064,23 @@ export async function ImpersonationBanner() {
 
   const t = await getTranslations('admin.banner');
   return (
-    <div role="status" className="sticky top-0 z-50 flex items-center justify-center gap-4 bg-amber-400 px-4 py-2 text-sm font-medium text-black">
-      <span>{t('text', { name: session.user.name || session.user.email, email: session.user.email })}</span>
+    <div
+      role="status"
+      className="sticky top-0 z-50 flex items-center justify-center gap-4 bg-amber-400 px-4 py-2 text-sm font-medium text-black"
+    >
+      <span>
+        {t('text', { name: session.user.name || session.user.email, email: session.user.email })}
+      </span>
       <StopImpersonationButton />
     </div>
   );
 }
 ```
+
 Render it as the **first child** in `(app)/layout.tsx` (above the flex container) — wrap the layout's returned tree in a fragment: `<><ImpersonationBanner /> …existing… </>`.
 
 📄 **Create `src/components/admin/impersonate-button.tsx`** and use it in `UserActions` (shown only when the target is neither you nor an admin):
+
 ```tsx
 'use client';
 
@@ -5378,13 +6115,15 @@ export function ImpersonateButton({ userId }: { userId: string }) {
   );
 }
 ```
+
 In `UserActions`, inside the `!protectedTarget` block add `<ImpersonateButton userId={userId} />`.
 
 ### 5. Sensitive actions are blocked while impersonating
 
-An admin acting *as* a user must never be able to change that user's password, email, MFA, passkeys or delete the account.
+An admin acting _as_ a user must never be able to change that user's password, email, MFA, passkeys or delete the account.
 
 📄 **Create `src/libs/impersonation-guard.ts`:**
+
 ```ts
 /** Better Auth endpoints that must be refused for impersonation sessions. */
 const BLOCKED = [
@@ -5400,27 +6139,43 @@ const BLOCKED = [
   '/unlink-account',
 ] as const;
 
-export const isBlockedWhileImpersonating = (path: string) => BLOCKED.some((blocked) => path === blocked || path.startsWith(`${blocked}/`));
+export const isBlockedWhileImpersonating = (path: string) =>
+  BLOCKED.some((blocked) => path === blocked || path.startsWith(`${blocked}/`));
 ```
+
 📄 **Create `src/libs/impersonation-guard.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
 import { isBlockedWhileImpersonating } from './impersonation-guard';
 
 it('blocks credential, MFA, passkey and account-removal endpoints', () => {
-  for (const path of ['/change-password', '/delete-user', '/two-factor/disable', '/passkey/delete-passkey']) {
+  for (const path of [
+    '/change-password',
+    '/delete-user',
+    '/two-factor/disable',
+    '/passkey/delete-passkey',
+  ]) {
     expect(isBlockedWhileImpersonating(path)).toBe(true);
   }
 });
 
 it('leaves everyday endpoints alone', () => {
-  for (const path of ['/get-session', '/sign-out', '/organization/list', '/change-password-not', '/update-user']) {
+  for (const path of [
+    '/get-session',
+    '/sign-out',
+    '/organization/list',
+    '/change-password-not',
+    '/update-user',
+  ]) {
     expect(isBlockedWhileImpersonating(path)).toBe(path === '/change-password-not' ? false : false);
   }
 });
 ```
+
 📄 **Edit `src/libs/Auth.ts`** — a `before` hook (🔍 API: `createAuthMiddleware`, `getSessionFromCtx` from `better-auth/api`):
+
 ```ts
 import { createAuthMiddleware, getSessionFromCtx } from 'better-auth/api';
 import { isBlockedWhileImpersonating } from '@/libs/impersonation-guard';
@@ -5438,11 +6193,13 @@ import { isBlockedWhileImpersonating } from '@/libs/impersonation-guard';
       }),
     },
 ```
+
 Error key + string: `auth-error-keys.ts` → `BLOCKED_WHILE_IMPERSONATING: 'admin.user.blockedWhileImpersonating'`; add to `admin.user` in both locales: `"blockedWhileImpersonating": "Not available while impersonating."` / `"Indisponible pendant une usurpation."`.
 
 Our own Server Action that changes a password must refuse too — in `src/actions/account.ts` (`changePassword`), at the top of the handler: `if (session.session.impersonatedBy) throw new AuthorizationError({ messageKey: 'admin.user.blockedWhileImpersonating' });`.
 
 📄 **Integration test** — append to `tests/integration/audit.test.ts`? No — create `tests/integration/impersonation.test.ts`:
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
@@ -5485,7 +6242,11 @@ it('impersonation sessions are marked, and refuse credential changes', async () 
   const adminDevice = await signIn(auth, adminEmail);
 
   // 🔍 method name: impersonateUser
-  const started = await auth.api.impersonateUser({ body: { userId: target!.id }, headers: adminDevice.headers, asResponse: true });
+  const started = await auth.api.impersonateUser({
+    body: { userId: target!.id },
+    headers: adminDevice.headers,
+    asResponse: true,
+  });
   const impersonated = cookieHeaderFrom(started);
 
   const current = await auth.api.getSession({ headers: impersonated, ...fresh });
@@ -5508,16 +6269,21 @@ it('a regular user cannot impersonate anyone', async () => {
   const [other] = await db.select().from(user).where(eq(user.email, b));
   const device = await signIn(auth, a);
 
-  await expect(auth.api.impersonateUser({ body: { userId: other!.id }, headers: device.headers })).rejects.toThrow();
+  await expect(
+    auth.api.impersonateUser({ body: { userId: other!.id }, headers: device.headers }),
+  ).rejects.toThrow();
 });
 ```
+
 (Remove the pointless ternary in `impersonation-guard.test.ts`'s second test — use `expect(isBlockedWhileImpersonating(path)).toBe(false)` for each path.)
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm db:reset && pnpm dev
 ```
+
 1. As `admin@example.com` → user page of `demo@example.com` → **Impersonate** → you land on the dashboard as Demo User with a **yellow banner** on every page.
 2. While impersonating: Security → change password / delete account / enable 2FA → refused ("Not available while impersonating"). Normal browsing works.
 3. **Stop impersonating** → back on the admin console as yourself.
@@ -5541,9 +6307,11 @@ git switch main && git pull && git switch -c test/s4-t15-isolation
 ```
 
 📄 **Create `tests/integration/tenancy.test.ts`:**
+
 ```ts
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createOrganizationWithOwner, findMembership } from '@/data/org-queries';
@@ -5558,7 +6326,14 @@ let db: TestDb;
 let destroy: () => Promise<void>;
 
 type World = {
-  a: { orgId: string; slug: string; owner: string; admin: string; member: string; projectIds: string[] };
+  a: {
+    orgId: string;
+    slug: string;
+    owner: string;
+    admin: string;
+    member: string;
+    projectIds: string[];
+  };
   b: { orgId: string; slug: string; owner: string; projectIds: string[] };
   outsider: string;
 };
@@ -5573,9 +6348,23 @@ async function newUser() {
 beforeAll(async () => {
   ({ db, destroy } = await createTestDb());
 
-  const [ownerA, adminA, memberA, ownerB, outsider] = await Promise.all([newUser(), newUser(), newUser(), newUser(), newUser()]);
-  const orgA = await createOrganizationWithOwner(db, { name: 'Org A', slug: 'org-a', ownerId: ownerA });
-  const orgB = await createOrganizationWithOwner(db, { name: 'Org B', slug: 'org-b', ownerId: ownerB });
+  const [ownerA, adminA, memberA, ownerB, outsider] = await Promise.all([
+    newUser(),
+    newUser(),
+    newUser(),
+    newUser(),
+    newUser(),
+  ]);
+  const orgA = await createOrganizationWithOwner(db, {
+    name: 'Org A',
+    slug: 'org-a',
+    ownerId: ownerA,
+  });
+  const orgB = await createOrganizationWithOwner(db, {
+    name: 'Org B',
+    slug: 'org-b',
+    ownerId: ownerB,
+  });
   await db.insert(member).values([
     { id: randomUUID(), organizationId: orgA.id, userId: adminA, role: 'admin' },
     { id: randomUUID(), organizationId: orgA.id, userId: memberA, role: 'member' },
@@ -5588,7 +6377,14 @@ beforeAll(async () => {
   const b1 = await repoB.create({ name: 'B secret' }, ownerB);
 
   world = {
-    a: { orgId: orgA.id, slug: 'org-a', owner: ownerA, admin: adminA, member: memberA, projectIds: [a1.id, a2.id] },
+    a: {
+      orgId: orgA.id,
+      slug: 'org-a',
+      owner: ownerA,
+      admin: adminA,
+      member: memberA,
+      projectIds: [a1.id, a2.id],
+    },
     b: { orgId: orgB.id, slug: 'org-b', owner: ownerB, projectIds: [b1.id] },
     outsider,
   };
@@ -5622,7 +6418,10 @@ describe('tenantDb: a repository can never leave its tenant', () => {
   it('create() always stamps the repository’s tenant, whatever the input says', async () => {
     const repoA = createTenantDb(db, world.a.orgId).projects;
     // A forged payload trying to write into tenant B
-    const row = await repoA.create({ name: 'forged', organizationId: world.b.orgId } as never, world.a.owner);
+    const row = await repoA.create(
+      { name: 'forged', organizationId: world.b.orgId } as never,
+      world.a.owner,
+    );
     expect(row.organizationId).toBe(world.a.orgId);
   });
 
@@ -5641,7 +6440,8 @@ describe('membership', () => {
   });
 
   it('roles resolve to the expected permissions', async () => {
-    const roleOf = async (userId: string) => (await findMembership(db, userId, 'org-a'))!.member.role;
+    const roleOf = async (userId: string) =>
+      (await findMembership(db, userId, 'org-a'))!.member.role;
     expect(hasPermission(await roleOf(world.a.owner), { organization: ['delete'] })).toBe(true);
     expect(hasPermission(await roleOf(world.a.admin), { organization: ['delete'] })).toBe(false);
     expect(hasPermission(await roleOf(world.a.member), { project: ['delete'] })).toBe(false);
@@ -5651,22 +6451,28 @@ describe('membership', () => {
 describe('these tests have teeth (mutation proof)', () => {
   it('an UNSCOPED repository WOULD leak — and the tests above would catch it', async () => {
     // What a careless future change looks like: the same query without the organization predicate
-    const leakyGet = async (id: string) => (await db.select().from(project).where(eq(project.id, id)))[0];
+    const leakyGet = async (id: string) =>
+      (await db.select().from(project).where(eq(project.id, id)))[0];
 
     expect((await leakyGet(world.b.projectIds[0]!))?.name).toBe('B secret'); // leak!
     // …whereas the real repository answers undefined for the same call (asserted in "get() of another tenant")
-    expect(await createTenantDb(db, world.a.orgId).projects.get(world.b.projectIds[0]!)).toBeUndefined();
+    expect(
+      await createTenantDb(db, world.a.orgId).projects.get(world.b.projectIds[0]!),
+    ).toBeUndefined();
   });
 });
 ```
+
 Also prove the real rule: remove `inOrg` from `get` in `tenant-db.ts` → **at least four tests fail**. Restore it. (Do this once, by hand, and note it in the PR.)
 
 Invitations against the real plugin:
 
 📄 **Append to `tests/integration/auth.test.ts`?** No — create `tests/integration/invitations.test.ts`:
+
 ```ts
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 
 import { createOrganizationWithOwner } from '@/data/org-queries';
@@ -5700,38 +6506,63 @@ async function inviteFlow() {
   const ownerEmail = nextEmail();
   const inviteeEmail = nextEmail();
   const strangerEmail = nextEmail();
-  for (const email of [ownerEmail, inviteeEmail, strangerEmail]) await signUpAndVerify(auth, transport, email);
+  for (const email of [ownerEmail, inviteeEmail, strangerEmail])
+    await signUpAndVerify(auth, transport, email);
 
   const [owner] = await db.select().from(user).where(eq(user.email, ownerEmail));
-  const org = await createOrganizationWithOwner(db, { name: 'Inv Co', slug: `inv-${randomUUID().slice(0, 6)}`, ownerId: owner!.id });
+  const org = await createOrganizationWithOwner(db, {
+    name: 'Inv Co',
+    slug: `inv-${randomUUID().slice(0, 6)}`,
+    ownerId: owner!.id,
+  });
   const ownerDevice = await signIn(auth, ownerEmail);
 
   // 🔍 method name: createInvitation (inviteMember on the client)
-  await auth.api.createInvitation({ body: { email: inviteeEmail, role: 'member', organizationId: org.id }, headers: ownerDevice.headers });
+  await auth.api.createInvitation({
+    body: { email: inviteeEmail, role: 'member', organizationId: org.id },
+    headers: ownerDevice.headers,
+  });
   const [invite] = await db.select().from(invitation).where(eq(invitation.email, inviteeEmail));
 
-  return { org, invite: invite!, invitee: await signIn(auth, inviteeEmail), stranger: await signIn(auth, strangerEmail) };
+  return {
+    org,
+    invite: invite!,
+    invitee: await signIn(auth, inviteeEmail),
+    stranger: await signIn(auth, strangerEmail),
+  };
 }
 
 it('only the invited address can accept', async () => {
   const { invite, stranger } = await inviteFlow();
-  await expect(auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: stranger.headers })).rejects.toThrow();
-  expect(await db.select().from(member).where(eq(member.organizationId, invite.organizationId))).toHaveLength(1); // still just the owner
+  await expect(
+    auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: stranger.headers }),
+  ).rejects.toThrow();
+  expect(
+    await db.select().from(member).where(eq(member.organizationId, invite.organizationId)),
+  ).toHaveLength(1); // still just the owner
 });
 
 it('the invited user joins with the invited role', async () => {
   const { invite, invitee } = await inviteFlow();
   await auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: invitee.headers });
 
-  const members = await db.select().from(member).where(eq(member.organizationId, invite.organizationId));
+  const members = await db
+    .select()
+    .from(member)
+    .where(eq(member.organizationId, invite.organizationId));
   expect(members.map((m) => m.role).sort()).toEqual(['member', 'owner']);
 });
 
 it('an expired invitation cannot be accepted', async () => {
   const { invite, invitee } = await inviteFlow();
-  await db.update(invitation).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(invitation.id, invite.id));
+  await db
+    .update(invitation)
+    .set({ expiresAt: new Date(Date.now() - 1000) })
+    .where(eq(invitation.id, invite.id));
 
-  await expect(auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: invitee.headers })).rejects.toThrow();
+  await expect(
+    auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: invitee.headers }),
+  ).rejects.toThrow();
 });
 
 it('a plain member cannot invite people', async () => {
@@ -5739,16 +6570,22 @@ it('a plain member cannot invite people', async () => {
   await auth.api.acceptInvitation({ body: { invitationId: invite.id }, headers: invitee.headers });
 
   await expect(
-    auth.api.createInvitation({ body: { email: nextEmail(), role: 'member', organizationId: org.id }, headers: invitee.headers }),
+    auth.api.createInvitation({
+      body: { email: nextEmail(), role: 'member', organizationId: org.id },
+      headers: invitee.headers,
+    }),
   ).rejects.toThrow(); // the plugin enforces invitation:create from OUR roles
 });
 ```
+
 > 🔍 If `acceptInvitation` for a wrong email doesn't throw in your version, check `requireEmailVerificationOnInvitation` and the plugin's changelog — the **assertion** (no membership created) is the contract.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 ```
+
 Run the mutation experiment from above and keep the proof (`pnpm test` output) in the PR description.
 
 **🚢 Ship** — branch `test/s4-t15-isolation` · message: `test(tenancy): add tenant isolation, membership and invitation integration tests`
@@ -5766,6 +6603,7 @@ git switch main && git pull && git switch -c test/s4-t16-tenancy-e2e
 ### 1. Helpers
 
 📄 **Create `e2e/helpers/db.ts`:**
+
 ```ts
 import { Pool } from 'pg';
 
@@ -5775,9 +6613,15 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * Reads the database the app uses (PGlite serves one connection at a time → short-lived pool + retries).
  * Read-only use only — tests must create data through the app, not behind its back.
  */
-export async function queryDb<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
+export async function queryDb<T = Record<string, unknown>>(
+  sql: string,
+  params: unknown[] = [],
+): Promise<T[]> {
   for (let attempt = 0; ; attempt += 1) {
-    const pool = new Pool({ connectionString: 'postgres://postgres:postgres@127.0.0.1:5433/postgres', max: 1 });
+    const pool = new Pool({
+      connectionString: 'postgres://postgres:postgres@127.0.0.1:5433/postgres',
+      max: 1,
+    });
     try {
       const { rows } = await pool.query(sql, params);
       return rows as T[];
@@ -5790,7 +6634,9 @@ export async function queryDb<T = Record<string, unknown>>(sql: string, params: 
   }
 }
 ```
+
 📄 **Create `e2e/helpers/admin.ts`:**
+
 ```ts
 import { execSync } from 'node:child_process';
 
@@ -5799,7 +6645,9 @@ export function makeAdmin(email: string) {
   execSync('pnpm admin:grant', { env: { ...process.env, ADMIN_EMAILS: email }, stdio: 'pipe' });
 }
 ```
+
 📄 **Create `e2e/helpers/contexts.ts`:**
+
 ```ts
 import type { Browser, Page } from '@playwright/test';
 
@@ -5815,6 +6663,7 @@ export async function newPerson(browser: Browser): Promise<Page> {
 ### 2. The specs
 
 📄 **Create `e2e/tenancy.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 import { newPerson } from './helpers/contexts';
@@ -5824,7 +6673,11 @@ import { createUser } from './helpers/users';
 
 const slugFrom = (url: string) => /\/dashboard\/([^/?#]+)/.exec(url)?.[1] ?? '';
 
-test('owner invites a teammate; roles restrict what each can do', async ({ browser, request, baseURL }) => {
+test('owner invites a teammate; roles restrict what each can do', async ({
+  browser,
+  request,
+  baseURL,
+}) => {
   const owner = await createUser(request, baseURL!);
   const mate = await createUser(request, baseURL!);
 
@@ -5882,7 +6735,11 @@ test('owner invites a teammate; roles restrict what each can do', async ({ brows
   await expect(matePage.getByRole('button', { name: 'Delete organization' })).toHaveCount(0);
 });
 
-test('another tenant’s project is a 404 — by URL tampering too', async ({ browser, request, baseURL }) => {
+test('another tenant’s project is a 404 — by URL tampering too', async ({
+  browser,
+  request,
+  baseURL,
+}) => {
   const [alice, bob] = [await createUser(request, baseURL!), await createUser(request, baseURL!)];
 
   const bobPage = await newPerson(browser);
@@ -5931,7 +6788,9 @@ test('creating and switching organizations', async ({ page, request, baseURL }) 
   await expect(page.getByRole('menuitem', { name: 'Second Company' })).toBeVisible();
 });
 ```
+
 📄 **Create `e2e/admin.spec.ts`:**
+
 ```ts
 import { expect, test } from './fixtures';
 import { makeAdmin } from './helpers/admin';
@@ -5940,7 +6799,11 @@ import { queryDb } from './helpers/db';
 import { signInViaUi } from './helpers/ui';
 import { createUser } from './helpers/users';
 
-test('admin bans, unbans and impersonates — and everything is audited', async ({ browser, request, baseURL }) => {
+test('admin bans, unbans and impersonates — and everything is audited', async ({
+  browser,
+  request,
+  baseURL,
+}) => {
   const adminUser = await createUser(request, baseURL!);
   const target = await createUser(request, baseURL!);
   makeAdmin(adminUser.email);
@@ -5958,7 +6821,11 @@ test('admin bans, unbans and impersonates — and everything is audited', async 
 
   // The admin finds the user
   await adminPage.goto('/admin/users');
-  await adminPage.getByRole('searchbox').or(adminPage.getByLabel('Search by email or name')).first().fill(target.email);
+  await adminPage
+    .getByRole('searchbox')
+    .or(adminPage.getByLabel('Search by email or name'))
+    .first()
+    .fill(target.email);
   await adminPage.keyboard.press('Enter');
   await adminPage.getByRole('link', { name: 'View' }).first().click();
   await expect(adminPage.getByText(target.email)).toBeVisible();
@@ -5982,9 +6849,19 @@ test('admin bans, unbans and impersonates — and everything is audited', async 
   await expect(adminPage).toHaveURL(/\/admin\/users/);
 
   // Audit trail (read-only DB access)
-  const [{ id }] = await queryDb<{ id: string }>('select id from "user" where email = $1', [target.email]);
-  const events = await queryDb<{ action: string }>('select action from audit_log where target_id = $1 order by created_at', [id]);
-  expect(events.map((event) => event.action)).toEqual(['user.ban', 'user.unban', 'impersonation.start', 'impersonation.stop']);
+  const [{ id }] = await queryDb<{ id: string }>('select id from "user" where email = $1', [
+    target.email,
+  ]);
+  const events = await queryDb<{ action: string }>(
+    'select action from audit_log where target_id = $1 order by created_at',
+    [id],
+  );
+  expect(events.map((event) => event.action)).toEqual([
+    'user.ban',
+    'user.unban',
+    'impersonation.start',
+    'impersonation.stop',
+  ]);
 });
 
 test('non-admins cannot even see that the console exists', async ({ page, request, baseURL }) => {
@@ -5998,14 +6875,17 @@ test('non-admins cannot even see that the console exists', async ({ page, reques
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
 });
 ```
+
 > 🔎 `pnpm admin:grant` talks to the same PGlite database as the running app (one connection at a time). The helpers retry; if you see `ECONNREFUSED`, make sure only **one** `pnpm dev` / Playwright server is running.
 
 ### ✅ Verify
+
 ```bash
 pnpm e2e                        # local (reuses pnpm dev)
 CI=1 pnpm e2e                   # 🪟 cmd.exe: set CI=1&& pnpm e2e — stop `pnpm dev` first (ports 3000 and 5433)
 pnpm exec playwright test e2e/tenancy.spec.ts e2e/admin.spec.ts --repeat-each=5 --workers=2
 ```
+
 All green, 0 flakes in 5 repetitions. In CI, check the `E2E` job is still under 10 minutes; if not, shard (`--shard`) in Sprint 5.
 
 **🚢 Ship** — branch `test/s4-t16-tenancy-e2e` · message: `test(e2e): cover organizations, role restrictions, tenant tampering and the admin console`
@@ -6015,6 +6895,7 @@ All green, 0 flakes in 5 repetitions. In CI, check the `E2E` job is still under 
 ## 🧾 Sprint 4 wrap-up
 
 **Branch:** `docs/s4-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s4-wrap-up
 ```
@@ -6022,18 +6903,20 @@ git switch main && git pull && git switch -c docs/s4-wrap-up
 ### 1. Docs
 
 📄 **Create `docs/guides/multi-tenancy.md`:**
-````markdown
+
+```markdown
 # Multi-tenancy
 
 **Tenant = organization.** Users can belong to many; the URL (`/dashboard/<orgSlug>/…`) says which one is active.
 
 ## The three walls
+
 1. **Membership** — `requireOrgMember(slug)` (pages) / `getOrgMembershipOrThrow(slug)` (actions): non-members get **404**.
 2. **Permission** — `requirePagePermission` / `withOrgPermission({ resource: ['action'] }, handler)`; role read from the DB on every request.
-3. **Data scope** — tenant data is reached only through `tenantDb(orgId)`. Feature code (`src/app`, `src/components`,
-   `src/actions`) may not import `@/db/client` or `@/db/schema` (enforced by `tenant-boundary.test.ts`).
+3. **Data scope** — tenant data is reached only through `tenantDb(orgId)`. Feature code (`src/app`, `src/components`, `src/actions`) may not import `@/db/client` or `@/db/schema` (enforced by `tenant-boundary.test.ts`).
 
 ## Adding a tenant-scoped resource (checklist)
+
 1. Table with `organization_id` (NOT NULL, FK → organization, cascade) + index `(organization_id, created_at)`.
 2. Repository in `src/data/tenant-db.ts` — **every** query starts from `eq(table.organizationId, orgId)`.
 3. Permissions in `src/libs/permissions.ts` (+ matrix test row).
@@ -6042,36 +6925,40 @@ git switch main && git pull && git switch -c docs/s4-wrap-up
 6. Foreign ids → `NotFoundError` / `notFound()`, never 403.
 
 ## Roles
+
 See `docs/guides/rbac.md`. Platform role (`user.role`) is separate from organization roles.
 
 ## Admin & audit
+
 - First admin: `ADMIN_EMAILS=you@example.com pnpm admin:grant` (verified users only).
 - `/admin` → 404 for non-admins; `ADMIN_REQUIRE_MFA=true` demands 2FA.
 - Impersonation: banner everywhere, 1 h, credential/MFA/passkey endpoints blocked.
 - `audit_log` is append-only (DB trigger). Ids are plain text so history outlives users and organizations.
 
 ## Postgres RLS
+
 Evaluated in Sprint 4 and **deferred** (`TD-02`) — see ADR-005 and `scripts/rls-spike.ts`.
-````
+```
 
 ### 2. Update `AGENTS.md`
-**Commands:** `pnpm admin:grant`.
-**Security / conventions:**
+
+**Commands:** `pnpm admin:grant`. **Security / conventions:**
+
 ```markdown
-- Tenant data: ONLY through `tenantDb(orgId)` (src/data/tenant-db.ts). Never import `@/db/client` / `@/db/schema` in
-  src/app, src/components or src/actions (tenant-boundary.test.ts).
-- Pages under `(app)` call `requireOrgMember` / `requirePagePermission` / `requireSession`; pages under `(admin)` call
-  `requireAdmin()`. Server Actions use `withOrgPermission(...)` or `getAdminOrThrow()`. Layouts are never guards.
+- Tenant data: ONLY through `tenantDb(orgId)` (src/data/tenant-db.ts). Never import `@/db/client` / `@/db/schema` in src/app, src/components or src/actions (tenant-boundary.test.ts).
+- Pages under `(app)` call `requireOrgMember` / `requirePagePermission` / `requireSession`; pages under `(admin)` call `requireAdmin()`. Server Actions use `withOrgPermission(...)` or `getAdminOrThrow()`. Layouts are never guards.
 - Foreign-tenant ids and non-admin admin URLs answer 404, not 403.
 - New permission → `src/libs/permissions.ts` + a row in the matrix test + docs/guides/rbac.md.
 - Anything an admin does (ban, role change, impersonation, org deletion…) writes an `audit(...)` event.
 - Never hand out `owner` by invitation/role change; ownership moves only via `transferOwnership`.
 ```
+
 ```bash
 pnpm check:agents
 ```
 
 ### 3. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 4 · **Current sprint:** Sprint 5 · **Release:** 0.5 MVP
 - **Tables added:** `organization`, `member`, `invitation`, `project`, `audit_log` (+ trigger); columns `session.active_organization_id`, `session.impersonated_by`, `user.role/banned/ban_reason/ban_expires`
 - **Env vars:** `AUTO_CREATE_PERSONAL_ORG`, `ORG_CREATION_LIMIT_PER_USER`, `INVITATION_EXPIRES_DAYS`, `ADMIN_EMAILS`, `ADMIN_REQUIRE_MFA`
@@ -6083,6 +6970,7 @@ pnpm check:agents
 - **Measured:** E2E duration, `--repeat-each=5` flakiness, isolation test count
 
 Tick the checkboxes in `docs/roadmap/sprint-04-tenancy-rbac-admin.md`, then:
+
 ```bash
 pnpm check
 git add -A
@@ -6112,22 +7000,22 @@ git push origin v0.5.0
 
 ### 🎬 Sprint review — measurable acceptance
 
-| Check | Expected |
-|---|---|
-| Create org, invite a teammate | email → accept → member row |
-| Member tries to delete a project | no button; the action returns FORBIDDEN |
-| Open another tenant's project URL | 404 (identical to a missing page) |
-| Remove / demote the last owner | blocked with a clear message |
-| Admin impersonates a user | banner on every page; audit rows; Stop returns to admin |
-| `UPDATE audit_log …` | rejected by the database |
-| Isolation suite | 100 % green; fails if a `where organization_id` is removed |
+| Check                             | Expected                                                   |
+| --------------------------------- | ---------------------------------------------------------- |
+| Create org, invite a teammate     | email → accept → member row                                |
+| Member tries to delete a project  | no button; the action returns FORBIDDEN                    |
+| Open another tenant's project URL | 404 (identical to a missing page)                          |
+| Remove / demote the last owner    | blocked with a clear message                               |
+| Admin impersonates a user         | banner on every page; audit rows; Stop returns to admin    |
+| `UPDATE audit_log …`              | rejected by the database                                   |
+| Isolation suite                   | 100 % green; fails if a `where organization_id` is removed |
 
 ---
 
 ## 🧯 Troubleshooting (Sprint 4)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | `/dashboard` → 404 right after creating an org | The slug in the URL doesn't match (case/typo) or you aren't a member; check Studio `member` |
 | Everyone becomes `member` / invitations ignore the role | `ac`/`roles` not registered on **both** server and client plugin |
 | 403 on `inviteMember` for an owner | Role strings differ (`Owner` vs `owner`) or the roles object isn't passed to `organization({ ac, roles })` |

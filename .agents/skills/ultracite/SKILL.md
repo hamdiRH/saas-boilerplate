@@ -75,15 +75,15 @@ Init creates config that extends Ultracite presets:
 
 ```ts
 // eslint.config.mjs — arrays of flat configs, spread together
-import core from "ultracite/eslint/core";
-import react from "ultracite/eslint/react";
+import core from 'ultracite/eslint/core';
+import react from 'ultracite/eslint/react';
 export default [...core, ...react];
 ```
 
 ```ts
 // oxlint.config.ts — imports passed to extends
-import { defineConfig } from "oxlint";
-import core from "ultracite/oxlint/core";
+import { defineConfig } from 'oxlint';
+import core from 'ultracite/oxlint/core';
 export default defineConfig({
   env: core.env,
   extends: [core],

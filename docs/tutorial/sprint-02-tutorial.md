@@ -21,27 +21,28 @@
 
 ## 🔢 Ticket order used in this tutorial
 
-| Order | Ticket | Why moved |
-|---|---|---|
-| 1 | **S2-T04** Email transport | Auth callbacks need to send mail |
-| 2 | **S2-T05** Email templates | …and templates |
-| 3 | S2-T01 Better Auth config | Uses the senders from T04/T05 |
-| 4 | S2-T02 Schema + migration | |
-| 5 | S2-T03 Route handler + client | |
-| 6 | **S2-T10** Session DAL + `proxy.ts` | Pages below need guards |
-| 7 | S2-T06 Sign-up | |
-| 8 | S2-T07 Email verification | |
-| 9 | S2-T08 Sign-in / sign-out | |
-| 10 | S2-T09 Forgot / reset password | |
-| 11 | S2-T11 Protected dashboard + guard tests | |
-| 12 | S2-T12 Profile + change password | |
-| 13 | S2-T13 Change email + sessions | |
-| 14 | S2-T14 Delete account (stretch) | |
-| 15 | **S2-T16** Rate limiting | Must exist before the E2E suite |
-| 16 | S2-T15 Auth E2E suite | |
-| 17 | Wrap-up | docs, state, tag `v0.1.0-alpha` |
+| Order | Ticket                                   | Why moved                        |
+| ----- | ---------------------------------------- | -------------------------------- |
+| 1     | **S2-T04** Email transport               | Auth callbacks need to send mail |
+| 2     | **S2-T05** Email templates               | …and templates                   |
+| 3     | S2-T01 Better Auth config                | Uses the senders from T04/T05    |
+| 4     | S2-T02 Schema + migration                |                                  |
+| 5     | S2-T03 Route handler + client            |                                  |
+| 6     | **S2-T10** Session DAL + `proxy.ts`      | Pages below need guards          |
+| 7     | S2-T06 Sign-up                           |                                  |
+| 8     | S2-T07 Email verification                |                                  |
+| 9     | S2-T08 Sign-in / sign-out                |                                  |
+| 10    | S2-T09 Forgot / reset password           |                                  |
+| 11    | S2-T11 Protected dashboard + guard tests |                                  |
+| 12    | S2-T12 Profile + change password         |                                  |
+| 13    | S2-T13 Change email + sessions           |                                  |
+| 14    | S2-T14 Delete account (stretch)          |                                  |
+| 15    | **S2-T16** Rate limiting                 | Must exist before the E2E suite  |
+| 16    | S2-T15 Auth E2E suite                    |                                  |
+| 17    | Wrap-up                                  | docs, state, tag `v0.1.0-alpha`  |
 
 ### Deviations from the sprint file (decided once, here)
+
 - **`BETTER_AUTH_URL` is dropped** — we reuse `NEXT_PUBLIC_APP_URL` (one source of truth, works with previews).
 - **No `/api/dev/last-email` route.** Playwright runs on the same machine as the server, so E2E reads the `.emails/` folder directly. A route that exposes emails would be a liability if it ever shipped.
 - **Auth flows use the Better Auth client SDK** from the browser (it talks to `/api/auth/*`, an external surface). Operations that need extra server-side side effects (change password → notification email) use **Server Actions** with `createAction`.
@@ -63,6 +64,7 @@ gh pr checks --watch
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line (branch + commit message). Run `pnpm pin` after adding dependencies.
 
 ---
@@ -74,6 +76,7 @@ git switch main && git pull
 pnpm install
 pnpm check              # Sprint 1 must be green
 ```
+
 Set **Current sprint: Sprint 2** in `docs/roadmap/06-project-state.md`.
 
 ---
@@ -92,18 +95,22 @@ mkdir -p src/libs/email
 ### 1. Environment variables
 
 📄 **Edit `src/libs/Env.ts`** — add to `server` and `runtimeEnv`:
+
 ```ts
     EMAIL_FROM: z.string().min(3).default('SaaS Boilerplate <onboarding@resend.dev>'),
     RESEND_API_KEY: z.string().min(1).optional(),
     // Optional override. Default: resend if a key exists, console in development, otherwise unset (sending fails loudly).
     EMAIL_TRANSPORT: z.enum(['console', 'resend', 'memory']).optional(),
 ```
+
 ```ts
     EMAIL_FROM: process.env.EMAIL_FROM,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_TRANSPORT: process.env.EMAIL_TRANSPORT,
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Email ──────────────────────────────────────────
 # Local development prints links in the terminal and stores messages in ./.emails (no setup needed).
@@ -116,6 +123,7 @@ EMAIL_TRANSPORT=
 ### 2. Types
 
 📄 **Create `src/libs/email/types.ts`:**
+
 ```ts
 export type EmailMessage = {
   to: string;
@@ -134,6 +142,7 @@ export type EmailTransport = {
 ### 3. Memory transport (tests)
 
 📄 **Create `src/libs/email/memory-transport.ts`:**
+
 ```ts
 import type { EmailMessage, EmailTransport } from './types';
 
@@ -158,6 +167,7 @@ export class MemoryTransport implements EmailTransport {
 ### 4. Console transport (development)
 
 📄 **Create `src/libs/email/console-transport.ts`:**
+
 ```ts
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -219,6 +229,7 @@ export function readLastEmail(dir: string, to: string): CapturedEmail | undefine
 ### 5. Resend transport (production)
 
 📄 **Create `src/libs/email/resend-transport.ts`:**
+
 ```ts
 import { ExternalServiceError } from '@/libs/errors';
 
@@ -257,14 +268,16 @@ export class ResendTransport implements EmailTransport {
   }
 }
 ```
+
 > 🔍 Resend tag values only allow letters, numbers, `_` and `-`. Keep tag values simple (`verify-email`).
 
 ### 6. Selecting a transport
 
 📄 **Create `src/libs/email/index.ts`:**
+
 ```ts
-import { AppError, ExternalServiceError } from '@/libs/errors';
 import { Env } from '@/libs/Env';
+import { AppError, ExternalServiceError } from '@/libs/errors';
 import { getLogger } from '@/libs/Logger';
 
 import { ConsoleTransport } from './console-transport';
@@ -282,7 +295,9 @@ function selectTransport(): EmailTransport {
   switch (kind) {
     case 'resend':
       if (!Env.RESEND_API_KEY) {
-        throw new ExternalServiceError({ message: 'EMAIL_TRANSPORT=resend but RESEND_API_KEY is missing' });
+        throw new ExternalServiceError({
+          message: 'EMAIL_TRANSPORT=resend but RESEND_API_KEY is missing',
+        });
       }
       return new ResendTransport(Env.RESEND_API_KEY, Env.EMAIL_FROM);
     case 'console':
@@ -291,7 +306,8 @@ function selectTransport(): EmailTransport {
       return new MemoryTransport();
     default:
       throw new ExternalServiceError({
-        message: 'No email transport configured. Set RESEND_API_KEY (or EMAIL_TRANSPORT) in production.',
+        message:
+          'No email transport configured. Set RESEND_API_KEY (or EMAIL_TRANSPORT) in production.',
       });
   }
 }
@@ -316,11 +332,13 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
   }
 }
 ```
+
 Knip: `MemoryTransport`/`setEmailTransport` are used by tests; `getEmailTransport` is used internally — if Knip complains about it being an unused **export**, un-export it.
 
 ### 7. Tests
 
 📄 **Create `src/libs/email/transports.test.ts`:**
+
 ```ts
 import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -375,7 +393,9 @@ describe('ConsoleTransport', () => {
   });
 
   it('does not throw when the folder cannot be written', async () => {
-    await expect(new ConsoleTransport('/proc/definitely/not/writable').send(message)).resolves.toBeUndefined();
+    await expect(
+      new ConsoleTransport('/proc/definitely/not/writable').send(message),
+    ).resolves.toBeUndefined();
   });
 });
 
@@ -411,9 +431,11 @@ describe('ResendTransport', () => {
   });
 });
 ```
+
 > 🪟 The "cannot be written" test uses a Unix-style path; on Windows it also fails to create the folder, which is exactly what the test needs. If it behaves differently on your machine, replace the path with `'Z:\\definitely\\not\\writable'`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 pnpm typecheck && pnpm lint && pnpm knip
@@ -437,6 +459,7 @@ mkdir -p src/templates/emails
 ### 1. Translations for emails (all four templates at once)
 
 📄 **Add to `src/locales/en.json`** (top-level key `emails`):
+
 ```json
   "emails": {
     "footer": "You received this email because of activity on your {appName} account.",
@@ -472,7 +495,9 @@ mkdir -p src/templates/emails
     }
   }
 ```
+
 📄 **Add to `src/locales/fr.json`:**
+
 ```json
   "emails": {
     "footer": "Vous recevez cet e-mail suite à une activité sur votre compte {appName}.",
@@ -512,6 +537,7 @@ mkdir -p src/templates/emails
 ### 2. Translator that works outside a request
 
 📄 **Create `src/templates/emails/i18n.ts`:**
+
 ```ts
 import { createTranslator, type Locale } from 'next-intl';
 
@@ -525,13 +551,24 @@ export function getEmailTranslator(locale: Locale) {
   return createTranslator({ locale, messages: messages[locale], namespace: 'emails' });
 }
 ```
+
 > 🔍 `createTranslator` options and the exported `Locale` type are from next-intl v4 — check the docs if your version differs.
 
 ### 3. Layout + generic action email
 
 📄 **Create `src/templates/emails/layout.tsx`:**
+
 ```tsx
-import { Body, Button, Container, Head, Heading, Html, Preview, Text } from '@react-email/components';
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Preview,
+  Text,
+} from '@react-email/components';
 
 export type ActionEmailProps = {
   lang: string;
@@ -544,13 +581,30 @@ export type ActionEmailProps = {
   ignore?: string;
 };
 
-export function ActionEmail({ lang, heading, greeting, body, footer, action, ignore }: ActionEmailProps) {
+export function ActionEmail({
+  lang,
+  heading,
+  greeting,
+  body,
+  footer,
+  action,
+  ignore,
+}: ActionEmailProps) {
   return (
     <Html lang={lang}>
       <Head />
       <Preview>{heading}</Preview>
-      <Body style={{ backgroundColor: '#f4f4f5', fontFamily: 'Arial, Helvetica, sans-serif', margin: 0, padding: '24px 0' }}>
-        <Container style={{ backgroundColor: '#ffffff', borderRadius: 8, maxWidth: 480, padding: 32 }}>
+      <Body
+        style={{
+          backgroundColor: '#f4f4f5',
+          fontFamily: 'Arial, Helvetica, sans-serif',
+          margin: 0,
+          padding: '24px 0',
+        }}
+      >
+        <Container
+          style={{ backgroundColor: '#ffffff', borderRadius: 8, maxWidth: 480, padding: 32 }}
+        >
           <Heading as="h1" style={{ fontSize: 22, margin: '0 0 16px' }}>
             {heading}
           </Heading>
@@ -559,12 +613,22 @@ export function ActionEmail({ lang, heading, greeting, body, footer, action, ign
           {action ? (
             <Button
               href={action.url}
-              style={{ backgroundColor: '#18181b', borderRadius: 6, color: '#ffffff', padding: '12px 20px', textDecoration: 'none' }}
+              style={{
+                backgroundColor: '#18181b',
+                borderRadius: 6,
+                color: '#ffffff',
+                padding: '12px 20px',
+                textDecoration: 'none',
+              }}
             >
               {action.label}
             </Button>
           ) : null}
-          {action ? <Text style={{ color: '#6b7280', fontSize: 12, wordBreak: 'break-all' }}>{action.url}</Text> : null}
+          {action ? (
+            <Text style={{ color: '#6b7280', fontSize: 12, wordBreak: 'break-all' }}>
+              {action.url}
+            </Text>
+          ) : null}
           {ignore ? <Text style={{ color: '#6b7280' }}>{ignore}</Text> : null}
           <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 32 }}>{footer}</Text>
         </Container>
@@ -573,11 +637,13 @@ export function ActionEmail({ lang, heading, greeting, body, footer, action, ign
   );
 }
 ```
+
 > 🔎 The raw URL is printed under the button: it keeps the plain-text version useful and lets users copy the link when buttons are blocked. No tracking pixels, ever.
 
 ### 4. The four templates
 
 📄 **Create `src/templates/emails/templates.tsx`:**
+
 ```tsx
 import type { Locale } from 'next-intl';
 
@@ -631,7 +697,12 @@ export function PasswordChangedEmail({ locale, name }: Base) {
   );
 }
 
-export function ChangeEmailEmail({ locale, name, url, newEmail }: Base & { url: string; newEmail: string }) {
+export function ChangeEmailEmail({
+  locale,
+  name,
+  url,
+  newEmail,
+}: Base & { url: string; newEmail: string }) {
   const t = getEmailTranslator(locale);
   return (
     <ActionEmail
@@ -650,6 +721,7 @@ export function ChangeEmailEmail({ locale, name, url, newEmail }: Base & { url: 
 ### 5. Rendering (HTML + plain text)
 
 📄 **Create `src/templates/emails/render.ts`:**
+
 ```ts
 import { render } from '@react-email/render';
 import type { ReactElement } from 'react';
@@ -660,11 +732,13 @@ export async function renderEmail(element: ReactElement) {
   return { html, text };
 }
 ```
+
 > 🔍 In recent `@react-email/render` versions `render` returns a **Promise**; in older ones a string. `await` works for both.
 
 ### 6. Pick the language from the request
 
 📄 **Create `src/i18n/request-locale.ts`:**
+
 ```ts
 import { hasLocale, type Locale } from 'next-intl';
 
@@ -678,13 +752,16 @@ export function localeFromRequest(request?: Request): Locale {
   return hasLocale(routing.locales, value) ? value : routing.defaultLocale;
 }
 ```
+
 📄 **Create `src/i18n/request-locale.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
 import { localeFromRequest } from './request-locale';
 
-const req = (cookie?: string) => new Request('http://localhost', { headers: cookie ? { cookie } : {} });
+const req = (cookie?: string) =>
+  new Request('http://localhost', { headers: cookie ? { cookie } : {} });
 
 it('reads NEXT_LOCALE and falls back to the default', () => {
   expect(localeFromRequest(req('a=1; NEXT_LOCALE=fr'))).toBe('fr');
@@ -697,6 +774,7 @@ it('reads NEXT_LOCALE and falls back to the default', () => {
 ### 7. Senders used by Better Auth callbacks
 
 📄 **Create `src/libs/auth-emails.tsx`:**
+
 ```tsx
 import { localeFromRequest } from '@/i18n/request-locale';
 import { sendEmail } from '@/libs/email';
@@ -714,7 +792,9 @@ type Input = { user: Recipient; request?: Request };
 
 export async function sendVerificationEmail({ user, url, request }: Input & { url: string }) {
   const locale = localeFromRequest(request);
-  const { html, text } = await renderEmail(<VerifyEmail locale={locale} name={user.name} url={url} />);
+  const { html, text } = await renderEmail(
+    <VerifyEmail locale={locale} name={user.name} url={url} />,
+  );
   await sendEmail({
     to: user.email,
     subject: getEmailTranslator(locale)('verify.subject'),
@@ -726,7 +806,9 @@ export async function sendVerificationEmail({ user, url, request }: Input & { ur
 
 export async function sendResetPasswordEmail({ user, url, request }: Input & { url: string }) {
   const locale = localeFromRequest(request);
-  const { html, text } = await renderEmail(<ResetPasswordEmail locale={locale} name={user.name} url={url} />);
+  const { html, text } = await renderEmail(
+    <ResetPasswordEmail locale={locale} name={user.name} url={url} />,
+  );
   await sendEmail({
     to: user.email,
     subject: getEmailTranslator(locale)('reset.subject'),
@@ -738,7 +820,9 @@ export async function sendResetPasswordEmail({ user, url, request }: Input & { u
 
 export async function sendPasswordChangedEmail({ user, request }: Input) {
   const locale = localeFromRequest(request);
-  const { html, text } = await renderEmail(<PasswordChangedEmail locale={locale} name={user.name} />);
+  const { html, text } = await renderEmail(
+    <PasswordChangedEmail locale={locale} name={user.name} />,
+  );
   await sendEmail({
     to: user.email,
     subject: getEmailTranslator(locale)('passwordChanged.subject'),
@@ -771,6 +855,7 @@ export async function sendChangeEmailEmail({
 ### 8. Template tests
 
 📄 **Create `src/templates/emails/templates.test.ts`** (`.ts` on purpose: runs in the node project, so we use `createElement`):
+
 ```ts
 import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -782,7 +867,9 @@ const url = 'https://app.test/api/auth/verify-email?token=tok_123';
 
 describe('email templates', () => {
   it('renders HTML + plain text with the action link (en)', async () => {
-    const { html, text } = await renderEmail(createElement(VerifyEmail, { locale: 'en', name: 'Ada', url }));
+    const { html, text } = await renderEmail(
+      createElement(VerifyEmail, { locale: 'en', name: 'Ada', url }),
+    );
 
     expect(html).toContain(url.replace(/&/g, '&amp;'));
     expect(html).toContain('lang="en"');
@@ -792,17 +879,22 @@ describe('email templates', () => {
   });
 
   it('renders French copy', async () => {
-    const { text } = await renderEmail(createElement(ResetPasswordEmail, { locale: 'fr', name: 'Ada', url }));
+    const { text } = await renderEmail(
+      createElement(ResetPasswordEmail, { locale: 'fr', name: 'Ada', url }),
+    );
     expect(text).toContain('Bonjour Ada,');
     expect(text).toContain("Si vous n'êtes pas à l'origine");
   });
 
   it('informational emails have no button', async () => {
-    const { text } = await renderEmail(createElement(PasswordChangedEmail, { locale: 'en', name: 'Ada' }));
+    const { text } = await renderEmail(
+      createElement(PasswordChangedEmail, { locale: 'en', name: 'Ada' }),
+    );
     expect(text).not.toMatch(/https?:\/\//);
   });
 });
 ```
+
 ```bash
 pnpm test          # first run writes the snapshot into __snapshots__/ — commit it
 ```
@@ -810,19 +902,24 @@ pnpm test          # first run writes the snapshot into __snapshots__/ — commi
 ### 9. Preview script (optional but handy)
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 "email:dev": "email dev --dir src/templates/emails --port 3030"
 ```
+
 > 🔍 React Email's preview server expects exported components with `PreviewProps`. If it shows nothing, treat the preview as optional — the tests are the safety net.
 
 ### 10. Knip
+
 `src/libs/auth-emails.tsx` is not imported yet (T01 does it). Add to `knip.config.ts` `entry` temporarily: `'src/libs/auth-emails.tsx'`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 pnpm typecheck && pnpm lint && pnpm knip && pnpm test:browser
 ```
+
 The locale parity test (Sprint 1) must still pass — both language files have the same `emails.*` keys.
 
 **🚢 Ship** — branch `feat/s2-t05-email-templates` · message: `feat(email): add translated react-email templates and auth email senders`
@@ -841,20 +938,26 @@ pnpm add better-auth server-only
 ### 1. Secret (never committed)
 
 📄 **Edit `src/libs/Env.ts`:**
+
 ```ts
     // ≥ 32 chars. Generate with: pnpm setup:env
     BETTER_AUTH_SECRET: z.string().min(32),
 ```
+
 ```ts
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
 ```
+
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Auth (Better Auth) ─────────────────────────────
 # Run `pnpm setup:env` to generate one into .env.local. NEVER commit a real secret.
 BETTER_AUTH_SECRET=
 ```
+
 📄 **Create `scripts/setup-env.mjs`:**
+
 ```js
 // scripts/setup-env.mjs — creates .env.local with a random BETTER_AUTH_SECRET if missing.
 import { randomBytes } from 'node:crypto';
@@ -873,9 +976,11 @@ const prefix = current && !current.endsWith('\n') ? '\n' : '';
 appendFileSync(file, `${prefix}BETTER_AUTH_SECRET=${secret}\n`);
 console.log('✅ Generated BETTER_AUTH_SECRET in .env.local');
 ```
+
 📄 **Edit `package.json`** `scripts`: `"setup:env": "node scripts/setup-env.mjs"`.
 
 Other places that need a value:
+
 - **Vitest** — `vitest.config.ts` → `test.env`: add `BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-123'` (≥ 32 chars).
 - **CI** — `.github/workflows/ci.yml` top-level `env:` block: add `BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-0123456789`.
 - **README quick start** — add `pnpm setup:env` before `pnpm dev`.
@@ -885,14 +990,18 @@ pnpm setup:env
 ```
 
 ### 2. Tell the guard tests how to import `server-only`
+
 Outside Next.js the `server-only` package throws on import. Stub it in tests:
 
 📄 **Create `tests/stubs/server-only.ts`:**
+
 ```ts
 // Vitest stub: lets server-only modules be imported in tests.
 export {};
 ```
+
 📄 **Edit `vitest.config.ts`** — extend the alias:
+
 ```ts
   resolve: {
     alias: {
@@ -905,6 +1014,7 @@ export {};
 ### 3. Run-in-background helper (don't make users wait for SMTP)
 
 📄 **Create `src/utils/background.ts`:**
+
 ```ts
 import { after } from 'next/server';
 
@@ -931,7 +1041,9 @@ export function runInBackground(task: () => Promise<void>): void {
   }
 }
 ```
+
 📄 **Create `src/utils/background.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -951,9 +1063,9 @@ it('runs the task outside a request scope and swallows its errors', async () => 
 ### 4. The Better Auth instance
 
 📄 **Create `src/libs/Auth.ts`:**
+
 ```ts
 import 'server-only';
-
 import { randomUUID } from 'node:crypto';
 
 import { betterAuth } from 'better-auth';
@@ -1035,7 +1147,9 @@ export function createAuth(database: DbLike) {
 export const auth = createAuth(db);
 export type Auth = typeof auth;
 ```
+
 > 🔒 **Notes**
+>
 > - Passwords are hashed by Better Auth (scrypt by default — 🔍 confirm in docs). We never touch password hashes.
 > - `requireEmailVerification: true` means **no session exists until the email is verified**.
 > - `nextCookies()` must stay the **last** plugin when you add more in Sprint 3/4.
@@ -1044,9 +1158,11 @@ export type Auth = typeof auth;
 Remove the temporary Knip entry for `auth-emails.tsx` (it's imported now) and add `'src/libs/Auth.ts'` as an entry until the route handler imports it in S2-T03.
 
 ### ✅ Verify
+
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm knip
 ```
+
 Remove `BETTER_AUTH_SECRET` from `.env.local` and run `pnpm dev:web` → it must fail with "Invalid environment variables … BETTER_AUTH_SECRET". Restore it with `pnpm setup:env`.
 
 **🚢 Ship** — branch `feat/s2-t01-better-auth` · message: `feat(auth): configure better auth with email verification and password reset`
@@ -1068,6 +1184,7 @@ git switch main && git pull && git switch -c feat/s2-t02-auth-schema
 ```bash
 pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output src/db/schema/auth.generated.ts
 ```
+
 - Answer **yes** if it asks to overwrite.
 - 🔍 If the CLI cannot resolve our `@/` aliases or `server-only`, use the fallback: create a throw-away `scripts/auth-cli.ts` with relative imports exporting an `auth` built from the same options, and point `--config` at it. Do not change `Auth.ts` to please the CLI.
 
@@ -1076,6 +1193,7 @@ Open `auth.generated.ts` and compare it with the file below. **The CLI output wi
 ### 2. Our adapted schema
 
 📄 **Create `src/db/schema/auth.ts`:**
+
 ```ts
 import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 
@@ -1151,9 +1269,11 @@ export const rateLimit = pgTable('rate_limit', {
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
 ```
+
 ```bash
 rm src/db/schema/auth.generated.ts     # 🪟 cmd.exe: del src\db\schema\auth.generated.ts
 ```
+
 > 🔎 The generated file was only a reference. Keeping two copies of the same tables would make Drizzle define them twice.
 
 ### 3. Replace `app_meta`
@@ -1161,7 +1281,9 @@ rm src/db/schema/auth.generated.ts     # 🪟 cmd.exe: del src\db\schema\auth.ge
 ```bash
 git rm src/db/schema/app-meta.ts tests/factories/app-meta.factory.ts
 ```
+
 📄 **Replace `src/db/schema/index.ts`:**
+
 ```ts
 export * from './auth';
 ```
@@ -1169,6 +1291,7 @@ export * from './auth';
 ### 4. Update everything that used `app_meta`
 
 📄 **Create `tests/factories/user.factory.ts`:**
+
 ```ts
 import { randomUUID } from 'node:crypto';
 
@@ -1183,7 +1306,9 @@ export const userFactory = defineFactory<typeof user.$inferInsert>((n) => ({
   emailVerified: true,
 }));
 ```
+
 📄 **Rewrite `tests/utils/test-db.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -1191,7 +1316,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { user } from '@/db/schema';
 
 import { userFactory } from '../factories/user.factory';
-
 import { createTestDb, type TestDb, withRollback } from './test-db';
 
 let db: TestDb;
@@ -1222,10 +1346,13 @@ describe('test database', () => {
   });
 });
 ```
+
 📄 **Rewrite `src/db/seed.ts`** — a verified demo user for local development:
+
 ```ts
-import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
+
+import { eq } from 'drizzle-orm';
 
 import { account, user } from './schema';
 import type { DbLike } from './types';
@@ -1240,7 +1367,10 @@ type SeedOptions = { hashPassword: (password: string) => Promise<string> };
 
 /** Idempotent: safe to run any number of times. */
 export async function seed(db: DbLike, { hashPassword }: SeedOptions) {
-  const existing = await db.select({ id: user.id }).from(user).where(eq(user.email, DEMO_USER.email));
+  const existing = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, DEMO_USER.email));
   if (existing.length > 0) return;
 
   const userId = randomUUID();
@@ -1261,9 +1391,9 @@ export async function seed(db: DbLike, { hashPassword }: SeedOptions) {
 ```
 
 📄 **Update `scripts/seed.ts`** — build the hasher from Better Auth's own context so seeded passwords work with sign-in:
+
 ```ts
 import './_env';
-
 import { Env } from '../src/libs/Env';
 
 async function main() {
@@ -1288,19 +1418,21 @@ main().catch((error) => {
   process.exit(1);
 });
 ```
+
 > 🪟 `server-only` throws when a module is loaded outside React Server Components, which includes `tsx` scripts. Make the script run with the right condition — **edit `package.json`**:
+>
 > ```json
 > "db:seed": "tsx --conditions=react-server scripts/seed.ts"
 > ```
 
 📄 **Rewrite `src/db/seed.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
 import { account, user } from '@/db/schema';
 
 import { createTestDb, type TestDb } from '../../tests/utils/test-db';
-
 import { seed } from './seed';
 
 let db: TestDb;
@@ -1324,10 +1456,13 @@ it('is idempotent and stores a hashed password, never the plain one', async () =
 ```
 
 ### 5. Generate and apply the migration
+
 ```bash
 pnpm db:generate         # creates 0001_….sql (drops app_meta, creates auth tables)
 ```
+
 Open the SQL and check: `DROP TABLE "app_meta"`, five `CREATE TABLE`s, foreign keys with `ON DELETE cascade`, the indexes.
+
 ```bash
 pnpm db:check
 pnpm db:server           # tab 2 — applies migrations at start
@@ -1336,21 +1471,25 @@ pnpm db:studio           # user/session/account/verification/rate_limit exist; o
 ```
 
 ### 6. Drift check for the future
+
 When a Better Auth plugin is added (Sprints 3–4) the schema must be regenerated. Add a reminder script:
 
 📄 **Edit `package.json`:**
+
 ```json
 "auth:schema": "pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output src/db/schema/auth.generated.ts"
 ```
+
 and a note in `docs/guides/database.md`:
+
 ```markdown
 ## Better Auth schema
-After adding/removing a Better Auth plugin run `pnpm auth:schema`, copy new tables/columns into
-`src/db/schema/auth.ts` (use our helpers/indexes), delete `auth.generated.ts`, then
-`pnpm db:generate` and commit the migration.
+
+After adding/removing a Better Auth plugin run `pnpm auth:schema`, copy new tables/columns into `src/db/schema/auth.ts` (use our helpers/indexes), delete `auth.generated.ts`, then `pnpm db:generate` and commit the migration.
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm db:check && pnpm typecheck && pnpm lint && pnpm knip
 ```
@@ -1369,6 +1508,7 @@ mkdir -p "src/app/api/auth/[...all]"
 ```
 
 📄 **Create `src/app/api/auth/[...all]/route.ts`:**
+
 ```ts
 import { toNextJsHandler } from 'better-auth/next-js';
 
@@ -1376,18 +1516,22 @@ import { auth } from '@/libs/Auth';
 
 export const { GET, POST } = toNextJsHandler(auth);
 ```
+
 > 🔎 Our `proxy.ts` matcher already excludes `/api`, so next-intl never touches these routes.
 
 📄 **Create `src/libs/AuthClient.ts`:**
+
 ```ts
 import { createAuthClient } from 'better-auth/react';
 
 // No baseURL → same origin. Works on localhost, preview URLs and production without config.
 export const authClient = createAuthClient();
 ```
+
 Remove `'src/libs/Auth.ts'` from the temporary Knip entries (the route imports it). `AuthClient.ts` is used from T06 onward — add it as a temporary entry.
 
 ### ✅ Verify
+
 ```bash
 pnpm dev
 # another tab:
@@ -1397,9 +1541,11 @@ curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H "content-type: a
   -d '{"email":"nobody@example.com","password":"wrong-password-123"}'
 # → {"code":"INVALID_EMAIL_OR_PASSWORD","message":"Invalid email or password"}
 ```
+
 🪟 In Git Bash the quotes above work as written; in cmd.exe prefer Postman or skip this check — the E2E tests cover it later.
 
 Seeded login check:
+
 ```bash
 curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H "content-type: application/json" -H "origin: http://localhost:3000" \
   -d '{"email":"demo@example.com","password":"Demo-Password-123"}'
@@ -1415,8 +1561,9 @@ curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H "content-type: a
 **Branch:** `feat/s2-t10-session-guard` · **Story:** US-025 · **3 SP** · risk **R-05** (auth bypass)
 
 > 🎯 **Two layers, on purpose (ADR-003):**
-> 1. `proxy.ts` → *optimistic*: "is there a session **cookie**?" Fast, redirects with a `callbackUrl`, but a forged cookie passes.
-> 2. **Data access layer** (`src/data/session.ts`) → *authoritative*: validates the session in the database on every protected page and action.
+>
+> 1. `proxy.ts` → _optimistic_: "is there a session **cookie**?" Fast, redirects with a `callbackUrl`, but a forged cookie passes.
+> 2. **Data access layer** (`src/data/session.ts`) → _authoritative_: validates the session in the database on every protected page and action.
 >
 > Never rely on the proxy alone. Never rely on a **layout** alone either — Next.js layouts are not re-rendered on every client navigation, so each **page** calls a guard itself.
 
@@ -1428,6 +1575,7 @@ mkdir -p src/data
 ### 1. Navigation helpers we now need
 
 📄 **Edit `src/i18n/navigation.ts`:**
+
 ```ts
 export const { Link, redirect, usePathname, useRouter, getPathname } = createNavigation(routing);
 ```
@@ -1435,6 +1583,7 @@ export const { Link, redirect, usePathname, useRouter, getPathname } = createNav
 ### 2. Pure route-guard helpers (easy to test)
 
 📄 **Create `src/libs/route-guard.ts`:**
+
 ```ts
 import { routing } from '@/i18n/routing';
 
@@ -1467,7 +1616,9 @@ export function buildSignInRedirect(pathname: string, search: string): string {
   return `${localizedPath(locale, '/sign-in')}?callbackUrl=${encodeURIComponent(pathname + search)}`;
 }
 ```
+
 📄 **Create `src/libs/route-guard.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -1498,8 +1649,12 @@ describe('isProtectedPath', () => {
 
 describe('buildSignInRedirect', () => {
   it('keeps the visitor’s language and encodes the callback', () => {
-    expect(buildSignInRedirect('/dashboard', '?tab=1')).toBe('/sign-in?callbackUrl=%2Fdashboard%3Ftab%3D1');
-    expect(buildSignInRedirect('/fr/dashboard', '')).toBe('/fr/sign-in?callbackUrl=%2Ffr%2Fdashboard');
+    expect(buildSignInRedirect('/dashboard', '?tab=1')).toBe(
+      '/sign-in?callbackUrl=%2Fdashboard%3Ftab%3D1',
+    );
+    expect(buildSignInRedirect('/fr/dashboard', '')).toBe(
+      '/fr/sign-in?callbackUrl=%2Ffr%2Fdashboard',
+    );
   });
 });
 
@@ -1513,6 +1668,7 @@ it('localizedPath omits the prefix for the default locale', () => {
 ### 3. Open-redirect protection
 
 📄 **Create `src/utils/safe-redirect.ts`:**
+
 ```ts
 /**
  * Only same-origin relative paths are allowed as post-login destinations.
@@ -1532,7 +1688,9 @@ export function sanitizeCallbackUrl(raw: string | null | undefined, fallback: st
   }
 }
 ```
+
 📄 **Create `src/utils/safe-redirect.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -1570,11 +1728,11 @@ describe('sanitizeCallbackUrl', () => {
 ### 4. The data access layer
 
 📄 **Create `src/data/session.ts`:**
+
 ```ts
 import 'server-only';
-
-import { headers } from 'next/headers';
 import { getLocale } from 'next-intl/server';
+import { headers } from 'next/headers';
 import { cache } from 'react';
 
 import { redirect } from '@/i18n/navigation';
@@ -1609,10 +1767,11 @@ export async function getSessionOrThrow(): Promise<Session> {
   return session;
 }
 ```
+
 📄 **Create `src/data/with-auth.ts`:**
+
 ```ts
 import 'server-only';
-
 import { getSessionOrThrow, type Session } from './session';
 
 /** Wrap an action handler so it only runs for authenticated users: `createAction(schema, withAuth(handler))`. */
@@ -1623,15 +1782,17 @@ export function withAuth<Input, Result>(
     handler(input, { session: await getSessionOrThrow() });
 }
 ```
+
 > 🔎 Banned users (Sprint 4) will be rejected in these same functions — one place to harden.
 
 ### 5. The optimistic proxy
 
 📄 **Rewrite `src/proxy.ts`:**
+
 ```ts
 import { getSessionCookie } from 'better-auth/cookies';
-import { type NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
+import { type NextRequest, NextResponse } from 'next/server';
 
 import { routing } from './i18n/routing';
 import { buildSignInRedirect, isProtectedPath, splitLocale } from './libs/route-guard';
@@ -1655,14 +1816,17 @@ export const config = {
   matcher: ['/((?!api|trpc|_next|_vercel|.*\\..*).*)'],
 };
 ```
+
 > 🔍 If you need a custom cookie name/prefix later, pass the same options to `getSessionCookie(request, { cookiePrefix })`.
 
-Update ADR-003 — append a consequence line to `docs/adr/003-*.md`: *"Every `page.tsx` under `(app)` calls `requireSession()` (enforced by a test, S2-T11); layouts alone are not a guard."*
+Update ADR-003 — append a consequence line to `docs/adr/003-*.md`: _"Every `page.tsx` under `(app)` calls `requireSession()` (enforced by a test, S2-T11); layouts alone are not a guard."_
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm typecheck && pnpm lint && pnpm knip
 ```
+
 Knip: `src/data/*` aren't imported by pages yet — add `'src/data/**/*.ts'` to the temporary `entry` list (removed in S2-T11).
 
 Manual: `pnpm dev`, open `/dashboard` while signed out → redirected to `/sign-in?callbackUrl=%2Fdashboard` (page is still the S1 placeholder, which is fine). `/fr/dashboard` → `/fr/sign-in?callbackUrl=%2Ffr%2Fdashboard`.
@@ -1682,9 +1846,10 @@ mkdir -p src/components/auth src/hooks
 
 ### 1. All authentication strings (one patch for the whole sprint)
 
-Later tickets only *use* these keys. Edit both files:
+Later tickets only _use_ these keys. Edit both files:
 
 📄 **`src/locales/en.json`** — (a) in `nav` add `"account": "Account"`; (b) in `dashboard` add `"welcome": "Welcome back, {name}"`; (c) add these keys to `validation`:
+
 ```json
     "passwordMin": "Password must be at least 12 characters",
     "passwordMax": "Password must be at most 128 characters",
@@ -1692,7 +1857,9 @@ Later tickets only *use* these keys. Edit both files:
     "passwordMismatch": "Passwords do not match",
     "confirmPhrase": "Type the exact confirmation word"
 ```
+
 (d) **replace** the whole `auth` object and add a new top-level `account` object:
+
 ```json
   "auth": {
     "signIn": {
@@ -1824,7 +1991,9 @@ Later tickets only *use* these keys. Edit both files:
     }
   }
 ```
+
 📄 **`src/locales/fr.json`** — same edits in French: `nav.account` = `"Compte"`; `dashboard.welcome` = `"Bon retour, {name}"`; `validation`:
+
 ```json
     "passwordMin": "Le mot de passe doit contenir au moins 12 caractères",
     "passwordMax": "Le mot de passe ne doit pas dépasser 128 caractères",
@@ -1832,7 +2001,9 @@ Later tickets only *use* these keys. Edit both files:
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "confirmPhrase": "Saisissez exactement le mot de confirmation"
 ```
+
 and the `auth` + `account` objects:
+
 ```json
   "auth": {
     "signIn": {
@@ -1964,6 +2135,7 @@ and the `auth` + `account` objects:
     }
   }
 ```
+
 ```bash
 pnpm test        # the locale parity test must pass: both files must have identical keys
 ```
@@ -1971,6 +2143,7 @@ pnpm test        # the locale parity test must pass: both files must have identi
 ### 2. Validation schemas (Zod messages are i18n keys)
 
 📄 **Create `src/validations/auth.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -2017,7 +2190,9 @@ export type SignInInput = z.infer<typeof signInSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 ```
+
 📄 **Create `src/validations/auth.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -2042,9 +2217,18 @@ describe('signUpSchema', () => {
   });
 
   it('rejects short, simple and mismatching passwords with translation keys', () => {
-    expect(messagesFor({ ...valid, password: 'Short1', confirmPassword: 'Short1' }, 'password')).toContain('validation.passwordMin');
-    expect(messagesFor({ ...valid, password: 'alllowercase123', confirmPassword: 'alllowercase123' }, 'password')).toContain('validation.passwordComplexity');
-    expect(messagesFor({ ...valid, confirmPassword: 'Different-Passw0rd' }, 'confirmPassword')).toEqual(['validation.passwordMismatch']);
+    expect(
+      messagesFor({ ...valid, password: 'Short1', confirmPassword: 'Short1' }, 'password'),
+    ).toContain('validation.passwordMin');
+    expect(
+      messagesFor(
+        { ...valid, password: 'alllowercase123', confirmPassword: 'alllowercase123' },
+        'password',
+      ),
+    ).toContain('validation.passwordComplexity');
+    expect(
+      messagesFor({ ...valid, confirmPassword: 'Different-Passw0rd' }, 'confirmPassword'),
+    ).toEqual(['validation.passwordMismatch']);
   });
 
   it('rejects invalid email and short name', () => {
@@ -2062,6 +2246,7 @@ it('signInSchema only requires a non-empty password (no policy leak at sign-in)'
 ### 3. Password strength
 
 📄 **Create `src/utils/password-strength.ts`:**
+
 ```ts
 export type PasswordScore = 0 | 1 | 2 | 3 | 4;
 
@@ -2079,7 +2264,9 @@ export function scorePassword(password: string): PasswordScore {
   return Math.min(points, 4) as PasswordScore;
 }
 ```
+
 📄 **Create `src/utils/password-strength.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -2097,6 +2284,7 @@ it('scores weak to strong', () => {
 ### 4. Error key mapping and the cooldown hook
 
 📄 **Create `src/libs/auth-error-keys.ts`** (client-safe — no server imports):
+
 ```ts
 const KEYS: Record<string, string> = {
   INVALID_EMAIL_OR_PASSWORD: 'auth.errors.invalidCredentials',
@@ -2122,21 +2310,29 @@ export function authErrorKey(error: AuthClientError | null | undefined): string 
   return key ?? 'errors.internal';
 }
 ```
+
 📄 **Create `src/libs/auth-error-keys.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
 import { authErrorKey } from './auth-error-keys';
 
 it('maps known codes, rate limits and unknown errors', () => {
-  expect(authErrorKey({ code: 'INVALID_EMAIL_OR_PASSWORD', status: 401 })).toBe('auth.errors.invalidCredentials');
-  expect(authErrorKey({ code: 'EMAIL_NOT_VERIFIED', status: 403 })).toBe('auth.errors.emailNotVerified');
+  expect(authErrorKey({ code: 'INVALID_EMAIL_OR_PASSWORD', status: 401 })).toBe(
+    'auth.errors.invalidCredentials',
+  );
+  expect(authErrorKey({ code: 'EMAIL_NOT_VERIFIED', status: 403 })).toBe(
+    'auth.errors.emailNotVerified',
+  );
   expect(authErrorKey({ status: 429 })).toBe('errors.rateLimited');
   expect(authErrorKey({ code: 'SOMETHING_NEW', status: 500 })).toBe('errors.internal');
   expect(authErrorKey(null)).toBe('errors.internal');
 });
 ```
+
 📄 **Create `src/hooks/use-cooldown.ts`:**
+
 ```ts
 'use client';
 
@@ -2161,17 +2357,24 @@ export function useCooldown(seconds: number, startActive = false) {
 ### 5. Components
 
 📄 **Create `src/components/auth/password-strength.tsx`:**
+
 ```tsx
 'use client';
 
 import { useTranslations } from 'next-intl';
 import { useWatch } from 'react-hook-form';
 
-import { scorePassword } from '@/utils/password-strength';
 import { cn } from '@/utils/cn';
+import { scorePassword } from '@/utils/password-strength';
 
 const LABELS = ['veryWeak', 'weak', 'fair', 'good', 'strong'] as const;
-const COLORS = ['bg-destructive', 'bg-destructive', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'] as const;
+const COLORS = [
+  'bg-destructive',
+  'bg-destructive',
+  'bg-yellow-500',
+  'bg-green-500',
+  'bg-green-600',
+] as const;
 
 export function PasswordStrength({ name }: { name: string }) {
   const t = useTranslations('auth.signUp');
@@ -2195,7 +2398,9 @@ export function PasswordStrength({ name }: { name: string }) {
   );
 }
 ```
+
 📄 **Create `src/components/auth/check-email.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2237,7 +2442,9 @@ export function CheckEmail({ email, callbackURL, onChangeEmail }: Props) {
   );
 }
 ```
+
 📄 **Create `src/components/auth/sign-up-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2308,18 +2515,24 @@ export function SignUpForm() {
           <PasswordField name="password" label={t('password')} autoComplete="new-password" />
           <PasswordStrength name="password" />
         </div>
-        <PasswordField name="confirmPassword" label={t('confirmPassword')} autoComplete="new-password" />
+        <PasswordField
+          name="confirmPassword"
+          label={t('confirmPassword')}
+          autoComplete="new-password"
+        />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
     </Form>
   );
 }
 ```
+
 Remove the temporary Knip entries for `src/components/forms/password-field.tsx` and `src/libs/AuthClient.ts` (both are used now).
 
 ### 6. The page
 
 📄 **Rewrite `src/app/[locale]/(auth)/sign-up/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -2354,11 +2567,11 @@ export default async function SignUpPage({ params }: { params: Promise<{ locale:
 ### 7. Component test (browser mode)
 
 📄 **Create `src/components/auth/sign-up-form.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { SignUpForm } from './sign-up-form';
 
 const signUpEmail = vi.hoisted(() => vi.fn());
@@ -2368,7 +2581,11 @@ vi.mock('@/libs/AuthClient', () => ({
 
 beforeEach(() => signUpEmail.mockReset());
 
-async function fill(screen: Awaited<ReturnType<typeof renderWithIntl>>, password: string, confirm: string) {
+async function fill(
+  screen: Awaited<ReturnType<typeof renderWithIntl>>,
+  password: string,
+  confirm: string,
+) {
   await screen.getByLabelText('Name', { exact: true }).fill('Ada Lovelace');
   await screen.getByLabelText('Email', { exact: true }).fill('ada@example.com');
   await screen.getByLabelText('Password', { exact: true }).fill(password);
@@ -2396,7 +2613,10 @@ test('shows the "check your email" screen after a successful sign-up', async () 
 });
 
 test('shows a generic error when the API refuses', async () => {
-  signUpEmail.mockResolvedValue({ data: null, error: { code: 'USER_ALREADY_EXISTS', status: 422 } });
+  signUpEmail.mockResolvedValue({
+    data: null,
+    error: { code: 'USER_ALREADY_EXISTS', status: 422 },
+  });
   const screen = await renderWithIntl(<SignUpForm />);
   await fill(screen, 'Str0ng-Passw0rd', 'Str0ng-Passw0rd');
 
@@ -2405,11 +2625,14 @@ test('shows a generic error when the API refuses', async () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check
 pnpm dev
 ```
+
 Open `/sign-up` (and `/fr/sign-up`):
+
 1. Submit empty → translated errors, focus on the first field.
 2. Type a password → the strength bar and label update live.
 3. Submit valid data → **Check your email**; the terminal prints the email with the verification link, and `.emails/` contains a JSON file.
@@ -2431,6 +2654,7 @@ git switch main && git pull && git switch -c feat/s2-t07-verify-email
 ### 1. Resend form (expired / invalid link)
 
 📄 **Create `src/components/auth/resend-verification-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2464,7 +2688,12 @@ export function ResendVerificationForm() {
     setSent(true); // identical outcome for unknown addresses
   }
 
-  if (sent) return <p className="text-sm text-green-600" role="status">{t('resendSent')}</p>;
+  if (sent)
+    return (
+      <p className="text-sm text-green-600" role="status">
+        {t('resendSent')}
+      </p>
+    );
 
   return (
     <Form {...form}>
@@ -2476,6 +2705,7 @@ export function ResendVerificationForm() {
   );
 }
 ```
+
 > 🔎 We reuse `forgotPasswordSchema` (just `{ email }`) — no new schema needed.
 
 ### 2. The page
@@ -2483,6 +2713,7 @@ export function ResendVerificationForm() {
 Better Auth redirects to our `callbackURL` after the user clicks the link: **success** → session cookie set (auto sign-in) and no query; **failure** → `?error=invalid_token` (or similar).
 
 📄 **Create `src/app/[locale]/(auth)/verify-email/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -2535,17 +2766,21 @@ export default async function VerifyEmailPage({
   );
 }
 ```
-> ℹ️ This page intentionally does **not** call `requireGuest()`: right after verification the user *is* signed in.
+
+> ℹ️ This page intentionally does **not** call `requireGuest()`: right after verification the user _is_ signed in.
 
 ### ✅ Verify
+
 ```bash
 pnpm dev
 ```
+
 1. Sign up → copy the link from the terminal (or `.emails/*.json` → `links`) → open it → **Email verified** → **Continue to dashboard**.
 2. Studio: `user.email_verified = true`, one `session` row.
 3. Open the **same link again** → error state (token is single-use) with the resend form.
 4. Tamper with `token=` in the URL → error state.
 5. Sign up, wait / change `expiresIn` temporarily to `5` seconds → link expired → error state. Revert.
+
 ```bash
 pnpm check
 ```
@@ -2565,6 +2800,7 @@ git switch main && git pull && git switch -c feat/s2-t08-sign-in-out
 ### 1. Sign-in form
 
 📄 **Create `src/components/auth/sign-in-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2623,7 +2859,10 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
         <TextField name="email" label={t('email')} type="email" autoComplete="email" />
         <PasswordField name="password" label={t('password')} autoComplete="current-password" />
         <div className="text-end text-sm">
-          <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground underline">
+          <Link
+            href="/forgot-password"
+            className="text-muted-foreground hover:text-foreground underline"
+          >
             {t('forgot')}
           </Link>
         </div>
@@ -2633,11 +2872,13 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   );
 }
 ```
+
 > 🔒 Why no `callbackURL` in `signIn.email`? We navigate ourselves with the already-sanitised value. Letting the SDK redirect would mean trusting another layer with an attacker-controlled string.
 
 ### 2. The page (with `callbackUrl` sanitising)
 
 📄 **Rewrite `src/app/[locale]/(auth)/sign-in/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -2682,6 +2923,7 @@ export default async function SignInPage({
 ### 3. User menu with sign-out
 
 📄 **Rewrite `src/components/layout/user-menu.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2742,11 +2984,13 @@ export function UserMenu({ user }: Props) {
   );
 }
 ```
+
 (The "Account" link 404s until S2-T12.)
 
 ### 4. The app layout reads the session
 
 📄 **Rewrite `src/app/[locale]/(app)/layout.tsx`:**
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
@@ -2795,9 +3039,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm dev
 ```
+
 1. Sign in with `demo@example.com` / `Demo-Password-123` (from `pnpm db:seed`) → lands on `/dashboard`; the header shows an avatar with initials.
 2. Wrong password → "Invalid email or password." (same text for an unknown email).
 3. Sign up a new user but **don't verify**, then sign in → "Please verify your email first…" and a **new email** appears in the terminal.
@@ -2821,6 +3067,7 @@ git switch main && git pull && git switch -c feat/s2-t09-password-reset
 ### 1. Notify the user when the password changes
 
 📄 **Edit `src/libs/Auth.ts`** — import `sendPasswordChangedEmail` and add inside `emailAndPassword`:
+
 ```ts
       // 🔍 `onPasswordReset` exists in recent versions; check the docs for your version
       onPasswordReset: async ({ user }, request) => {
@@ -2831,6 +3078,7 @@ git switch main && git pull && git switch -c feat/s2-t09-password-reset
 ### 2. Forms
 
 📄 **Create `src/components/auth/forgot-password-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2888,7 +3136,9 @@ export function ForgotPasswordForm() {
   );
 }
 ```
+
 📄 **Create `src/components/auth/reset-password-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2939,18 +3189,24 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <PasswordField name="password" label={t('newPassword')} autoComplete="new-password" />
           <PasswordStrength name="password" />
         </div>
-        <PasswordField name="confirmPassword" label={t('confirmPassword')} autoComplete="new-password" />
+        <PasswordField
+          name="confirmPassword"
+          label={t('confirmPassword')}
+          autoComplete="new-password"
+        />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
     </Form>
   );
 }
 ```
+
 > 🔎 `PasswordStrength` reads its label from `auth.signUp.*` — that's fine, it's a shared widget.
 
 ### 3. Pages
 
 📄 **Create `src/app/[locale]/(auth)/forgot-password/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -2958,7 +3214,11 @@ import { ForgotPasswordForm } from '@/components/auth/forgot-password-form';
 import { requireGuest } from '@/data/session';
 import { Link } from '@/i18n/navigation';
 
-export default async function ForgotPasswordPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function ForgotPasswordPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
   await requireGuest();
@@ -2980,7 +3240,9 @@ export default async function ForgotPasswordPage({ params }: { params: Promise<{
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/(auth)/reset-password/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3028,6 +3290,7 @@ export default async function ResetPasswordPage({
 ### 4. Integration tests with the real auth stack (in-memory DB)
 
 📄 **Create `tests/utils/auth.ts`:**
+
 ```ts
 import { expect, vi } from 'vitest';
 
@@ -3073,7 +3336,9 @@ export async function signIn(auth: TestAuth, email: string, password = TEST_PASS
   return { response, headers: cookieHeaderFrom(response) };
 }
 ```
+
 📄 **Create `tests/integration/auth.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -3083,14 +3348,8 @@ import { createAuth } from '@/libs/Auth';
 import { setEmailTransport } from '@/libs/email';
 import { MemoryTransport } from '@/libs/email/memory-transport';
 
+import { firstLink, signIn, signUpAndVerify, TEST_PASSWORD, tokenFromLink } from '../utils/auth';
 import { createTestDb, type TestDb } from '../utils/test-db';
-import {
-  firstLink,
-  signIn,
-  signUpAndVerify,
-  TEST_PASSWORD,
-  tokenFromLink,
-} from '../utils/auth';
 
 let db: TestDb;
 let destroy: () => Promise<void>;
@@ -3134,7 +3393,9 @@ describe('sign-up and email verification', () => {
       auth.api.signInEmail({ body: { email, password: TEST_PASSWORD } }),
     ).rejects.toMatchObject({ body: { code: 'EMAIL_NOT_VERIFIED' } });
 
-    await auth.api.verifyEmail({ query: { token: tokenFromLink(firstLink(transport.last(email))) } });
+    await auth.api.verifyEmail({
+      query: { token: tokenFromLink(firstLink(transport.last(email))) },
+    });
 
     const { response } = await signIn(auth, email);
     expect(response.status).toBe(200);
@@ -3168,28 +3429,38 @@ describe('password reset', () => {
     expect(await db.select().from(session).where(eq(session.userId, row!.id))).toHaveLength(0);
 
     // old password dead, new one works
-    await expect(auth.api.signInEmail({ body: { email, password: TEST_PASSWORD } })).rejects.toThrow();
+    await expect(
+      auth.api.signInEmail({ body: { email, password: TEST_PASSWORD } }),
+    ).rejects.toThrow();
     expect((await signIn(auth, email, newPassword)).response.status).toBe(200);
 
     // the token cannot be reused
-    await expect(auth.api.resetPassword({ body: { newPassword: 'Another-Passw0rd-1', token } })).rejects.toThrow();
+    await expect(
+      auth.api.resetPassword({ body: { newPassword: 'Another-Passw0rd-1', token } }),
+    ).rejects.toThrow();
   });
 
   it('answers identically for unknown emails and sends nothing', async () => {
-    await auth.api.requestPasswordReset({ body: { email: nextEmail(), redirectTo: '/reset-password' } });
+    await auth.api.requestPasswordReset({
+      body: { email: nextEmail(), redirectTo: '/reset-password' },
+    });
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(transport.outbox).toHaveLength(0);
   });
 });
 ```
+
 > 🔍 These tests touch Better Auth's server API directly. If a method name differs in your version (e.g. `forgetPassword`), fix the name — the **assertions** (unverified → blocked, token single-use, sessions revoked) are the contract that must keep holding.
 
 ### ✅ Verify
+
 ```bash
 pnpm test                     # integration tests included (first run may take a few seconds)
 pnpm dev
 ```
+
 Manual flow:
+
 1. `/forgot-password` → enter `demo@example.com` → "Check your inbox" → link in the terminal.
 2. Enter an **unknown** email → exactly the same confirmation, and **no** email in the terminal.
 3. Open the link → `/reset-password?token=…` → choose a new password (weak ones are rejected) → toast → sign in works with the new password only.
@@ -3197,6 +3468,7 @@ Manual flow:
 5. A "Password changed" email is printed after the reset.
 6. In Studio, all other `session` rows of that user disappeared.
 7. Run `pnpm db:reset` afterwards to restore the demo password.
+
 ```bash
 pnpm check
 ```
@@ -3216,6 +3488,7 @@ git switch main && git pull && git switch -c feat/s2-t11-protected-dashboard
 ### 1. The dashboard page calls the guard itself
 
 📄 **Rewrite `src/app/[locale]/(app)/dashboard/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3233,11 +3506,13 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   return <PageHeader title={t('title')} description={t('welcome', { name: user.name })} />;
 }
 ```
+
 Remove the temporary `'src/data/**/*.ts'` Knip entry — everything in `src/data` is imported now (if `getSessionOrThrow`/`withAuth` are flagged as unused exports, they're consumed in S2-T12; keep the entry until then).
 
 ### 2. Unit tests for the guards — **without** the proxy
 
 📄 **Create `src/data/session.test.ts`:**
+
 ```ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -3258,7 +3533,10 @@ vi.mock('@/i18n/navigation', () => ({ redirect: redirectMock }));
 import { getSessionOrThrow, requireGuest, requireSession } from './session';
 import { withAuth } from './with-auth';
 
-const verified = { user: { id: 'u1', name: 'Ada', email: 'ada@example.com', emailVerified: true }, session: { id: 's1' } };
+const verified = {
+  user: { id: 'u1', name: 'Ada', email: 'ada@example.com', emailVerified: true },
+  session: { id: 's1' },
+};
 
 beforeEach(() => {
   getSessionMock.mockReset();
@@ -3278,7 +3556,10 @@ describe('requireSession (no proxy involved)', () => {
   });
 
   it('rejects sessions of unverified users', async () => {
-    getSessionMock.mockResolvedValue({ ...verified, user: { ...verified.user, emailVerified: false } });
+    getSessionMock.mockResolvedValue({
+      ...verified,
+      user: { ...verified.user, emailVerified: false },
+    });
     await expect(requireSession()).rejects.toThrow('REDIRECT');
   });
 
@@ -3316,7 +3597,10 @@ describe('getSessionOrThrow / withAuth', () => {
 
   it('withAuth passes the session to the handler', async () => {
     getSessionMock.mockResolvedValue(verified);
-    const handler = vi.fn(async (input: { a: number }, ctx: { session: unknown }) => ({ input, ctx }));
+    const handler = vi.fn(async (input: { a: number }, ctx: { session: unknown }) => ({
+      input,
+      ctx,
+    }));
     const result = await withAuth(handler)({ a: 1 });
     expect(result.input).toEqual({ a: 1 });
     expect(result.ctx.session).toBe(verified);
@@ -3327,6 +3611,7 @@ describe('getSessionOrThrow / withAuth', () => {
 ### 3. "Every protected page calls a guard" — enforced by a test (risk R-05)
 
 📄 **Create `src/data/guard-coverage.test.ts`:**
+
 ```ts
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -3342,18 +3627,23 @@ it('every page under (app) calls requireSession() itself', () => {
 
   expect(pages.length).toBeGreaterThan(0);
 
-  const unguarded = pages.filter((file) => !/require(Session|Admin)\(/.test(readFileSync(file, 'utf8')));
+  const unguarded = pages.filter(
+    (file) => !/require(Session|Admin)\(/.test(readFileSync(file, 'utf8')),
+  );
 
   // Layouts are NOT re-rendered on client navigations — a layout-only guard is not a guard.
   expect(unguarded, `Pages without a guard:\n${unguarded.join('\n')}`).toEqual([]);
 });
 ```
+
 > 🔎 When Sprint 4 adds `requireAdmin()` for `(admin)` pages, extend this test with a second root.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 ```
+
 Mutation check (proves the test has teeth): remove the `requireSession()` line from the dashboard page → `pnpm test` fails listing that file → restore it.
 
 Browser check: sign in, open `/dashboard` → "Welcome back, Demo User". Delete the session cookie in DevTools and reload → redirected to sign-in. **Forge** a cookie (`better-auth.session_token=fake`) and reload → the **proxy lets you through (cookie present) but the page still redirects to sign-in** — that's the authoritative layer doing its job.
@@ -3376,24 +3666,28 @@ mkdir -p src/components/account "src/app/[locale]/(app)/dashboard/account/profil
 `createAction` (Sprint 1) dropped `fieldErrors` carried by `ValidationError`. Fix it:
 
 📄 **Edit `src/utils/action.ts`** — import `ValidationError` and replace the `AppError` branch:
+
 ```ts
 import { AppError, ValidationError } from '@/libs/errors';
 ```
+
 ```ts
-      if (error instanceof AppError) {
-        return {
-          ok: false,
-          error: {
-            code: error.code,
-            messageKey: error.messageKey,
-            ...(error instanceof ValidationError && error.fieldErrors
-              ? { fieldErrors: error.fieldErrors }
-              : {}),
-          },
-        };
-      }
+if (error instanceof AppError) {
+  return {
+    ok: false,
+    error: {
+      code: error.code,
+      messageKey: error.messageKey,
+      ...(error instanceof ValidationError && error.fieldErrors
+        ? { fieldErrors: error.fieldErrors }
+        : {}),
+    },
+  };
+}
 ```
+
 📄 **Add a test to `src/utils/action.test.ts`:**
+
 ```ts
 import { ConflictError, ValidationError } from '@/libs/errors';
 
@@ -3411,15 +3705,19 @@ it('forwards field errors thrown as ValidationError', async () => {
   });
 });
 ```
+
 (Merge the import with the existing `ConflictError` import.)
 
 ### 2. Schemas
 
 📄 **Edit `src/validations/auth.ts`** — export the small building blocks at the bottom:
+
 ```ts
 export { email as emailField, name as nameField, required as requiredField };
 ```
+
 📄 **Create `src/validations/account.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -3445,14 +3743,15 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;
 ```
+
 > If Zod complains that `refine` makes `.shape` unavailable — we don't use `.shape`, so nothing to change.
 
 ### 3. Server-side helpers
 
 📄 **Create `src/data/request.ts`** — rebuild a `Request` from the current headers (so emails sent from actions pick the visitor's language):
+
 ```ts
 import 'server-only';
-
 import { headers } from 'next/headers';
 
 import { Env } from '@/libs/Env';
@@ -3461,10 +3760,11 @@ export async function currentRequest(): Promise<Request> {
   return new Request(Env.NEXT_PUBLIC_APP_URL, { headers: new Headers(await headers()) });
 }
 ```
+
 📄 **Create `src/libs/auth-api-errors.ts`:**
+
 ```ts
 import 'server-only';
-
 import { APIError } from 'better-auth/api';
 
 import {
@@ -3487,10 +3787,16 @@ export function mapAuthApiError(error: unknown): unknown {
     });
   }
   if (code === 'PASSWORD_TOO_SHORT') {
-    return new ValidationError({ fieldErrors: { newPassword: ['validation.passwordMin'] }, cause: error });
+    return new ValidationError({
+      fieldErrors: { newPassword: ['validation.passwordMin'] },
+      cause: error,
+    });
   }
   if (code === 'PASSWORD_TOO_LONG') {
-    return new ValidationError({ fieldErrors: { newPassword: ['validation.passwordMax'] }, cause: error });
+    return new ValidationError({
+      fieldErrors: { newPassword: ['validation.passwordMax'] },
+      cause: error,
+    });
   }
 
   switch (error.statusCode) {
@@ -3505,11 +3811,13 @@ export function mapAuthApiError(error: unknown): unknown {
   }
 }
 ```
+
 > 🔍 `APIError` exposes `statusCode` and `body.code` in current versions; adjust if yours differ.
 
 ### 4. The Server Action (password change + notification email)
 
 📄 **Create `src/actions/account.ts`:**
+
 ```ts
 'use server';
 
@@ -3517,9 +3825,9 @@ import { headers } from 'next/headers';
 
 import { currentRequest } from '@/data/request';
 import { withAuth } from '@/data/with-auth';
-import { sendPasswordChangedEmail } from '@/libs/auth-emails';
-import { mapAuthApiError } from '@/libs/auth-api-errors';
 import { auth } from '@/libs/Auth';
+import { mapAuthApiError } from '@/libs/auth-api-errors';
+import { sendPasswordChangedEmail } from '@/libs/auth-emails';
 import { createAction } from '@/utils/action';
 import { runInBackground } from '@/utils/background';
 import { changePasswordSchema } from '@/validations/account';
@@ -3550,11 +3858,13 @@ export async function changePassword(input: unknown) {
   return handleChangePassword(input);
 }
 ```
+
 > 🔎 Why a Server Action and not the client SDK? We need a **server-side side effect** (notification email) and want `createAction`'s typed errors. The client SDK is used where Better Auth alone is enough.
 
 ### 5. A helper to show action errors in forms
 
 📄 **Create `src/utils/form-errors.ts`:**
+
 ```ts
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
 
@@ -3578,6 +3888,7 @@ export function applyActionError<T extends FieldValues>(
 ### 6. Components
 
 📄 **Create `src/components/account/profile-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3628,7 +3939,9 @@ export function ProfileForm({ name }: { name: string }) {
   );
 }
 ```
+
 📄 **Create `src/components/account/change-password-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3678,7 +3991,11 @@ export function ChangePasswordForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
-        <PasswordField name="currentPassword" label={t('current')} autoComplete="current-password" />
+        <PasswordField
+          name="currentPassword"
+          label={t('current')}
+          autoComplete="current-password"
+        />
         <div className="space-y-2">
           <PasswordField name="newPassword" label={t('new')} autoComplete="new-password" />
           <PasswordStrength name="newPassword" />
@@ -3690,7 +4007,10 @@ export function ChangePasswordForm() {
           render={({ field }) => (
             <FormItem className="flex items-center gap-2">
               <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} />
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                />
               </FormControl>
               <FormLabel className="font-normal">{t('revokeOthers')}</FormLabel>
             </FormItem>
@@ -3702,7 +4022,9 @@ export function ChangePasswordForm() {
   );
 }
 ```
+
 📄 **Create `src/components/account/account-nav.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3745,6 +4067,7 @@ export function AccountNav() {
 ### 7. Layout and pages
 
 📄 **Create `src/app/[locale]/(app)/dashboard/account/layout.tsx`:**
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -3760,7 +4083,9 @@ export default function AccountLayout({ children }: { children: ReactNode }) {
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/dashboard/account/profile/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3787,7 +4112,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ locale
   );
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/dashboard/account/security/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3816,21 +4143,27 @@ export default async function SecurityPage({ params }: { params: Promise<{ local
   );
 }
 ```
+
 Add an **Account** link to the sidebar in `(app)/layout.tsx`:
+
 ```tsx
 const links: readonly NavLink[] = [
   { href: '/dashboard', label: t('nav.dashboard') },
   { href: '/dashboard/account/profile', label: t('nav.account') },
 ];
 ```
+
 Remove the remaining temporary Knip entry for `src/data/**/*.ts` (everything is consumed).
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser && pnpm check
 pnpm dev
 ```
+
 Sign in as the demo user:
+
 1. **Profile:** change the name → toast; the avatar initials and dashboard greeting update.
 2. **Security → password:** wrong current password → error **under** "Current password"; weak new password → translated policy errors; mismatch → error under confirmation.
 3. Valid change (leave "sign me out of other devices" ticked) → toast; a "Your password was changed" email is printed; sign out and sign in with the new password works, the old one doesn't. (`pnpm db:reset` restores the demo password.)
@@ -3852,6 +4185,7 @@ git switch main && git pull && git switch -c feat/s2-t13-email-sessions
 ### 1. Change email (profile page)
 
 📄 **Create `src/components/account/change-email-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -3908,7 +4242,9 @@ export function ChangeEmailForm() {
   );
 }
 ```
+
 📄 **Edit the profile page** — add a second card under the first (import `ChangeEmailForm`):
+
 ```tsx
 <Card>
   <CardHeader>
@@ -3920,11 +4256,13 @@ export function ChangeEmailForm() {
   </CardContent>
 </Card>
 ```
+
 with `const tEmail = await getTranslations('account.email');` and wrap both cards in `<div className="space-y-6">`.
 
 ### 2. A tiny user-agent describer (no dependency)
 
 📄 **Create `src/utils/user-agent.ts`:**
+
 ```ts
 /** "Chrome on Windows". Deliberately simple — it's a hint for recognising your own devices. */
 export function describeUserAgent(userAgent: string | null | undefined): string {
@@ -3957,16 +4295,27 @@ export function describeUserAgent(userAgent: string | null | undefined): string 
   return `${browser} on ${os}`;
 }
 ```
+
 📄 **Create `src/utils/user-agent.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
 import { describeUserAgent } from './user-agent';
 
 it.each([
-  ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36', 'Chrome on Windows'],
-  ['Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/126.0 Safari/537.36 Edg/126.0', 'Edge on Windows'],
-  ['Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15', 'Safari on macOS'],
+  [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36',
+    'Chrome on Windows',
+  ],
+  [
+    'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 Chrome/126.0 Safari/537.36 Edg/126.0',
+    'Edge on Windows',
+  ],
+  [
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 Version/17.5 Safari/605.1.15',
+    'Safari on macOS',
+  ],
   ['Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0', 'Firefox on Linux'],
   [null, 'Unknown device'],
 ])('describes %s', (ua, expected) => {
@@ -3977,9 +4326,9 @@ it.each([
 ### 3. Session data for the page (tokens never leave the server)
 
 📄 **Create `src/data/sessions.ts`:**
+
 ```ts
 import 'server-only';
-
 import { headers } from 'next/headers';
 
 import { auth } from '@/libs/Auth';
@@ -4015,6 +4364,7 @@ export async function listUserSessions(): Promise<SessionSummary[]> {
 ### 4. Actions: revoke by **id** (the token is resolved server-side)
 
 📄 **Append to `src/actions/account.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -4059,11 +4409,13 @@ export async function revokeOtherSessions() {
   return handleRevokeOthers({});
 }
 ```
+
 (Merge the `zod`/`errors` imports with the existing ones at the top of the file.)
 
 ### 5. The sessions card
 
 📄 **Create `src/components/account/sessions-list.tsx`:**
+
 ```tsx
 'use client';
 
@@ -4074,8 +4426,8 @@ import { toast } from 'sonner';
 import { revokeOtherSessions, revokeSession } from '@/actions/account';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useRouter } from '@/i18n/navigation';
 import type { SessionSummary } from '@/data/sessions';
+import { useRouter } from '@/i18n/navigation';
 
 export function SessionsList({ sessions }: { sessions: SessionSummary[] }) {
   const t = useTranslations('account.sessions');
@@ -4091,7 +4443,11 @@ export function SessionsList({ sessions }: { sessions: SessionSummary[] }) {
         toast.success(t('revoked'));
         router.refresh();
       } else if (result.error) {
-        toast.error(tErrors.has(result.error.messageKey as never) ? tErrors(result.error.messageKey as never) : tErrors('errors.internal'));
+        toast.error(
+          tErrors.has(result.error.messageKey as never)
+            ? tErrors(result.error.messageKey as never)
+            : tErrors('errors.internal'),
+        );
       }
     });
   }
@@ -4111,7 +4467,10 @@ export function SessionsList({ sessions }: { sessions: SessionSummary[] }) {
               <p className="text-muted-foreground truncate text-xs">
                 {item.ip ? `${item.ip} · ` : ''}
                 {t('lastActive', {
-                  date: format.dateTime(new Date(item.updatedAt), { dateStyle: 'medium', timeStyle: 'short' }),
+                  date: format.dateTime(new Date(item.updatedAt), {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  }),
                 })}
               </p>
             </div>
@@ -4132,7 +4491,11 @@ export function SessionsList({ sessions }: { sessions: SessionSummary[] }) {
       {others.length === 0 ? (
         <p className="text-muted-foreground text-sm">{t('empty')}</p>
       ) : (
-        <Button variant="outline" disabled={pending} onClick={() => run(() => revokeOtherSessions())}>
+        <Button
+          variant="outline"
+          disabled={pending}
+          onClick={() => run(() => revokeOtherSessions())}
+        >
           {t('revokeOthers')}
         </Button>
       )}
@@ -4140,7 +4503,9 @@ export function SessionsList({ sessions }: { sessions: SessionSummary[] }) {
   );
 }
 ```
+
 📄 **Edit `security/page.tsx`** — add the card (import `SessionsList` and `listUserSessions`):
+
 ```tsx
 const sessions = await listUserSessions();
 const tSessions = await getTranslations('account.sessions');
@@ -4153,7 +4518,7 @@ const tSessions = await getTranslations('account.sessions');
   <CardContent>
     <SessionsList sessions={sessions} />
   </CardContent>
-</Card>
+</Card>;
 ```
 
 ### 6. Make the DAL truly authoritative: bypass the cookie cache
@@ -4161,17 +4526,20 @@ const tSessions = await getTranslations('account.sessions');
 Better Auth's `cookieCache` stores a signed copy of the session in a cookie so repeated reads skip the database — which also means a **revoked** session could still look valid for up to 5 minutes. For our guard that's unacceptable:
 
 📄 **Edit `src/data/session.ts`:**
+
 ```ts
 export const getSession = cache(async () =>
   // 🔍 disableCookieCache: always validate against the database (revocation takes effect immediately)
   auth.api.getSession({ headers: await headers(), query: { disableCookieCache: true } }),
 );
 ```
+
 (`cache()` still dedupes the lookup to **one query per request**.)
 
 ### 7. Integration tests: revocation, expiry, ownership
 
 📄 **Create `tests/integration/account.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -4214,7 +4582,10 @@ describe('sessions', () => {
     expect(sessions.length).toBeGreaterThanOrEqual(2);
 
     const phoneSession = await auth.api.getSession({ headers: phone.headers, ...fresh });
-    await auth.api.revokeSession({ body: { token: phoneSession!.session.token }, headers: laptop.headers });
+    await auth.api.revokeSession({
+      body: { token: phoneSession!.session.token },
+      headers: laptop.headers,
+    });
 
     expect(await auth.api.getSession({ headers: phone.headers, ...fresh })).toBeNull();
     expect(await auth.api.getSession({ headers: laptop.headers, ...fresh })).not.toBeNull();
@@ -4226,7 +4597,10 @@ describe('sessions', () => {
     const device = await signIn(auth, email);
 
     const current = await auth.api.getSession({ headers: device.headers, ...fresh });
-    await db.update(session).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(session.id, current!.session.id));
+    await db
+      .update(session)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(session.id, current!.session.id));
 
     expect(await auth.api.getSession({ headers: device.headers, ...fresh })).toBeNull();
   });
@@ -4247,10 +4621,12 @@ describe('sessions', () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. Sign in from **two browsers** (e.g. Edge + Chrome, or one in a private window).
 2. In browser A → Security → **Active sessions** lists both; "This device" is marked and has no revoke button.
 3. Revoke browser B's session → within one click+reload B is back at sign-in (**immediately**, not after 5 minutes).
@@ -4261,7 +4637,7 @@ pnpm dev
 
 ---
 
-## 🎫 S2-T14 — Delete account *(stretch — P1, may slip)*
+## 🎫 S2-T14 — Delete account _(stretch — P1, may slip)_
 
 **Branch:** `feat/s2-t14-delete-account` · **Story:** US-026 · **2 SP**
 
@@ -4272,6 +4648,7 @@ git switch main && git pull && git switch -c feat/s2-t14-delete-account
 ### 1. Future hook for organizations
 
 📄 **Edit `src/libs/Auth.ts`:**
+
 ```ts
       deleteUser: {
         enabled: true,
@@ -4279,11 +4656,13 @@ git switch main && git pull && git switch -c feat/s2-t14-delete-account
         // of an organization that still has other members.
       },
 ```
+
 The sessions are already "fresh" for 10 minutes (`session.freshAge`); Better Auth rejects deletion for older sessions, which gives us the **re-authentication** requirement.
 
 ### 2. Schema with a **translated** confirmation word
 
 📄 **Append to `src/validations/account.ts`:**
+
 ```ts
 export function createDeleteAccountSchema(phrase: string) {
   return z
@@ -4300,6 +4679,7 @@ export type DeleteAccountInput = z.infer<ReturnType<typeof createDeleteAccountSc
 ### 3. The dialog
 
 📄 **Create `src/components/account/delete-account-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -4385,7 +4765,9 @@ export function DeleteAccountForm() {
   );
 }
 ```
+
 📄 **Edit `security/page.tsx`** — add a danger card:
+
 ```tsx
 const tDanger = await getTranslations('account.danger');
 // …
@@ -4397,14 +4779,16 @@ const tDanger = await getTranslations('account.danger');
   <CardContent>
     <DeleteAccountForm />
   </CardContent>
-</Card>
+</Card>;
 ```
 
 ### 4. Cascade test
 
 📄 **Append to `tests/integration/account.test.ts`:**
+
 ```ts
 import { account } from '@/db/schema';
+
 import { TEST_PASSWORD } from '../utils/auth';
 
 describe('account deletion', () => {
@@ -4423,13 +4807,16 @@ describe('account deletion', () => {
   });
 });
 ```
+
 (Move the two new imports to the top of the file.)
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm check
 pnpm dev
 ```
+
 1. Create a throw-away account, verify it, open **Security → Delete account**.
 2. Wrong confirmation word → error under the first field; wrong password → "current password incorrect"-style error.
 3. Correct values → toast, redirect to `/`, and `/dashboard` redirects to sign-in. In Studio the `user`, `session`, `account` rows are gone.
@@ -4439,7 +4826,7 @@ pnpm dev
 
 ---
 
-## 🎫 S2-T16 — Auth rate limiting *(done before the E2E suite)*
+## 🎫 S2-T16 — Auth rate limiting _(done before the E2E suite)_
 
 **Branch:** `feat/s2-t16-rate-limit` · **Story:** US-027 · **1 SP**
 
@@ -4450,16 +4837,20 @@ git switch main && git pull && git switch -c feat/s2-t16-rate-limit
 ### 1. Switch + rules
 
 📄 **Edit `src/libs/Env.ts`:**
+
 ```ts
     // Better Auth rate limiting. "off" is only for local development.
     AUTH_RATE_LIMIT: z.enum(['on', 'off']).default('on'),
 ```
+
 ```ts
     AUTH_RATE_LIMIT: process.env.AUTH_RATE_LIMIT,
 ```
+
 `.env.example`: `AUTH_RATE_LIMIT=on` · `.env.development`: `AUTH_RATE_LIMIT=off` · `vitest.config.ts` → `test.env`: `AUTH_RATE_LIMIT: 'off'`.
 
 📄 **Create `src/libs/auth-rate-limit.ts`:**
+
 ```ts
 /** Per client IP + endpoint, window in seconds. Stricter than the global default on purpose. */
 export const AUTH_RATE_LIMIT_RULES = {
@@ -4473,7 +4864,9 @@ export const AUTH_RATE_LIMIT_RULES = {
 
 export const AUTH_RATE_LIMIT_DEFAULT = { window: 60, max: 100 } as const;
 ```
+
 📄 **Create `src/libs/auth-rate-limit.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -4487,7 +4880,9 @@ it('sensitive endpoints are much stricter than the default', () => {
   expect(AUTH_RATE_LIMIT_RULES['/sign-in/email'].max).toBe(5);
 });
 ```
+
 📄 **Edit `src/libs/Auth.ts`** — import the rules and add (before `plugins`):
+
 ```ts
     rateLimit: {
       enabled: Env.AUTH_RATE_LIMIT === 'on',
@@ -4496,24 +4891,31 @@ it('sensitive endpoints are much stricter than the default', () => {
       customRules: { ...AUTH_RATE_LIMIT_RULES },
     },
 ```
+
 and extend `advanced`:
+
 ```ts
       // Client IP comes from this header. On Vercel it is set by the platform and can't be spoofed;
       // behind your own proxy make sure it overwrites any client-supplied value.
       ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
 ```
+
 > 🔍 Check the exact `rateLimit` option names (`customRules`, `storage`) and the `advanced.ipAddress` shape in your version.
 
-Add a note to `docs/guides/auth.md` (created in the wrap-up): *"Per-IP limits only protect against single-source abuse. Arcjet (Sprint 6) adds per-email fingerprinting and bot detection."*
+Add a note to `docs/guides/auth.md` (created in the wrap-up): _"Per-IP limits only protect against single-source abuse. Arcjet (Sprint 6) adds per-email fingerprinting and bot detection."_
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 ```
+
 The behaviour is proven by the E2E rate-limit spec in the next ticket. Quick manual check with the limiter on:
+
 ```bash
 AUTH_RATE_LIMIT=on pnpm dev       # 🪟 cmd.exe: set AUTH_RATE_LIMIT=on&& pnpm dev
 ```
+
 Submit the sign-in form with a wrong password **6 times in a minute** → the form shows "Too many requests. Please slow down." Wait a minute → works again. Studio → `rate_limit` has rows.
 
 **🚢 Ship** — branch `feat/s2-t16-rate-limit` · message: `feat(auth): add database-backed rate limiting for sensitive endpoints`
@@ -4534,6 +4936,7 @@ mkdir -p e2e/helpers
 ### 1. Playwright config: database + app servers, deterministic env
 
 📄 **Rewrite `playwright.config.ts`:**
+
 ```ts
 import { defineConfig, devices } from '@playwright/test';
 
@@ -4558,17 +4961,31 @@ export default defineConfig({
     ? [
         // CI: fresh embedded database + the PRODUCTION build
         { command: 'pnpm db:server', port: 5433, reuseExistingServer: false, timeout: 120_000 },
-        { command: 'pnpm build && pnpm start', url: baseURL, reuseExistingServer: false, timeout: 300_000, env: appEnv },
+        {
+          command: 'pnpm build && pnpm start',
+          url: baseURL,
+          reuseExistingServer: false,
+          timeout: 300_000,
+          env: appEnv,
+        },
       ]
     : // Local: `pnpm dev` already starts the database. Reuses a running dev server if there is one.
-      { command: 'pnpm dev', url: baseURL, reuseExistingServer: true, timeout: 180_000, env: appEnv },
+      {
+        command: 'pnpm dev',
+        url: baseURL,
+        reuseExistingServer: true,
+        timeout: 180_000,
+        env: appEnv,
+      },
 });
 ```
+
 > 🔎 If you reuse an already running `pnpm dev`, it won't have `EMAIL_TRANSPORT`/`AUTH_RATE_LIMIT` from this config. In development the console transport is the default anyway; the **rate-limit spec only runs with `CI=1`** (see below).
 
 ### 2. Helpers
 
 📄 **Create `e2e/helpers/inbox.ts`:**
+
 ```ts
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -4598,7 +5015,10 @@ function find(to: string, since: number): CapturedEmail | undefined {
 }
 
 /** Waits for an email to `to` created at/after `since` (ms epoch). */
-export async function waitForEmail(to: string, { since, timeout = 15_000 }: { since: number; timeout?: number }) {
+export async function waitForEmail(
+  to: string,
+  { since, timeout = 15_000 }: { since: number; timeout?: number },
+) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     const email = find(to, since);
@@ -4608,7 +5028,9 @@ export async function waitForEmail(to: string, { since, timeout = 15_000 }: { si
   throw new Error(`No email for ${to} within ${timeout} ms (is EMAIL_TRANSPORT=console?)`);
 }
 ```
+
 📄 **Create `e2e/helpers/users.ts`:**
+
 ```ts
 import { type APIRequestContext, expect } from '@playwright/test';
 
@@ -4619,10 +5041,15 @@ export const PASSWORD = 'Str0ng-Passw0rd-E2E!';
 export const randomIp = () =>
   `10.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`;
 
-export const uniqueEmail = () => `e2e+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+export const uniqueEmail = () =>
+  `e2e+${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 /** Creates a user through the API (fast). Optionally verifies the email. */
-export async function createUser(request: APIRequestContext, baseURL: string, { verify = true } = {}) {
+export async function createUser(
+  request: APIRequestContext,
+  baseURL: string,
+  { verify = true } = {},
+) {
   const email = uniqueEmail();
   const ip = randomIp();
   const headers = { origin: baseURL, 'x-forwarded-for': ip };
@@ -4644,7 +5071,9 @@ export async function createUser(request: APIRequestContext, baseURL: string, { 
   return { email, password: PASSWORD };
 }
 ```
+
 📄 **Create `e2e/fixtures.ts`** — every test gets its own client IP, so the per-IP rate limits never interfere between tests:
+
 ```ts
 import { test as base } from '@playwright/test';
 
@@ -4666,6 +5095,7 @@ export { expect } from '@playwright/test';
 ### 3. The specs
 
 📄 **Create `e2e/auth.spec.ts`:**
+
 ```ts
 import type { Page } from '@playwright/test';
 
@@ -4724,7 +5154,11 @@ test('wrong password shows a generic error', async ({ page, request, baseURL }) 
   await expect(page).toHaveURL(/\/sign-in/);
 });
 
-test('an unverified user cannot sign in and gets a new link', async ({ page, request, baseURL }) => {
+test('an unverified user cannot sign in and gets a new link', async ({
+  page,
+  request,
+  baseURL,
+}) => {
   const user = await createUser(request, baseURL!, { verify: false });
   const since = Date.now();
 
@@ -4736,7 +5170,11 @@ test('an unverified user cannot sign in and gets a new link', async ({ page, req
   expect(mail.subject).toBe('Verify your email address');
 });
 
-test('forgot → reset → old password dead, new password works', async ({ page, request, baseURL }) => {
+test('forgot → reset → old password dead, new password works', async ({
+  page,
+  request,
+  baseURL,
+}) => {
   const user = await createUser(request, baseURL!);
   const since = Date.now();
 
@@ -4764,7 +5202,11 @@ test('forgot → reset → old password dead, new password works', async ({ page
   await expect(page).toHaveURL(/\/dashboard$/);
 });
 
-test('the proxy redirects anonymous visitors and remembers the destination', async ({ page, request, baseURL }) => {
+test('the proxy redirects anonymous visitors and remembers the destination', async ({
+  page,
+  request,
+  baseURL,
+}) => {
   const user = await createUser(request, baseURL!);
 
   await page.goto('/dashboard/account/security');
@@ -4822,19 +5264,25 @@ test('repeated failed sign-ins are rate limited', async ({ request, baseURL }) =
   expect(statuses).toContain(429);
 });
 ```
+
 > 🔎 Why `request` (API) to create users instead of the UI? It makes tests **fast and independent**: only `auth.spec.ts` exercises the sign-up/sign-in UI end to end. Sprint 5 adds reusable `storageState` fixtures.
 
 ### ✅ Verify
+
 ```bash
 pnpm e2e                         # local: uses (or starts) `pnpm dev`; the rate-limit test is skipped
 ```
+
 Now reproduce **exactly what CI does** (stop any running `pnpm dev` first so ports 3000 and 5433 are free):
+
 ```bash
 CI=1 pnpm e2e                    # 🪟 Git Bash syntax; cmd.exe: set CI=1&& pnpm e2e
 ```
+
 All 8 auth specs + the 5 smoke specs pass, including the rate-limit one.
 
 Sabotage checks (revert after each):
+
 - Remove `requireGuest()` from the sign-in page → no spec fails (guests aren't affected) — but remove `requireSession()` from the dashboard page **and** the cookie-forgery step in S2-T11 shows the hole; the guard-coverage unit test catches it first.
 - Change the French heading in `fr.json` → the French spec fails.
 
@@ -4847,6 +5295,7 @@ CI: the `E2E` job already runs `pnpm e2e`; with `CI=true` Playwright starts the 
 ## 🧾 Sprint 2 wrap-up
 
 **Branch:** `docs/s2-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s2-wrap-up
 ```
@@ -4854,36 +5303,41 @@ git switch main && git pull && git switch -c docs/s2-wrap-up
 ### 1. Auth guide
 
 📄 **Create `docs/guides/auth.md`:**
-````markdown
+
+```markdown
 # Authentication (Better Auth)
 
 ## Flows
-| Flow | Where |
-|---|---|
-| Sign up → verify email | `/sign-up` → email link → `/verify-email` |
-| Sign in / out | `/sign-in`, avatar menu |
-| Forgot / reset password | `/forgot-password` → email link → `/reset-password` |
-| Account | `/dashboard/account/profile`, `/dashboard/account/security` |
+
+| Flow                    | Where                                                       |
+| ----------------------- | ----------------------------------------------------------- |
+| Sign up → verify email  | `/sign-up` → email link → `/verify-email`                   |
+| Sign in / out           | `/sign-in`, avatar menu                                     |
+| Forgot / reset password | `/forgot-password` → email link → `/reset-password`         |
+| Account                 | `/dashboard/account/profile`, `/dashboard/account/security` |
 
 ## Layers (never skip the second one)
+
 1. `src/proxy.ts` — optimistic: redirects when there is **no session cookie**.
-2. `src/data/session.ts` — authoritative: `requireSession()` in **every** protected page,
-   `withAuth()` in every Server Action. Bypasses Better Auth's cookie cache so revocation is immediate.
+2. `src/data/session.ts` — authoritative: `requireSession()` in **every** protected page, `withAuth()` in every Server Action. Bypasses Better Auth's cookie cache so revocation is immediate.
 
 ## Environment
+
 | Variable | Notes |
-|---|---|
+| --- | --- |
 | `BETTER_AUTH_SECRET` | ≥ 32 chars. `pnpm setup:env` generates one into `.env.local` |
 | `NEXT_PUBLIC_APP_URL` | Base URL used in email links and as the trusted origin |
 | `EMAIL_FROM`, `RESEND_API_KEY`, `EMAIL_TRANSPORT` | See `docs/guides/email.md` below |
 | `AUTH_RATE_LIMIT` | `on` (default) / `off` (local dev only) |
 
 ## Email
+
 - Dev: links are printed in the terminal and stored in `.emails/` (git-ignored).
 - Production: set `RESEND_API_KEY` and verify your sending domain (SPF, DKIM, DMARC).
 - Production **refuses** to start sending without a transport instead of silently dropping mail.
 
 ## Security notes
+
 - Passwords: min 12 chars (policy in `src/validations/auth.ts`), hashed by Better Auth.
 - No account enumeration: identical responses for sign-up conflicts, forgot-password and resend.
 - Post-login redirects only accept same-origin relative paths (`sanitizeCallbackUrl`).
@@ -4891,35 +5345,40 @@ git switch main && git pull && git switch -c docs/s2-wrap-up
 - Per-IP rate limits only stop single-source abuse; Arcjet (Sprint 6) adds bot detection.
 
 ## Changing the schema
-After adding a Better Auth plugin: `pnpm auth:schema`, copy changes into `src/db/schema/auth.ts`,
-`pnpm db:generate`, commit the migration.
-````
+
+After adding a Better Auth plugin: `pnpm auth:schema`, copy changes into `src/db/schema/auth.ts`, `pnpm db:generate`, commit the migration.
+```
 
 ### 2. Update `AGENTS.md`
+
 **Commands** — add:
+
 ```markdown
 - `pnpm setup:env` — generates `.env.local` with a random `BETTER_AUTH_SECRET`
 - `pnpm auth:schema` — regenerate the Better Auth schema reference after plugin changes
 - `pnpm email:dev` — preview email templates
 ```
+
 **Structure** — add:
+
 ```markdown
-src/data/       data-access layer: session guards (requireSession, withAuth), tenant helpers later
-src/hooks/      client hooks             src/templates/emails/  React Email templates
-src/libs/email/ email transports         src/libs/Auth.ts (server only) · AuthClient.ts (browser)
+src/data/ data-access layer: session guards (requireSession, withAuth), tenant helpers later src/hooks/ client hooks src/templates/emails/ React Email templates src/libs/email/ email transports src/libs/Auth.ts (server only) · AuthClient.ts (browser)
 ```
+
 **Security** — add:
+
 ```markdown
-- EVERY `page.tsx` under `src/app/[locale]/(app)` calls `requireSession()`; Server Actions use `withAuth()`.
-  A layout is never a guard (enforced by `src/data/guard-coverage.test.ts`).
+- EVERY `page.tsx` under `src/app/[locale]/(app)` calls `requireSession()`; Server Actions use `withAuth()`. A layout is never a guard (enforced by `src/data/guard-coverage.test.ts`).
 - Never import `@/libs/Auth` in client code — use `@/libs/AuthClient`. Never read tokens/hashes in components.
 - Post-login redirects go through `sanitizeCallbackUrl`. Auth errors shown to users stay generic.
 ```
+
 ```bash
 pnpm check:agents
 ```
 
 ### 3. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 2 · **Current sprint:** Sprint 3
 - **Tables:** `user`, `session`, `account`, `verification`, `rate_limit` (migrations `0001_…`)
 - **Env vars:** `BETTER_AUTH_SECRET`, `EMAIL_FROM`, `RESEND_API_KEY`, `EMAIL_TRANSPORT`, `AUTH_RATE_LIMIT`
@@ -4930,6 +5389,7 @@ pnpm check:agents
 - **Measured:** CI duration, E2E duration
 
 Tick the checkboxes in `docs/roadmap/sprint-02-auth-core.md`, then ship:
+
 ```bash
 pnpm check
 git add -A
@@ -4946,11 +5406,13 @@ git push origin v0.1.0-alpha
 ## 🏁 Sprint 2 — Definition of Done
 
 Prove it on a **fresh clone**:
+
 ```bash
 cd "$TEMP" && git clone git@github.com:OWNER/saas-boilerplate.git s2-check && cd s2-check
 corepack enable && pnpm install && pnpm setup:env
 pnpm dev
 ```
+
 (🪟 cmd.exe: `cd %TEMP%`.)
 
 - [ ] Sign up → verification email (terminal) → link → signed in on `/dashboard`
@@ -4973,23 +5435,23 @@ git log --first-parent --oneline        # one merge per ticket
 
 ### 🎬 Sprint review — measurable acceptance
 
-| Check | Expected |
-|---|---|
-| Sign up with a new email | email in terminal; unverified sign-in blocked |
-| Click the link | signed in, on `/dashboard` |
-| Sign out, visit `/dashboard` | redirected to sign-in with `callbackUrl` |
-| 6 wrong sign-ins in a minute (limiter on) | 429 → "Too many requests…" |
-| Reset password | old sessions revoked, new password works |
-| Revoke a session in another browser | that browser loses access on its next request |
-| Forge a session cookie | proxy passes, page redirects to sign-in |
-| `pnpm e2e` | all auth specs green |
+| Check                                     | Expected                                      |
+| ----------------------------------------- | --------------------------------------------- |
+| Sign up with a new email                  | email in terminal; unverified sign-in blocked |
+| Click the link                            | signed in, on `/dashboard`                    |
+| Sign out, visit `/dashboard`              | redirected to sign-in with `callbackUrl`      |
+| 6 wrong sign-ins in a minute (limiter on) | 429 → "Too many requests…"                    |
+| Reset password                            | old sessions revoked, new password works      |
+| Revoke a session in another browser       | that browser loses access on its next request |
+| Forge a session cookie                    | proxy passes, page redirects to sign-in       |
+| `pnpm e2e`                                | all auth specs green                          |
 
 ---
 
 ## 🧯 Troubleshooting (Sprint 2)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | `Invalid environment variables … BETTER_AUTH_SECRET` | Run `pnpm setup:env` (≥ 32 chars). CI needs the dummy secret in the workflow `env:` block |
 | `server-only` error when running a script | Run it with `tsx --conditions=react-server …` (see the `db:seed` script) |
 | Better Auth CLI can't resolve `@/…` | Use the relative-import `scripts/auth-cli.ts` fallback from S2-T02 |

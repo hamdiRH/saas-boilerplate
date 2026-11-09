@@ -25,7 +25,7 @@
 The sprint file lists tasks T01…T16. A few have hidden dependencies, so we reorder them to keep every branch buildable:
 
 | Order | Ticket | Why moved |
-|---|---|---|
+| --- | --- | --- |
 | 1–2 | S1-T01, S1-T02 | DB config + client |
 | 3 | **S1-T04** (before T03) | The PGlite server must exist before migration scripts can be verified |
 | 4 | S1-T03 | Migration/reset scripts |
@@ -58,6 +58,7 @@ gh pr checks --watch                         # wait for all jobs green
 gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
+
 Each ticket ends with a **🚢 Ship** line giving the branch name and commit message to plug into this block.
 
 > 🔎 If a PR check fails, fix it **on the branch** and push again. Never weaken a check to get green.
@@ -73,6 +74,7 @@ git switch main && git pull
 pnpm install
 pnpm check            # must be green: Sprint 0 is really done
 ```
+
 In `docs/roadmap/06-project-state.md` set **Current sprint: Sprint 1**.
 
 ---
@@ -86,11 +88,13 @@ git switch -c feat/s1-t01-drizzle-config
 pnpm add drizzle-orm pg
 pnpm add -D drizzle-kit @types/pg @next/env
 ```
-> 🔎 We use **node-postgres (`pg`)** for every environment. Locally it talks to the PGlite socket server; in production it talks to Neon's **pooled TCP** connection string. One driver = one code path. *(Deviation from the sprint file's "Neon driver switch": the switch is now a pure config function, tested in S1-T02. If you later move to the Edge runtime, adopt Neon's serverless driver — 🔍 see Neon docs.)*
+
+> 🔎 We use **node-postgres (`pg`)** for every environment. Locally it talks to the PGlite socket server; in production it talks to Neon's **pooled TCP** connection string. One driver = one code path. _(Deviation from the sprint file's "Neon driver switch": the switch is now a pure config function, tested in S1-T02. If you later move to the Edge runtime, adopt Neon's serverless driver — 🔍 see Neon docs.)_
 
 ### 1. Helper script: `pnpm pin`
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -102,6 +106,7 @@ pnpm add -D drizzle-kit @types/pg @next/env
 ### 2. Env variables
 
 📄 **Edit `src/libs/Env.ts`** — extend `server` and `runtimeEnv`:
+
 ```ts
   server: {
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -112,6 +117,7 @@ pnpm add -D drizzle-kit @types/pg @next/env
     DB_SERVER_PORT: z.coerce.number().int().positive().default(5433),
   },
 ```
+
 ```ts
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
@@ -122,9 +128,11 @@ pnpm add -D drizzle-kit @types/pg @next/env
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
   },
 ```
+
 > 🪟 We default the local DB port to **5433**, not 5432, because a Postgres installed on Windows usually already owns 5432.
 
 📄 **Append to `.env.example`:**
+
 ```dotenv
 # ─── Database ───────────────────────────────────────
 # Leave empty locally: `pnpm dev` starts an embedded PGlite server on DB_SERVER_PORT.
@@ -134,7 +142,9 @@ DATABASE_URL=
 DATABASE_URL_UNPOOLED=
 DB_SERVER_PORT=5433
 ```
+
 📄 **Append to `.env.development`:**
+
 ```dotenv
 DB_SERVER_PORT=5433
 ```
@@ -142,6 +152,7 @@ DB_SERVER_PORT=5433
 ### 3. Drizzle config
 
 📄 **Create `drizzle.config.ts`:**
+
 ```ts
 import { loadEnvConfig } from '@next/env';
 import { defineConfig } from 'drizzle-kit';
@@ -164,11 +175,13 @@ export default defineConfig({
   },
 });
 ```
+
 > ✅ `process.env` is allowed in config files; our env guard only scans `src/`.
 
 ### 4. Schema helpers + a temporary table
 
 📄 **Create `src/db/schema/_helpers.ts`:**
+
 ```ts
 import { randomUUID } from 'node:crypto';
 
@@ -190,6 +203,7 @@ export const timestamps = {
 ```
 
 📄 **Create `src/db/schema/app-meta.ts`:**
+
 ```ts
 import { pgTable, text } from 'drizzle-orm/pg-core';
 
@@ -204,6 +218,7 @@ export const appMeta = pgTable('app_meta', {
 ```
 
 📄 **Create `src/db/schema/index.ts`:**
+
 ```ts
 export * from './app-meta';
 ```
@@ -211,6 +226,7 @@ export * from './app-meta';
 ### 5. Scripts + generate the first migration
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -219,7 +235,9 @@ export * from './app-meta';
   }
 }
 ```
+
 Add `pnpm db:check` to the aggregate `check` script (before `pnpm test`):
+
 ```json
 "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm check:env && pnpm check:agents && pnpm db:check && pnpm test && pnpm test:browser"
 ```
@@ -230,11 +248,13 @@ ls drizzle                # 0000_….sql + meta/
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm db:check             # "Everything's fine"
 pnpm typecheck
 pnpm dev:web 2>/dev/null || pnpm dev     # app still boots (Env accepts missing DATABASE_URL)
 ```
+
 (`dev:web` is created in S1-T04; for now `pnpm dev` is fine — Ctrl+C after it boots.)
 
 Open the generated SQL and confirm: table `app_meta`, `timestamp with time zone` columns.
@@ -254,6 +274,7 @@ git switch main && git pull && git switch -c feat/s1-t02-db-client
 ### 1. Pure, testable pool configuration
 
 📄 **Create `src/db/pool-config.ts`:**
+
 ```ts
 import type { PoolConfig } from 'pg';
 
@@ -295,6 +316,7 @@ export function buildPoolConfig(url: string | undefined, port = 5433): PoolConfi
 ```
 
 📄 **Create `src/db/pool-config.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -335,6 +357,7 @@ describe('isLocalUrl', () => {
 ### 2. The client (HMR-safe singleton)
 
 📄 **Create `src/db/client.ts`:**
+
 ```ts
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
@@ -357,25 +380,30 @@ if (Env.NODE_ENV !== 'production') {
 export const db = drizzle(pool, { schema });
 export type Database = typeof db;
 ```
+
 > ℹ️ Nothing imports `client.ts` yet, so Knip will flag it as an unused file. Add it temporarily to the `entry` list in `knip.config.ts`: `'src/db/client.ts'` (remove the entry in Sprint 2 when auth imports it).
 
 📄 **Document the two URLs** — create `docs/guides/database.md` (extended in later tickets):
-````markdown
+
+```markdown
 # Database
 
 ## Environments
+
 | Env | Database | Connection |
-|---|---|---|
+| --- | --- | --- |
 | Local dev | PGlite (embedded Postgres) served by `pnpm db:server` on port 5433 | `DATABASE_URL` empty |
 | Tests | PGlite in memory, one per test file | `tests/utils/test-db.ts` |
 | Production / previews | Neon | `DATABASE_URL` = **pooled** URL; `DATABASE_URL_UNPOOLED` = **direct** URL (migrations) |
 
 ## Neon connection strings
+
 - Runtime (serverless functions): the **pooled** host (contains `-pooler`) with `?sslmode=require`.
 - Migrations: the **direct** host — pooled connections are not suitable for DDL.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test                 # pool-config tests pass
 pnpm typecheck && pnpm lint && pnpm knip
@@ -385,7 +413,7 @@ pnpm typecheck && pnpm lint && pnpm knip
 
 ---
 
-## 🎫 S1-T04 — PGlite socket dev server *(done before T03)*
+## 🎫 S1-T04 — PGlite socket dev server _(done before T03)_
 
 **Branch:** `feat/s1-t04-pglite-server` · **Story:** US-010 · **3 SP** · ⚠️ spike (risk R-02)
 
@@ -400,6 +428,7 @@ pnpm approve-builds        # tsx → esbuild postinstall: select esbuild, confir
 ### 1. Load env files in scripts (same rules as Next)
 
 📄 **Create `scripts/_env.ts`:**
+
 ```ts
 // Import this FIRST in every script: it loads .env, .env.local, .env.development like Next.js.
 import { loadEnvConfig } from '@next/env';
@@ -411,9 +440,9 @@ loadEnvConfig(process.cwd(), process.env.NODE_ENV !== 'production');
 ### 2. The server
 
 📄 **Create `scripts/db-server.ts`:**
+
 ```ts
 import './_env';
-
 import { PGlite } from '@electric-sql/pglite';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
 import { drizzle } from 'drizzle-orm/pglite';
@@ -463,14 +492,15 @@ main().catch((error) => {
   process.exit(1);
 });
 ```
+
 > 🔍 **Verify against docs:** `PGlite.create`, `PGLiteSocketServer` constructor options and `start()/stop()` names in the versions you installed (PGlite is pre-1.0 — signatures change).
 
 ### 3. A tiny connectivity probe
 
 📄 **Create `scripts/db-ping.ts`:**
+
 ```ts
 import './_env';
-
 import { Pool } from 'pg';
 
 import { buildPoolConfig } from '../src/db/pool-config';
@@ -493,6 +523,7 @@ main().catch((error) => {
 ### 4. Scripts: `dev` now starts both processes
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -504,42 +535,49 @@ main().catch((error) => {
   }
 }
 ```
+
 > 🪟 The escaped `\"` quotes work in both `cmd.exe` and Bash. Keep them exactly.
 
 📄 **Ensure `.gitignore` has** (added in Sprint 0): `local.db` and `local.db-*`. `local.db` is a **folder** — confirm `git status` doesn't list it.
 
 📄 **Extend `docs/guides/database.md`:**
-````markdown
 
+````markdown
 ## Local database (PGlite)
-`pnpm dev` runs two processes: the embedded Postgres (`pnpm db:server`, port 5433) and Next.js.
-Data lives in `./local.db` (git-ignored). Reset with `pnpm db:reset`.
+
+`pnpm dev` runs two processes: the embedded Postgres (`pnpm db:server`, port 5433) and Next.js. Data lives in `./local.db` (git-ignored). Reset with `pnpm db:reset`.
 
 Run the pieces separately when debugging: `pnpm db:server` in one tab, `pnpm dev:web` in another.
 
 ### Known limits
-- PGlite serves **one connection at a time**. The app pool is capped at 1 short-lived connection
-  so `pnpm db:studio` and scripts can connect while the app is idle.
+
+- PGlite serves **one connection at a time**. The app pool is capped at 1 short-lived connection so `pnpm db:studio` and scripts can connect while the app is idle.
 - If you see `ECONNREFUSED`, the db server isn't running.
 - If `local.db` is corrupted (e.g. the process was force-killed) delete the folder and restart.
 
 ### Fallback: Docker Postgres
+
 If PGlite misbehaves on your machine:
+
 ```bash
 docker run --name saas-pg -e POSTGRES_PASSWORD=postgres -p 5433:5432 -d postgres:17
 ```
-and set `DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5433/postgres` in `.env.local`
-(skip `pnpm db:server`; use `pnpm dev:web`).
+
+and set `DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5433/postgres` in `.env.local` (skip `pnpm db:server`; use `pnpm dev:web`).
 ````
 
 ### ✅ Verify
+
 Open **three Cmder tabs** (Ctrl+T):
+
 ```bash
 # Tab 1 — database only
 pnpm db:server
 # → 🐘 PGlite listening on postgres://postgres:postgres@127.0.0.1:5433/postgres
 ```
+
 🪟 If Windows Firewall prompts for `node.exe`, choose **Allow (private networks)**.
+
 ```bash
 # Tab 2
 pnpm db:ping                 # ✅ Database reachable
@@ -547,13 +585,16 @@ pnpm db:studio               # prints https://local.drizzle.studio → open it, 
 # Tab 3 — while Studio is open, hit the DB again
 pnpm db:ping                 # still ✅ (this is the single-connection risk check)
 ```
+
 > 🔎 Drizzle Studio at `local.drizzle.studio` is blocked by Brave Shields/Safari — use Chrome or Edge.
 
 Stop tab 1 (Ctrl+C) and test the combined flow:
+
 ```bash
 pnpm dev
 # → both [db] and [web] prefixes appear; http://localhost:3000 renders
 ```
+
 Ctrl+C must stop **both**. Check the port is free: `netstat -ano | findstr :5433` → no output.
 
 > ⚠️ **Risk R-02 outcome:** write in `06-project-state.md` whether concurrent connections worked. If they don't, document the Docker fallback as the recommended path for Studio.
@@ -573,9 +614,9 @@ git switch main && git pull && git switch -c feat/s1-t03-db-scripts
 ### 1. Programmatic migrator (used locally **and** by deploys)
 
 📄 **Create `scripts/migrate.ts`:**
+
 ```ts
 import './_env';
-
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
@@ -603,9 +644,9 @@ main().catch((error) => {
 ### 2. Reset (dev only, with guard rails)
 
 📄 **Create `scripts/db-reset.ts`:**
+
 ```ts
 import './_env';
-
 import { execSync } from 'node:child_process';
 
 import { Pool } from 'pg';
@@ -639,6 +680,7 @@ main().catch((error) => {
 ```
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -647,20 +689,26 @@ main().catch((error) => {
   }
 }
 ```
+
 (`db:seed` and its chaining into `db:reset` come in S1-T06.)
 
 ### ✅ Verify
+
 With `pnpm db:server` running in another tab:
+
 ```bash
 pnpm db:migrate              # ✅ Migrations applied (idempotent: run it twice)
 pnpm db:reset                # drops + recreates; re-applies migrations
 pnpm db:ping
 ```
+
 Safety check — the guard must refuse remote URLs:
+
 ```bash
 DATABASE_URL="postgres://u:p@db.example.com/x" pnpm db:reset
 # → ❌ Refusing to reset: db:reset only runs against a LOCAL database.
 ```
+
 (🪟 cmd.exe: `set DATABASE_URL=postgres://u:p@db.example.com/x&& pnpm db:reset`, then `set DATABASE_URL=`.)
 
 Optional, now or in Sprint 8: create a free **Neon** project, put its **direct** URL in `.env.local` as `DATABASE_URL_UNPOOLED`, run `pnpm db:migrate` and watch the tables appear in Neon's console. (Remove the variable afterwards so local dev keeps using PGlite.)
@@ -679,6 +727,7 @@ mkdir -p tests/utils tests/factories
 ```
 
 📄 **Create `tests/utils/test-db.ts`:**
+
 ```ts
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
@@ -724,6 +773,7 @@ export async function withRollback<T>(
 ```
 
 📄 **Create `tests/utils/test-db.test.ts`:**
+
 ```ts
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -763,12 +813,15 @@ describe('test database', () => {
   });
 });
 ```
+
 > ⏱ Record the `createTestDb took … ms` number in `06-project-state.md`. The sprint target is < 1 s per file; first run on Windows is often slower (WASM compile + antivirus). If it's > 3 s, note it as tech debt `TD-10`.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 ```
+
 Rename a column in `src/db/schema/app-meta.ts` **without** generating a migration, then run `pnpm db:check` → drift is reported. Revert.
 
 **🚢 Ship** — branch `test/s1-t05-test-db` · message: `test(db): add in-memory pglite test database helper`
@@ -785,6 +838,7 @@ pnpm add -D @faker-js/faker
 ```
 
 📄 **Create `tests/factories/factory.ts`:**
+
 ```ts
 import { faker } from '@faker-js/faker';
 
@@ -802,6 +856,7 @@ export function defineFactory<T>(make: (sequence: number) => T) {
 ```
 
 📄 **Create `tests/factories/app-meta.factory.ts`:**
+
 ```ts
 import type { appMeta } from '@/db/schema';
 
@@ -814,6 +869,7 @@ export const appMetaFactory = defineFactory<typeof appMeta.$inferInsert>((n) => 
 ```
 
 📄 **Create `src/db/types.ts`:**
+
 ```ts
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 
@@ -822,9 +878,11 @@ import type * as schema from './schema';
 /** Any Drizzle Postgres database (node-postgres, PGlite…) bound to our schema. */
 export type DbLike = PgDatabase<PgQueryResultHKT, typeof schema>;
 ```
+
 > 🔍 If TypeScript rejects passing the node-postgres or PGlite database where `DbLike` is expected, check the Drizzle docs for the recommended base type in your version — keep it `any`-free.
 
 📄 **Create `src/db/seed.ts`:**
+
 ```ts
 import { appMeta } from './schema';
 import type { DbLike } from './types';
@@ -839,9 +897,9 @@ export async function seed(db: DbLike) {
 ```
 
 📄 **Create `scripts/seed.ts`:**
+
 ```ts
 import './_env';
-
 import { Env } from '../src/libs/Env';
 
 async function main() {
@@ -866,6 +924,7 @@ main().catch((error) => {
 ```
 
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -876,12 +935,13 @@ main().catch((error) => {
 ```
 
 📄 **Create `src/db/seed.test.ts`:**
+
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
 import { appMeta } from '@/db/schema';
-import { createTestDb, type TestDb } from '../../tests/utils/test-db';
 
+import { createTestDb, type TestDb } from '../../tests/utils/test-db';
 import { seed } from './seed';
 
 let db: TestDb;
@@ -898,15 +958,18 @@ it('is idempotent', async () => {
   expect(await db.select().from(appMeta)).toHaveLength(1);
 });
 ```
+
 Remove the temporary `'src/db/client.ts'` Knip entry if you added it (`seed.ts` script now imports the client).
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 # with `pnpm db:server` running in another tab:
 pnpm db:reset        # drop + migrate + seed
 pnpm db:seed         # run again → no error, no duplicate row
 ```
+
 Open Studio → `app_meta` has one `seeded_at` row. `pnpm knip` must pass (use factories in a test or delete `app-meta.factory.ts` if Knip complains; factories used by tests in Sprint 2).
 
 **🚢 Ship** — branch `feat/s1-t06-factories-seed` · message: `feat(db): add test factories and idempotent seed`
@@ -922,12 +985,12 @@ git switch main && git pull && git switch -c feat/s1-t07-route-groups
 pnpm dlx shadcn@latest add sheet
 ```
 
-> 🔎 **Deviation:** the sprint file creates these under `src/app/[locale]/`. next-intl isn't installed yet, so we build the groups at `src/app/` now and **move them under `[locale]` in S1-T10** with `git mv` (history preserved).
-> All text here is English placeholders; S1-T11 moves it into translation files.
+> 🔎 **Deviation:** the sprint file creates these under `src/app/[locale]/`. next-intl isn't installed yet, so we build the groups at `src/app/` now and **move them under `[locale]` in S1-T10** with `git mv` (history preserved). All text here is English placeholders; S1-T11 moves it into translation files.
 
 ### 1. Folders
 
 🪟 Quote paths containing parentheses in Bash:
+
 ```bash
 mkdir -p "src/app/(marketing)" "src/app/(auth)/sign-in" "src/app/(auth)/sign-up" \
          "src/app/(app)/dashboard" "src/app/(admin)/admin" src/components/layout
@@ -937,6 +1000,7 @@ git mv src/app/page.tsx "src/app/(marketing)/page.tsx"
 ### 2. Layout components
 
 📄 **Create `src/components/layout/mobile-nav.tsx`:**
+
 ```tsx
 'use client';
 
@@ -945,13 +1009,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export type NavLink = { href: string; label: string };
 
@@ -983,6 +1041,7 @@ export function MobileNav({ links }: { links: readonly NavLink[] }) {
 ```
 
 📄 **Create `src/components/layout/site-header.tsx`:**
+
 ```tsx
 import Link from 'next/link';
 
@@ -1004,7 +1063,11 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-6 text-sm md:flex">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted-foreground hover:text-foreground"
+            >
               {link.label}
             </Link>
           ))}
@@ -1024,9 +1087,11 @@ export function SiteHeader() {
   );
 }
 ```
+
 > 🔎 Notice `border-e`, `ms-*`, `ps-*`, `text-start` utilities (logical properties) are used instead of `border-r`, `ml-*`… so the layout flips correctly for RTL languages later.
 
 📄 **Create `src/components/layout/site-footer.tsx`:**
+
 ```tsx
 export function SiteFooter() {
   return (
@@ -1042,6 +1107,7 @@ export function SiteFooter() {
 ### 3. Group layouts
 
 📄 **Create `src/app/(marketing)/layout.tsx`:**
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -1062,6 +1128,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
 ```
 
 📄 **Create `src/app/(auth)/layout.tsx`:**
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -1075,6 +1142,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 ```
 
 📄 **Create `src/app/(app)/layout.tsx`:**
+
 ```tsx
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -1112,6 +1180,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 ```
 
 📄 **Create `src/app/(admin)/layout.tsx`:**
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -1132,6 +1201,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 ### 4. Pages
 
 📄 **Edit `src/app/(marketing)/page.tsx`:**
+
 ```tsx
 import { Button } from '@/components/ui/button';
 import { Env } from '@/libs/Env';
@@ -1150,6 +1220,7 @@ export default function HomePage() {
 ```
 
 📄 **Create the four placeholders** (identical pattern; change the title):
+
 ```tsx
 // src/app/(auth)/sign-in/page.tsx
 export default function SignInPage() {
@@ -1157,6 +1228,7 @@ export default function SignInPage() {
   return <h1 className="text-xl font-semibold">Sign in</h1>;
 }
 ```
+
 ```tsx
 // src/app/(auth)/sign-up/page.tsx
 export default function SignUpPage() {
@@ -1164,6 +1236,7 @@ export default function SignUpPage() {
   return <h1 className="text-xl font-semibold">Create your account</h1>;
 }
 ```
+
 ```tsx
 // src/app/(app)/dashboard/page.tsx
 export default function DashboardPage() {
@@ -1171,6 +1244,7 @@ export default function DashboardPage() {
   return <h1 className="text-2xl font-semibold">Dashboard</h1>;
 }
 ```
+
 ```tsx
 // src/app/(admin)/admin/page.tsx
 export default function AdminPage() {
@@ -1178,7 +1252,9 @@ export default function AdminPage() {
   return <h1 className="text-2xl font-semibold">Admin</h1>;
 }
 ```
+
 Create a contact placeholder so the nav link doesn't 404 yet (replaced in S1-T13):
+
 ```tsx
 // src/app/(marketing)/contact/page.tsx
 export default function ContactPage() {
@@ -1187,10 +1263,13 @@ export default function ContactPage() {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm dev
 ```
+
 Visit `/`, `/contact`, `/sign-in`, `/sign-up`, `/dashboard`, `/admin`. Each shows its own layout (header/footer, centered card, sidebar, admin bar). Use the browser's responsive mode:
+
 - **320 px:** the hamburger appears and the Sheet opens/closes; no horizontal scrollbar.
 - **1440 px:** sidebar visible in `/dashboard`.
 
@@ -1215,6 +1294,7 @@ pnpm dlx shadcn@latest add dropdown-menu
 ### 1. Provider
 
 📄 **Create `src/components/providers/theme-provider.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1227,6 +1307,7 @@ export function ThemeProvider(props: ComponentProps<typeof NextThemesProvider>) 
 ```
 
 📄 **Edit `src/app/layout.tsx`** — suppress the expected hydration warning on `<html>` and wrap children (keep your existing font code):
+
 ```tsx
 import { ThemeProvider } from '@/components/providers/theme-provider';
 
@@ -1237,28 +1318,33 @@ import { ThemeProvider } from '@/components/providers/theme-provider';
       {children}
     </ThemeProvider>
   </body>
-</html>
+</html>;
 ```
+
 > 🔎 `next-themes` injects a tiny inline script that sets the `dark` class **before** first paint → no flash. `suppressHydrationWarning` is needed only on `<html>` because that script modifies it.
 
 ### 2. Tokens — minimalist neutral palette
 
 `shadcn init` already generated CSS variables. Open `src/styles/global.css` and confirm you have:
+
 - `:root { --background …; --foreground …; --primary …; --muted …; --border …; --ring …; --radius … }`
 - `.dark { … }` with dark values
 - `@custom-variant dark (&:is(.dark *));`
 
 Set the radius and keep the neutral palette:
+
 ```css
 :root {
   --radius: 0.5rem;
 }
 ```
+
 > 🎯 Sprint 7 centralises tokens in `theme.css` and adds accent presets. For now: neutral grays, one accent (`--primary`).
 
 ### 3. Toggle
 
 📄 **Create `src/components/layout/theme-toggle.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1293,15 +1379,19 @@ export function ThemeToggle() {
   );
 }
 ```
+
 Add `<ThemeToggle />` inside the right-hand `div` of `site-header.tsx` (before `MobileNav`) and in the `(app)` layout header (right side, wrap with `<div className="ms-auto">`).
 
 ### ✅ Verify
+
 ```bash
 pnpm dev
 ```
+
 1. Toggle **Dark** → page turns dark. Hard-reload (Ctrl+Shift+R) → still dark, **no white flash**.
 2. Choose **System**, then switch Windows to dark/light mode (Settings → Personalization → Colors) → the page follows.
 3. The toggle is reachable with the keyboard (Tab → Enter → arrows).
+
 ```bash
 pnpm check
 ```
@@ -1318,19 +1408,23 @@ pnpm check
 git switch main && git pull && git switch -c feat/s1-t09-shadcn-set
 pnpm dlx shadcn@latest add input label textarea form card dialog sonner avatar badge separator skeleton tabs select checkbox alert table tooltip
 ```
+
 > 🔍 If the CLI says `form` doesn't exist (newer shadcn versions replace it with a `field` component), install `field` instead and adapt the S1-T12 wrappers to its API — the idea (label + control + message) is identical. Dependencies that shadcn adds (e.g. `react-hook-form`, `@hookform/resolvers`, Radix packages) come with caret versions → run `pnpm pin`.
 
 ### 1. Don't lint generated code
 
 📄 **Edit `.oxlintrc.json`** — add to `ignorePatterns`:
+
 ```json
 "src/components/ui"
 ```
+
 (Formatting still applies — only rules are skipped for vendor-style primitives.)
 
 ### 2. Toasts
 
 📄 **Edit `src/app/layout.tsx`** — mount the toaster inside `<ThemeProvider>`:
+
 ```tsx
 import { Toaster } from '@/components/ui/sonner';
 
@@ -1343,6 +1437,7 @@ import { Toaster } from '@/components/ui/sonner';
 ### 3. Layout helpers
 
 📄 **Create `src/components/layout/page-header.tsx`:**
+
 ```tsx
 import type { ReactNode } from 'react';
 
@@ -1368,6 +1463,7 @@ export function PageHeader({
 ```
 
 📄 **Create `src/components/layout/user-menu.tsx`** (placeholder, becomes real in Sprint 2):
+
 ```tsx
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
@@ -1380,11 +1476,13 @@ export function UserMenu() {
   );
 }
 ```
+
 Use them: in `(app)/dashboard/page.tsx` replace the `<h1>` with `<PageHeader title="Dashboard" description="Your workspace will appear here." />`, and add `<UserMenu />` after the theme toggle in the `(app)` header.
 
 ### 4. Component gallery (temporary, to eyeball everything)
 
 📄 **Create `src/app/(marketing)/ui-kit/page.tsx`** (deleted at the end of this ticket):
+
 ```tsx
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -1422,14 +1520,18 @@ export default function UiKitPage() {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm dev                   # open /ui-kit in light and dark mode: everything themed, no unstyled parts
 ```
+
 Delete the gallery (`git rm -r "src/app/(marketing)/ui-kit"`), then:
+
 ```bash
 pnpm pin
 pnpm check                 # includes Knip → fix any unused-dependency finding
 ```
+
 Count installed primitives: `ls src/components/ui` → ≥ 12 files.
 
 **🚢 Ship** — branch `feat/s1-t09-shadcn-set` · message: `feat(ui): add shadcn component set, toaster and layout helpers`
@@ -1448,6 +1550,7 @@ pnpm add next-intl
 ### 1. Routing config
 
 📄 **Create `src/i18n/routing.ts`:**
+
 ```ts
 import { defineRouting } from 'next-intl/routing';
 
@@ -1459,6 +1562,7 @@ export const routing = defineRouting({
 ```
 
 📄 **Create `src/i18n/navigation.ts`:**
+
 ```ts
 import { createNavigation } from 'next-intl/navigation';
 
@@ -1469,6 +1573,7 @@ export const { Link, usePathname } = createNavigation(routing);
 ```
 
 📄 **Create `src/i18n/request.ts`:**
+
 ```ts
 import { hasLocale } from 'next-intl';
 import { getRequestConfig } from 'next-intl/server';
@@ -1491,11 +1596,15 @@ export default getRequestConfig(async ({ requestLocale }) => {
 ```bash
 mkdir -p src/locales
 ```
+
 📄 **Create `src/locales/en.json`:**
+
 ```json
 { "common": { "appName": "SaaS Boilerplate" } }
 ```
+
 📄 **Create `src/locales/fr.json`:**
+
 ```json
 { "common": { "appName": "SaaS Boilerplate" } }
 ```
@@ -1503,6 +1612,7 @@ mkdir -p src/locales
 ### 3. Typed message keys
 
 📄 **Create `src/types/next-intl.d.ts`:**
+
 ```ts
 import type { routing } from '@/i18n/routing';
 
@@ -1515,15 +1625,17 @@ declare module 'next-intl' {
   }
 }
 ```
+
 → `t('typo')` is now a **TypeScript error**. Add `'src/types/**'` to `ignore` in `knip.config.ts`.
 
 ### 4. Plugin + `proxy.ts`
 
 📄 **Edit `next.config.ts`:**
+
 ```ts
 import { createJiti } from 'jiti';
-import createNextIntlPlugin from 'next-intl/plugin';
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const jiti = createJiti(import.meta.url);
 await jiti.import('./src/libs/Env');
@@ -1537,9 +1649,11 @@ const nextConfig: NextConfig = {
 
 export default withNextIntl(nextConfig);
 ```
+
 (If you used the `@next/bundle-analyzer` fallback in Sprint 0, compose: `withBundleAnalyzer(withNextIntl(nextConfig))`.)
 
 📄 **Create `src/proxy.ts`** — Next 16's replacement for `middleware.ts`:
+
 ```ts
 import createMiddleware from 'next-intl/middleware';
 
@@ -1553,11 +1667,13 @@ export const config = {
   matcher: ['/((?!api|trpc|_next|_vercel|.*\\..*).*)'],
 };
 ```
+
 > 🔍 Confirm in the next-intl docs that the default export form is what `proxy.ts` expects in your Next 16.x (a named `proxy` export may be required in some versions).
 
 ### 5. Move the app under `[locale]`
 
 🪟 Quote everything — brackets and parentheses are special in Bash:
+
 ```bash
 mkdir "src/app/[locale]"
 git mv "src/app/(marketing)" "src/app/[locale]/(marketing)"
@@ -1566,22 +1682,25 @@ git mv "src/app/(app)"       "src/app/[locale]/(app)"
 git mv "src/app/(admin)"     "src/app/[locale]/(admin)"
 git mv src/app/layout.tsx    "src/app/[locale]/layout.tsx"
 ```
+
 `src/app/favicon.ico` and `src/app/api/` (later) stay at the app root.
 
 ### 6. The root layout becomes locale-aware
 
 📄 **Rewrite `src/app/[locale]/layout.tsx`:**
+
 ```tsx
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { routing } from '@/i18n/routing';
+
 import '@/styles/global.css';
 
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
@@ -1611,7 +1730,12 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NextIntlClientProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             {children}
             <Toaster richColors />
           </ThemeProvider>
@@ -1621,18 +1745,22 @@ export default async function RootLayout({
   );
 }
 ```
+
 > 🔎 There is **no** `src/app/layout.tsx` any more — the `[locale]` layout is the root layout (it owns `<html>`). Static metadata is localised in Sprint 7.
 
 Replace **internal links** with the locale-aware `Link`: in `site-header.tsx`, `app/(app)/layout.tsx` and `mobile-nav.tsx` change `import Link from 'next/link'` → `import { Link } from '@/i18n/navigation'`.
 
 ### ✅ Verify
+
 ```bash
 pnpm typecheck && pnpm dev
 ```
+
 - `http://localhost:3000/` → English
 - `http://localhost:3000/fr` → same page (French strings come in the next ticket)
 - `http://localhost:3000/de` → 404 (we add a localized 404 in S1-T14)
 - Header links from `/fr` keep the `/fr` prefix (`/fr/contact`)
+
 ```bash
 pnpm build                 # static generation for en + fr succeeds
 pnpm check
@@ -1653,6 +1781,7 @@ git switch main && git pull && git switch -c feat/s1-t11-messages
 ### 1. Messages (English)
 
 📄 **Replace `src/locales/en.json`** — this single file also covers keys used by tickets T12–T15, so we don't revisit it:
+
 ```json
 {
   "common": {
@@ -1722,6 +1851,7 @@ git switch main && git pull && git switch -c feat/s1-t11-messages
 ```
 
 📄 **Replace `src/locales/fr.json`:**
+
 ```json
 {
   "common": {
@@ -1739,7 +1869,12 @@ git switch main && git pull && git switch -c feat/s1-t11-messages
     "dashboard": "Tableau de bord",
     "workspace": "Espace de travail"
   },
-  "theme": { "toggle": "Changer de thème", "light": "Clair", "dark": "Sombre", "system": "Système" },
+  "theme": {
+    "toggle": "Changer de thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
   "locale": { "label": "Langue", "en": "English", "fr": "Français" },
   "footer": { "rights": "Tous droits réservés." },
   "marketing": {
@@ -1751,7 +1886,10 @@ git switch main && git pull && git switch -c feat/s1-t11-messages
     "signInTitle": "Se connecter",
     "signUpTitle": "Créez votre compte"
   },
-  "dashboard": { "title": "Tableau de bord", "description": "Votre espace de travail apparaîtra ici." },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "description": "Votre espace de travail apparaîtra ici."
+  },
   "admin": { "consoleTitle": "Console d'administration", "title": "Administration" },
   "contact": {
     "title": "Nous contacter",
@@ -1793,6 +1931,7 @@ git switch main && git pull && git switch -c feat/s1-t11-messages
 ### 2. Language switcher
 
 📄 **Create `src/components/layout/locale-switcher.tsx`:**
+
 ```tsx
 'use client';
 
@@ -1832,11 +1971,13 @@ export function LocaleSwitcher() {
   );
 }
 ```
+
 > 🔎 Plain links (not a `<select>`) → crawlable, work without JS, trivially testable. Query strings are not preserved; revisit if a page needs it.
 
 ### 3. Translate the existing components
 
 📄 **`src/components/layout/site-header.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -1863,7 +2004,11 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-6 text-sm md:flex">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="text-muted-foreground hover:text-foreground">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted-foreground hover:text-foreground"
+            >
               {link.label}
             </Link>
           ))}
@@ -1887,6 +2032,7 @@ export function SiteHeader() {
 ```
 
 📄 **`src/components/layout/site-footer.tsx`:**
+
 ```tsx
 import { useTranslations } from 'next-intl';
 
@@ -1904,21 +2050,23 @@ export function SiteFooter() {
 ```
 
 📄 **`src/components/layout/mobile-nav.tsx`** — change the hard-coded strings:
+
 ```tsx
 import { useTranslations } from 'next-intl';
+
 import { Link } from '@/i18n/navigation';
 // inside MobileNav():
 const t = useTranslations('common');
 // aria-label={t('openMenu')}  and  <SheetTitle>{t('menu')}</SheetTitle>
 ```
 
-📄 **`src/components/layout/theme-toggle.tsx`** — `useTranslations('theme')`:
-`aria-label={t('toggle')}` and the three items `{t('light')}`, `{t('dark')}`, `{t('system')}`.
+📄 **`src/components/layout/theme-toggle.tsx`** — `useTranslations('theme')`: `aria-label={t('toggle')}` and the three items `{t('light')}`, `{t('dark')}`, `{t('system')}`.
 
 📄 **`src/app/[locale]/(marketing)/page.tsx`:**
+
 ```tsx
-import { setRequestLocale } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
 import { use } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -1937,7 +2085,9 @@ export default function HomePage({ params }: { params: Promise<{ locale: string 
   );
 }
 ```
+
 Placeholders (same pattern — `useTranslations` + keys from the JSON above):
+
 - `(auth)/sign-in/page.tsx` → `t('auth.signInTitle')`
 - `(auth)/sign-up/page.tsx` → `t('auth.signUpTitle')`
 - `(app)/dashboard/page.tsx` → `<PageHeader title={t('dashboard.title')} description={t('dashboard.description')} />`
@@ -1951,6 +2101,7 @@ For **async** server components use `const t = await getTranslations('ns')` from
 ### 4. Direction helper (RTL-ready) + `<html dir>`
 
 📄 **Create `src/i18n/direction.ts`:**
+
 ```ts
 const RTL_LOCALES = new Set(['ar', 'he', 'fa', 'ur']);
 
@@ -1958,7 +2109,9 @@ export function getDirection(locale: string): 'ltr' | 'rtl' {
   return RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
 }
 ```
+
 📄 **Create `src/i18n/direction.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -1970,11 +2123,13 @@ it('returns rtl only for right-to-left locales', () => {
   expect(getDirection('fr')).toBe('ltr');
 });
 ```
+
 📄 **Edit `src/app/[locale]/layout.tsx`:** `import { getDirection } from '@/i18n/direction';` and `<html lang={locale} dir={getDirection(locale)} suppressHydrationWarning>`.
 
 ### 5. Locale parity test (full tooling arrives in Sprint 5)
 
 📄 **Create `src/locales/locales.test.ts`:**
+
 ```ts
 import { expect, it } from 'vitest';
 
@@ -1998,29 +2153,32 @@ it('has exactly the same keys in every locale', () => {
 ### 6. Guide
 
 📄 **Create `docs/guides/i18n.md`:**
-````markdown
+
+```markdown
 # Internationalization (next-intl)
 
 - Locales: `en` (default, no URL prefix) and `fr` (`/fr/...`). Config: `src/i18n/routing.ts`.
 - Messages: `src/locales/{locale}.json`. Keys are typed — a typo is a TypeScript error.
 - **Rule:** no user-facing string in components. Add the key to **both** `en.json` and `fr.json`.
-- Server components: `useTranslations()` (sync) or `await getTranslations()` (async).
-  Client components: `useTranslations()`.
+- Server components: `useTranslations()` (sync) or `await getTranslations()` (async). Client components: `useTranslations()`.
 - Links/navigation: always import `Link`/`usePathname` from `@/i18n/navigation`.
 - Dates/numbers: `useFormatter()` / `getFormatter()` — never `toLocaleString()` by hand.
 - Every page/layout that renders translations calls `setRequestLocale(locale)` for static rendering.
 - Adding a locale: add it to `routing.ts`, create `src/locales/<code>.json`, update `locale.*` labels.
-````
+```
 
 ### ✅ Verify
+
 ```bash
 pnpm test               # parity + direction tests
 pnpm dev
 ```
+
 - `/` English, `/fr` French; switcher links keep you on the same page (`/contact` ⇄ `/fr/contact`).
 - `<html lang="fr">` on French pages (DevTools → Elements).
 - Delete one key from `fr.json` → `pnpm test` fails → restore it.
 - Introduce a typo in a `t('nav.hom')` call → `pnpm typecheck` fails → fix it.
+
 ```bash
 pnpm check
 ```
@@ -2037,6 +2195,7 @@ pnpm check
 git switch main && git pull && git switch -c feat/s1-t12-form-components
 mkdir -p src/components/forms src/validations
 ```
+
 > 🎯 **Design rule:** Zod error messages are **translation keys** (`'validation.email'`), not English sentences. The UI translates them at render time, so one schema serves both languages — and the same schema runs on the server.
 
 > 🔍 These wrappers build on shadcn's `form` primitives (`FormField`, `FormItem`, `FormLabel`, `FormControl`, `useFormField`). If you installed `field` instead, adapt the imports.
@@ -2044,6 +2203,7 @@ mkdir -p src/components/forms src/validations
 ### 1. Translated error message
 
 📄 **Create `src/components/forms/field-message.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2070,6 +2230,7 @@ export function FieldMessage() {
 ### 2. Fields
 
 📄 **Create `src/components/forms/text-field.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2104,6 +2265,7 @@ export function TextField({ name, label, ...inputProps }: TextFieldProps) {
 ```
 
 📄 **Create `src/components/forms/textarea-field.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2141,6 +2303,7 @@ export function TextareaField({ name, label, ...props }: TextareaFieldProps) {
 ```
 
 📄 **Create `src/components/forms/password-field.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2198,6 +2361,7 @@ export function PasswordField({ name, label, ...props }: PasswordFieldProps) {
 ### 3. Submit button and form-level error
 
 📄 **Create `src/components/forms/submit-button.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2225,6 +2389,7 @@ export function SubmitButton({
 ```
 
 📄 **Create `src/components/forms/form-error.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2246,28 +2411,33 @@ export function FormError({ messageKey }: { messageKey?: string | null }) {
   );
 }
 ```
+
 > ✅ Accessibility: errors are linked to inputs through shadcn's `aria-describedby`/`aria-invalid`; RHF focuses the first invalid field on submit (`shouldFocusError` default).
 
 ### 4. Knip: these files are not used yet
 
 📄 **Edit `knip.config.ts`** — temporarily add to `entry`:
+
 ```ts
 // TEMP (S1-T12): consumed by the contact form in S1-T13; password-field until Sprint 2
 'src/components/forms/**/*.tsx',
 ```
+
 (In S1-T13 narrow this to `'src/components/forms/password-field.tsx'`.)
 
 ### ✅ Verify
+
 ```bash
 pnpm typecheck && pnpm lint && pnpm knip
 ```
+
 Behavioural verification happens with the browser tests in S1-T13.
 
 **🚢 Ship** — branch `feat/s1-t12-form-components` · message: `feat(forms): add rhf field components with translated zod errors`
 
 ---
 
-## 🎫 S1-T14 — `AppError` hierarchy and error pages *(done before T13)*
+## 🎫 S1-T14 — `AppError` hierarchy and error pages _(done before T13)_
 
 **Branch:** `feat/s1-t14-errors` · **Story:** US-015 · **3 SP**
 
@@ -2279,6 +2449,7 @@ mkdir -p src/libs
 ### 1. Error classes
 
 📄 **Create `src/libs/errors.ts`:**
+
 ```ts
 type AppErrorOptions = {
   code: string;
@@ -2327,7 +2498,12 @@ export class ValidationError extends AppError {
 
 export class AuthenticationError extends AppError {
   constructor(init: Init = {}) {
-    super({ code: 'UNAUTHENTICATED', httpStatus: 401, messageKey: 'errors.unauthenticated', ...init });
+    super({
+      code: 'UNAUTHENTICATED',
+      httpStatus: 401,
+      messageKey: 'errors.unauthenticated',
+      ...init,
+    });
   }
 }
 
@@ -2363,6 +2539,7 @@ export class ExternalServiceError extends AppError {
 ```
 
 📄 **Create `src/libs/errors.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 
@@ -2413,6 +2590,7 @@ describe('AppError hierarchy', () => {
 ### 2. Shared error view
 
 📄 **Create `src/components/layout/error-view.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2424,7 +2602,10 @@ export function ErrorView({ digest, onRetry }: { digest?: string; onRetry?: () =
   const t = useTranslations('errors');
 
   return (
-    <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center">
+    <div
+      role="alert"
+      className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center"
+    >
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
       <p className="text-muted-foreground">{t('description')}</p>
       {digest ? (
@@ -2441,6 +2622,7 @@ export function ErrorView({ digest, onRetry }: { digest?: string; onRetry?: () =
 ### 3. Error boundaries and 404
 
 📄 **Create `src/app/[locale]/error.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2457,9 +2639,11 @@ export default function ErrorPage({
   return <ErrorView digest={error.digest} onRetry={reset} />;
 }
 ```
+
 📄 **Create `src/app/[locale]/(app)/error.tsx`** — same content (keeps the sidebar visible when a page inside the app fails).
 
 📄 **Create `src/app/[locale]/not-found.tsx`:**
+
 ```tsx
 import { getTranslations } from 'next-intl/server';
 
@@ -2480,7 +2664,9 @@ export default async function NotFound() {
   );
 }
 ```
-📄 **Create `src/app/[locale]/[...rest]/page.tsx`** — makes *unknown* URLs render the localized 404:
+
+📄 **Create `src/app/[locale]/[...rest]/page.tsx`** — makes _unknown_ URLs render the localized 404:
+
 ```tsx
 import { notFound } from 'next/navigation';
 
@@ -2488,7 +2674,9 @@ export default function CatchAllPage() {
   notFound();
 }
 ```
+
 📄 **Create `src/app/not-found.tsx`** — last-resort 404 (outside any locale; has its own `<html>`):
+
 ```tsx
 import '@/styles/global.css';
 
@@ -2502,11 +2690,18 @@ export default function GlobalNotFound() {
   );
 }
 ```
+
 📄 **Create `src/app/global-error.tsx`** — crash in the root layout itself (no providers available, so no i18n):
+
 ```tsx
 'use client';
 
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function GlobalError({
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col items-center justify-center gap-4">
@@ -2519,19 +2714,25 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
   );
 }
 ```
+
 > 🔎 `forbidden.tsx` / `unauthorized.tsx` (Next 16 auth interrupts) are evaluated in Sprint 2 with the session guard.
 
 ### ✅ Verify
+
 ```bash
 pnpm test
 ```
+
 Browser checks (production build shows real error boundaries; dev mode shows the red overlay instead):
+
 ```bash
 pnpm build && pnpm start        # tab 1
 ```
+
 - `/does-not-exist` → localized 404 ("Page not found"); `/fr/nimporte-quoi` → "Page introuvable".
 - `/de` → English 404 (the proxy treats `de` as a path, not a locale).
 - Temporarily create `src/app/[locale]/(marketing)/boom/page.tsx` with `export default function Boom() { throw new Error('boom'); }` → `/boom` shows the error boundary with a **Try again** button and a **Reference** digest. Delete the file afterwards.
+
 ```bash
 pnpm check
 ```
@@ -2540,7 +2741,7 @@ pnpm check
 
 ---
 
-## 🎫 S1-T15 — LogTape structured logging *(done before T13)*
+## 🎫 S1-T15 — LogTape structured logging _(done before T13)_
 
 **Branch:** `feat/s1-t15-logging` · **Story:** US-016 · **3 SP** · 🔍 read the LogTape docs (APIs below follow the current stable shape)
 
@@ -2552,17 +2753,21 @@ pnpm add @logtape/logtape
 ### 1. Env
 
 📄 **Edit `src/libs/Env.ts`** — add to `server` and `runtimeEnv`:
+
 ```ts
 LOG_LEVEL: z.enum(['debug', 'info', 'warning', 'error']).default('info'),
 ```
+
 ```ts
 LOG_LEVEL: process.env.LOG_LEVEL,
 ```
+
 📄 `.env.example`: `LOG_LEVEL=info` · `.env.development`: `LOG_LEVEL=debug`
 
 ### 2. Redaction (our own, tiny, fully testable)
 
 📄 **Create `src/libs/logger-redaction.ts`:**
+
 ```ts
 import type { LogRecord, Sink } from '@logtape/logtape';
 
@@ -2592,9 +2797,11 @@ export function withRedaction(sink: Sink): Sink {
     sink({ ...record, properties: redactValue(record.properties) as Record<string, unknown> });
 }
 ```
+
 > 🔒 **Logging rule:** always pass data as **properties** (`logger.info('msg', { userId })`), never by string-interpolating secrets into the message — redaction works on property keys.
 
 📄 **Create `src/libs/logger-redaction.test.ts`:**
+
 ```ts
 import type { LogRecord } from '@logtape/logtape';
 import { describe, expect, it, vi } from 'vitest';
@@ -2632,7 +2839,14 @@ describe('withRedaction', () => {
     const inner = vi.fn();
     const sink = withRedaction(inner);
 
-    sink({ level: 'info', category: ['app'], message: ['hi'], rawMessage: 'hi', timestamp: 0, properties: { password: 'p', id: 1 } } as LogRecord);
+    sink({
+      level: 'info',
+      category: ['app'],
+      message: ['hi'],
+      rawMessage: 'hi',
+      timestamp: 0,
+      properties: { password: 'p', id: 1 },
+    } as LogRecord);
 
     expect(inner).toHaveBeenCalledOnce();
     expect(inner.mock.calls[0]?.[0].properties).toEqual({ password: REDACTED, id: 1 });
@@ -2643,6 +2857,7 @@ describe('withRedaction', () => {
 ### 3. The logger
 
 📄 **Create `src/libs/Logger.ts`:**
+
 ```ts
 import {
   configureSync,
@@ -2666,7 +2881,8 @@ if (!globalForLog.__logtapeConfigured) {
       console: withRedaction(
         getConsoleSink({
           // Pretty in dev, machine-readable JSON lines in production
-          formatter: Env.NODE_ENV === 'production' ? getJsonLinesFormatter() : getAnsiColorFormatter(),
+          formatter:
+            Env.NODE_ENV === 'production' ? getJsonLinesFormatter() : getAnsiColorFormatter(),
         }),
       ),
     },
@@ -2682,6 +2898,7 @@ export function getLogger(category: LogCategory = 'app') {
   return category === 'app' ? getBaseLogger(['app']) : getBaseLogger(['app', category]);
 }
 ```
+
 > 🔍 Function names (`getJsonLinesFormatter`, `getAnsiColorFormatter`, `getConsoleSink`) can differ between LogTape releases (older ones export constants like `jsonLinesFormatter`). Follow the docs for your installed version.
 
 ### 4. Keep a single LogTape instance across Next.js bundles
@@ -2689,6 +2906,7 @@ export function getLogger(category: LogCategory = 'app') {
 Next.js compiles server code into several bundles (RSC, SSR, actions). If LogTape were bundled into each, only one copy would be configured and logs from the others would vanish. Load it from `node_modules` instead:
 
 📄 **Edit `next.config.ts`:**
+
 ```ts
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -2700,6 +2918,7 @@ const nextConfig: NextConfig = {
 ### 5. Use it in the DB client
 
 📄 **Edit `src/db/client.ts`:**
+
 ```ts
 import { getLogger } from '@/libs/Logger';
 
@@ -2713,30 +2932,37 @@ function createPool() {
 
 const pool = globalForDb.__dbPool ?? createPool();
 ```
+
 (Replace the previous `const pool = …new Pool(…)` line.)
 
 ### 6. Document the conventions in `AGENTS.md`
+
 Add under **Conventions**:
+
 ```markdown
-- Logging: `getLogger('<category>')` from `@/libs/Logger` (categories: app, auth, db, email, security, http).
-  Pass data as properties — never interpolate secrets into messages. Never `console.log` in `src/`.
+- Logging: `getLogger('<category>')` from `@/libs/Logger` (categories: app, auth, db, email, security, http). Pass data as properties — never interpolate secrets into messages. Never `console.log` in `src/`.
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test                          # redaction tests pass
 ```
+
 Quick manual proof — temporarily add to `src/app/[locale]/(marketing)/page.tsx` (top of the component):
+
 ```ts
 import { getLogger } from '@/libs/Logger';
 getLogger('app').info('home rendered', { password: 'hunter2', user: 'ada' });
 ```
+
 ```bash
 pnpm dev:web          # visit /
 # → coloured line in the terminal, password shows [REDACTED]
 LOG_LEVEL=error pnpm dev:web      # (cmd.exe: set LOG_LEVEL=error&& pnpm dev:web) → the info line disappears
 pnpm build && pnpm start          # production → one JSON line per log
 ```
+
 Remove the temporary log line, then `pnpm check`.
 
 **🚢 Ship** — branch `feat/s1-t15-logging` · message: `feat(obs): add logtape structured logging with secret redaction`
@@ -2755,6 +2981,7 @@ mkdir -p src/actions
 ### 1. The action wrapper
 
 📄 **Create `src/utils/action.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -2811,6 +3038,7 @@ export function createAction<S extends z.ZodType, R>(
 ```
 
 📄 **Create `src/utils/action.test.ts`:**
+
 ```ts
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -2870,6 +3098,7 @@ describe('createAction', () => {
 ### 2. Shared schema (client **and** server)
 
 📄 **Create `src/validations/contact.ts`:**
+
 ```ts
 import { z } from 'zod';
 
@@ -2890,6 +3119,7 @@ export type ContactInput = z.infer<typeof contactSchema>;
 ### 3. The Server Action
 
 📄 **Create `src/actions/contact.ts`:**
+
 ```ts
 'use server';
 
@@ -2912,6 +3142,7 @@ export async function submitContact(input: unknown) {
 ### 4. The form
 
 📄 **Create `src/components/forms/contact-form.tsx`:**
+
 ```tsx
 'use client';
 
@@ -2924,8 +3155,8 @@ import { toast } from 'sonner';
 import { submitContact } from '@/actions/contact';
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
-import { TextareaField } from '@/components/forms/textarea-field';
 import { TextField } from '@/components/forms/text-field';
+import { TextareaField } from '@/components/forms/textarea-field';
 import { Form } from '@/components/ui/form';
 import { type ContactInput, contactSchema } from '@/validations/contact';
 
@@ -2973,7 +3204,9 @@ export function ContactForm() {
   );
 }
 ```
+
 Narrow the temporary Knip entry from S1-T12 in `knip.config.ts`:
+
 ```ts
 // password-field is used from Sprint 2
 'src/components/forms/password-field.tsx',
@@ -2982,6 +3215,7 @@ Narrow the temporary Knip entry from S1-T12 in `knip.config.ts`:
 ### 5. The page
 
 📄 **Rewrite `src/app/[locale]/(marketing)/contact/page.tsx`:**
+
 ```tsx
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
@@ -3005,6 +3239,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
 ### 6. Component tests (browser mode)
 
 📄 **Create `tests/utils/render.tsx`:**
+
 ```tsx
 import { NextIntlClientProvider } from 'next-intl';
 import type { ReactNode } from 'react';
@@ -3023,12 +3258,13 @@ export function renderWithIntl(ui: ReactNode) {
   });
 }
 ```
+
 📄 **Create `src/components/forms/contact-form.test.tsx`:**
+
 ```tsx
 import { beforeEach, expect, test, vi } from 'vitest';
 
 import { renderWithIntl } from '../../../tests/utils/render';
-
 import { ContactForm } from './contact-form';
 
 const submitContact = vi.hoisted(() => vi.fn());
@@ -3087,15 +3323,19 @@ test('displays server-side field errors returned by the action', async () => {
 ```
 
 ### ✅ Verify
+
 ```bash
 pnpm test && pnpm test:browser
 pnpm dev
 ```
+
 On `/contact` and `/fr/contact`:
+
 1. Submit empty → red messages in the right language; focus jumps to the first invalid field.
 2. Type an invalid email → message under the email field only.
 3. Fill valid data → button shows a spinner and is disabled while pending → toast "Thanks!" and the form resets.
 4. The terminal shows `Contact form received` (no name/email/message content).
+
 ```bash
 pnpm check
 ```
@@ -3118,6 +3358,7 @@ mkdir -p e2e
 ### 1. Config
 
 📄 **Create `playwright.config.ts`:**
+
 ```ts
 import { defineConfig, devices } from '@playwright/test';
 
@@ -3143,7 +3384,9 @@ export default defineConfig({
   },
 });
 ```
+
 📄 **Edit `package.json`** `scripts`:
+
 ```json
 {
   "scripts": {
@@ -3152,11 +3395,13 @@ export default defineConfig({
   }
 }
 ```
+
 > 🔎 Vitest only includes `src/**` and `tests/**`, Playwright only `e2e/` — they never run each other's files.
 
 ### 2. Smoke specs
 
 📄 **Create `e2e/smoke.spec.ts`:**
+
 ```ts
 import { expect, test } from '@playwright/test';
 
@@ -3206,42 +3451,46 @@ test('contact form validates input', async ({ page }) => {
 ### 3. Add the E2E job to CI
 
 📄 **Edit `.github/workflows/ci.yml`** — append a job (keep the others):
+
 ```yaml
-  e2e:
-    name: E2E
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm e2e
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
+e2e:
+  name: E2E
+  runs-on: ubuntu-latest
+  timeout-minutes: 20
+  steps:
+    - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+    - run: pnpm exec playwright install --with-deps chromium
+    - run: pnpm e2e
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-report
+        path: |
+          playwright-report
+          test-results
+        retention-days: 7
 ```
+
 > 🔎 In CI, `pnpm start` serves the production build and needs **no database** yet (nothing reads it at runtime). The `NEXT_PUBLIC_*` values come from the workflow-level `env:` block set in Sprint 0.
 
 ### ✅ Verify
+
 ```bash
 pnpm e2e                # starts `pnpm dev` automatically; 5 specs pass
 pnpm e2e:ui             # explore interactively; Ctrl+C when done
 ```
+
 Sabotage: change the expected French heading to `'Contactez'` → spec fails with a trace → revert.
 
 After the PR is open, add the **`E2E`** check to the required checks of the `main` ruleset (GitHub → Settings → Branches/Rules).
@@ -3255,35 +3504,42 @@ After the PR is open, add the **`E2E`** check to the required checks of the `mai
 ## 🧾 Sprint 1 wrap-up
 
 **Branch:** `docs/s1-wrap-up`
+
 ```bash
 git switch main && git pull && git switch -c docs/s1-wrap-up
 ```
 
 ### 1. Update `AGENTS.md`
+
 **Commands** — add:
+
 ```markdown
 - `pnpm dev` — starts the embedded PGlite database AND Next.js (`pnpm dev:web` = Next only)
 - `pnpm db:generate` / `db:migrate` / `db:reset` / `db:seed` / `db:studio` / `db:check` — Drizzle workflow
 - `pnpm e2e` — Playwright tests; `pnpm pin` — pin dependency versions exactly
 ```
+
 **Structure** — add:
+
 ```markdown
-src/db/        schema, client, seed (migrations in drizzle/)   src/i18n/     next-intl routing/navigation
-src/actions/   Server Actions ('use server')                   src/validations/  Zod schemas shared client/server
-src/locales/   en.json, fr.json (add keys to BOTH)             scripts/      Node scripts (db, checks)
+src/db/ schema, client, seed (migrations in drizzle/) src/i18n/ next-intl routing/navigation src/actions/ Server Actions ('use server') src/validations/ Zod schemas shared client/server src/locales/ en.json, fr.json (add keys to BOTH) scripts/ Node scripts (db, checks)
 ```
+
 **Conventions** — add:
+
 ```markdown
 - User-facing strings: always via next-intl (`useTranslations`/`getTranslations`); Zod messages are i18n keys.
 - Mutations: Server Action built with `createAction(schema, handler)` returning `ActionResult<T>`; throw `AppError` subclasses.
 - Database changes: edit `src/db/schema/*` → `pnpm db:generate` → commit the SQL in `drizzle/`. Never edit generated SQL by hand.
 - Internal links: `Link` from `@/i18n/navigation`, never `next/link`.
 ```
+
 ```bash
 pnpm check:agents        # every command mentioned must exist
 ```
 
 ### 2. Update `docs/roadmap/06-project-state.md`
+
 - **Last completed sprint:** Sprint 1 · **Current sprint:** Sprint 2
 - **What exists:** DB layer (Drizzle, PGlite dev server, pool config), `app_meta` table (removed in Sprint 2), route groups, theme, shadcn set, next-intl (`en`, `fr`), form components, `createAction`, `AppError`, LogTape, Playwright smoke tests
 - **Commands:** the new scripts above
@@ -3294,6 +3550,7 @@ pnpm check:agents        # every command mentioned must exist
 - **Deviations:** `pg` driver for every environment (no Neon-specific driver); DB port 5433; routes built before `[locale]` then moved; ticket order changed (T04→T03, T14/T15→T13); no `NEXT_PUBLIC_DEFAULT_LOCALE` (routing config is the single source of truth); `db:reset` also seeds
 
 ### 3. Tick the checkboxes in `docs/roadmap/sprint-01-data-shell-i18n.md`, then ship
+
 ```bash
 pnpm check
 git add -A
@@ -3310,11 +3567,13 @@ git push origin v0.0.2
 ## 🏁 Sprint 1 — Definition of Done
 
 Prove it on a **fresh clone**:
+
 ```bash
 cd "$TEMP" && git clone git@github.com:OWNER/saas-boilerplate.git s1-check && cd s1-check
 corepack enable && pnpm install
 pnpm dev                 # DB + app, zero external services
 ```
+
 (🪟 cmd.exe: `cd %TEMP%`)
 
 - [ ] `pnpm dev` works on a clean clone with **zero** external services
@@ -3337,23 +3596,23 @@ git log --first-parent --oneline     # one merge per ticket, 16 + wrap-up
 
 ### 🎬 Sprint review — measurable acceptance
 
-| Check | Expected |
-|---|---|
-| `pnpm db:reset && pnpm dev` | app + DB up; Studio lists tables |
-| Visit `/`, `/fr` | content in the right language; switcher preserves the path |
-| Toggle theme, reload | persisted, no flash |
-| Submit invalid contact form | localized field errors; valid → toast |
-| Open a missing URL | localized 404 |
-| Throw in a page (prod build) | error boundary with **Try again** |
-| Log with `{ password }` | shows `[REDACTED]` |
-| `pnpm e2e` | 5 specs green |
+| Check                        | Expected                                                   |
+| ---------------------------- | ---------------------------------------------------------- |
+| `pnpm db:reset && pnpm dev`  | app + DB up; Studio lists tables                           |
+| Visit `/`, `/fr`             | content in the right language; switcher preserves the path |
+| Toggle theme, reload         | persisted, no flash                                        |
+| Submit invalid contact form  | localized field errors; valid → toast                      |
+| Open a missing URL           | localized 404                                              |
+| Throw in a page (prod build) | error boundary with **Try again**                          |
+| Log with `{ password }`      | shows `[REDACTED]`                                         |
+| `pnpm e2e`                   | 5 specs green                                              |
 
 ---
 
 ## 🧯 Troubleshooting (Sprint 1)
 
 | Symptom | Likely cause → fix |
-|---|---|
+| --- | --- |
 | `ECONNREFUSED 127.0.0.1:5433` | DB server not running → `pnpm dev` (or `pnpm db:server`) |
 | `EADDRINUSE` on 5433 | Old db process alive → `netstat -ano \| findstr :5433` then `taskkill /PID <pid> /F`, or change `DB_SERVER_PORT` |
 | Studio/`db:ping` hang while the app runs | PGlite serves one connection at a time → stop the app briefly, or use the Docker fallback in `docs/guides/database.md` |
