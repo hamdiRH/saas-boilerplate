@@ -2,7 +2,7 @@
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
-const run = (cmd) => execSync(cmd, { encoding: "utf8" }).trim();
+const run = (cmd) => execSync(cmd, { encoding: "utf-8" }).trim();
 const today = new Date().toISOString().slice(0, 10);
 
 const body = [

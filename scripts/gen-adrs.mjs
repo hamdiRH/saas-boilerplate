@@ -19,18 +19,21 @@ const TITLES = [
 mkdirSync("docs/adr", { recursive: true });
 const today = new Date().toISOString().slice(0, 10);
 
-TITLES.forEach((title, index) => {
+for (const [index, title] of TITLES.entries()) {
   const n = String(index + 1).padStart(3, "0");
   const slug = title
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-|-$/gu, "");
   const file = `docs/adr/${n}-${slug}.md`;
-  if (existsSync(file)) return; // never overwrite
+  if (existsSync(file)) {
+    // Never overwrite existing ADRs.
+    continue;
+  }
   writeFileSync(
     file,
-    `# ADR-${n} — ${title}\n\n- **Status:** accepted\n- **Date:** ${today}\n\n## Context\nSee \`docs/roadmap/02-architecture.md\` §14.\n\n## Decision\n${title}.\n\n## Consequences\n_Fill in details when the related sprint is implemented._\n`,
+    `# ADR-${n} — ${title}\n\n- **Status:** accepted\n- **Date:** ${today}\n\n## Context\nSee \`docs/roadmap/02-architecture.md\` §14.\n\n## Decision\n${title}.\n\n## Consequences\n_Fill in details when the related sprint is implemented._\n`
   );
-});
+}
 
 console.log("✅ ADR stubs created in docs/adr");
