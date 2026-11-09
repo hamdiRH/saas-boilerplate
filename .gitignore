@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env (keep examples + development defaults)
+.env*
+!.env.example
+!.env.development
+
+# local database (Sprint 1)
+local.db
+local.db-*
+
+# tests
+coverage
+playwright-report
+test-results
+e2e/.auth
+
+# dev emails (Sprint 2)
+.emails
+
+# editors (keep shared VS Code config)
+.idea
+.DS_Store
