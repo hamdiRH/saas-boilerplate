@@ -13,7 +13,7 @@ const config: KnipConfig = {
     // 'tests/**/*.ts',
   ],
   // shadcn primitives intentionally export more than we use
-  ignore: ['src/components/ui/**', 'src/utils/cn.ts'],
+  ignore: ['src/components/ui/**'],
   ignoreDependencies: ['lucide-react'],
   project: ['src/**/*.{ts,tsx,css}', 'scripts/**/*.{ts,mjs}'],
 };
