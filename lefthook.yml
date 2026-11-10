@@ -47,3 +47,7 @@ pre-commit:
   commands:
     lint-staged:
       run: pnpm exec lint-staged
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
