@@ -2,6 +2,8 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 permissions:
+  lefthook:
+    build: true
   ultracite:
     skills: true
 skills:
