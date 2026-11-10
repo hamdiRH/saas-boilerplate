@@ -1,8 +1,11 @@
 import path from 'node:path';
 
+import react from '@vitejs/plugin-react';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, 'src') },
   },
@@ -32,6 +35,21 @@ export default defineConfig({
           environment: 'node',
           include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
           name: 'unit',
+        },
+      },
+
+      {
+        extends: true,
+        test: {
+          browser: {
+            enabled: true,
+            headless: true,
+            instances: [{ browser: 'chromium' }],
+            provider: playwright() as never,
+          },
+          include: ['src/**/*.test.tsx'],
+          name: 'browser',
+          setupFiles: ['tests/browser-setup.ts'],
         },
       },
     ],
