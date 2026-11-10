@@ -14,7 +14,8 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "commit": "cz"
+    "commit": "cz",
+    "knip": "knip"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -40,6 +41,7 @@
     "commitizen": "4.3.2",
     "cz-conventional-changelog": "3.3.0",
     "jiti": "2.7.0",
+    "knip": "6.44.2",
     "lefthook": "2.2.2",
     "lint-staged": "17.6.0",
     "oxfmt": "0.75.0",
