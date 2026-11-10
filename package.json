@@ -17,9 +17,11 @@
     "commit": "cz",
     "knip": "knip",
     "analyze": "cross-env ANALYZE=true next build --webpack",
-    "test": "vitest run",
+    "test": "vitest run --project unit",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:browser": "vitest run --project browser",
+    "test:all": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -43,6 +45,9 @@
     "@types/node": "20.19.43",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "@vitest/browser": "5.1.0",
+    "@vitest/browser-playwright": "5.1.0",
     "@vitest/coverage-v8": "5.1.0",
     "commitizen": "4.3.2",
     "cross-env": "10.1.0",
@@ -54,10 +59,12 @@
     "oxfmt": "0.75.0",
     "oxlint": "1.92.0",
     "oxlint-tsgolint": "7.0.2006",
+    "playwright": "1.65.0",
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3",
     "ultracite": "8.1.1",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "vitest-browser-react": "2.3.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}": [

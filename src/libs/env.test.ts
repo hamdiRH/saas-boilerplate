@@ -4,6 +4,7 @@ describe('Env', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
+    vi.restoreAllMocks();
   });
 
   it('loads when all variables are valid', async () => {
@@ -17,6 +18,7 @@ describe('Env', () => {
   });
 
   it('throws when NEXT_PUBLIC_APP_URL is not a URL', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubEnv('NEXT_PUBLIC_APP_URL', 'not-a-url');
     vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');
 
@@ -24,6 +26,7 @@ describe('Env', () => {
   });
 
   it('throws when a required variable is empty', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
     vi.stubEnv('NEXT_PUBLIC_APP_NAME', '');
 
