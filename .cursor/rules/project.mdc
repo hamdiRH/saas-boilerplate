@@ -1,0 +1,8 @@
+---
+description: Project-wide rules (see AGENTS.md for the full version)
+alwaysApply: true
+---
+
+Follow AGENTS.md in the repository root.
+Use pnpm. TypeScript strict, no `any`. Never read `process.env` outside `src/libs/Env.ts`.
+Run `pnpm check` before finishing a task. Conventional commits.

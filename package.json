@@ -8,7 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:env": "node scripts/check-env-usage.mjs",
-    "check": "ultracite check",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm check:env && pnpm check:agents && pnpm test && pnpm test:browser",
     "fix": "ultracite fix",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -21,7 +21,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:browser": "vitest run --project browser",
-    "test:all": "vitest run"
+    "test:all": "vitest run",
+    "check:agents": "node scripts/check-agent-files.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
