@@ -1,3 +1,14 @@
 allowBuilds:
   sharp: false
   unrs-resolver: false
+permissions:
+  ultracite:
+    skills: true
+skills:
+  dirs:
+    - .agent/skills
+    - .agents/skills
+    - .claude/skills
+    - .cursor/skills
+    - .gemini/skills
+    - .github/skills

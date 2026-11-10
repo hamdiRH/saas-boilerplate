@@ -201,7 +201,7 @@ importers:
         version: 4.6.7
     devDependencies:
       '@shadcn/lint':
-        specifier: ^0.2.5
+        specifier: 0.2.5
         version: 0.2.5
       '@tailwindcss/turbopack':
         specifier: 4.3.5
@@ -218,14 +218,17 @@ importers:
       jiti:
         specifier: 2.7.0
         version: 2.7.0
+      lint-staged:
+        specifier: 17.6.0
+        version: 17.6.0
       oxfmt:
-        specifier: ^0.75.0
+        specifier: 0.75.0
         version: 0.75.0
       oxlint:
-        specifier: ^1.92.0
+        specifier: 1.92.0
         version: 1.92.0(oxlint-tsgolint@7.0.2006)
       oxlint-tsgolint:
-        specifier: ^7.0.2006
+        specifier: 7.0.2006
         version: 7.0.2006
       tailwindcss:
         specifier: 4.3.5
@@ -1817,6 +1820,11 @@ packages:
     resolution: {integrity: sha512-WkUDrojuJs0xkgGf2udWxa3yGBRxPtxUkB79i6aCZLRgc7PM8fZe9TosfPDcvEpQZbuFASnHYmRLBLUbmLOIIA==}
     engines: {node: '>= 12.0.0'}
 
+  lint-staged@17.6.0:
+    resolution: {integrity: sha512-nOhBfYkZEwkFtNzD5pK9s9LkcWoxJ+whLzEnhqi9nl7zTB5n7tg8+9iYgMGx2Wm3VlLu8cbNj0RACzY+nWi5iQ==}
+    engines: {node: '>=22.22.1'}
+    hasBin: true
+
   locate-path@3.0.0:
     resolution: {integrity: sha512-7AO748wWnIhNqAuaty2ZWHkQHRSNfPVIsPIfwEOWO22AmaoVrWavlOcMR5nzTLNYvp36X220/maaRsrec1G65A==}
     engines: {node: '>=6'}
@@ -2172,6 +2180,10 @@ packages:
   stdin-discarder@0.2.2:
     resolution: {integrity: sha512-UhDfHmA92YAlNnCfhmq0VeNL5bDbiZGg7sZ2IvPsXubGkiNa9EC+tUTsjBRsYUAz87btI6/1wf4XoVvQ3uRnmQ==}
     engines: {node: '>=18'}
+
+  string-argv@0.3.2:
+    resolution: {integrity: sha512-aqD2Q0144Z+/RqG52NeHEkZauTAUWJO8c6yTftGJKO3Tja5tUgIfmIl6kExvhtxSDP7fXB6DvzkfMpCd/F3G+Q==}
+    engines: {node: '>=0.6.19'}
 
   string-width@7.2.0:
     resolution: {integrity: sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==}
@@ -3585,6 +3597,14 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.33.0
       lightningcss-win32-x64-msvc: 1.33.0
 
+  lint-staged@17.6.0:
+    dependencies:
+      picomatch: 4.0.7
+      string-argv: 0.3.2
+      tinyexec: 1.3.1
+    optionalDependencies:
+      yaml: 2.9.1
+
   locate-path@3.0.0:
     dependencies:
       p-locate: 3.0.0
@@ -4024,6 +4044,8 @@ snapshots:
   source-map@0.6.1: {}
 
   stdin-discarder@0.2.2: {}
+
+  string-argv@0.3.2: {}
 
   string-width@7.2.0:
     dependencies:
