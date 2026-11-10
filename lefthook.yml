@@ -51,3 +51,9 @@ commit-msg:
   commands:
     commitlint:
       run: pnpm exec commitlint --edit {1}
+pre-push:
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    tests:
+      run: pnpm vitest run --changed
