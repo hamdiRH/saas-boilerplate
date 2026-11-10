@@ -1,5 +1,8 @@
+import bundleAnalyzer from '@next/bundle-analyzer';
 import { createJiti } from 'jiti';
 import type { NextConfig } from 'next';
+
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 const jiti = createJiti(import.meta.url);
 
@@ -34,4 +37,4 @@ const validateEnvironment = async (): Promise<void> => {
 
 void validateEnvironment();
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
