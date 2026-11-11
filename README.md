@@ -186,6 +186,7 @@ e2e/  tests/  .storybook/  docs/  scripts/  loadtest/
 | --- | --- |
 | start developing | `pnpm dev` |
 | run everything CI runs, locally | `pnpm check` |
+| commit, open a PR, wait for CI, merge, and sync `main` | `pnpm git:pr` (stages all changes) |
 | run tests | `pnpm test` (unit) · `pnpm test:browser` (components) · `pnpm test:coverage` |
 | run end-to-end tests | `pnpm e2e` · `pnpm e2e:visual` · `pnpm e2e:rtl` |
 | work on UI in isolation | `pnpm storybook` |
