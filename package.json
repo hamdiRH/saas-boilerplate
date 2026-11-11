@@ -30,7 +30,9 @@
     "dev:web": "next dev",
     "db:server": "tsx scripts/db-server.ts",
     "db:ping": "tsx scripts/db-ping.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:reset": "tsx scripts/db-reset.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
