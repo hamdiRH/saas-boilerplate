@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently -k -n db,web -c blue,green \"pnpm db:server\" \"next dev\"",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -26,7 +26,11 @@
     "check:agents": "node scripts/check-agent-files.mjs",
     "pin": "node scripts/pin-versions.mjs && pnpm install",
     "db:generate": "drizzle-kit generate",
-    "db:check": "drizzle-kit check"
+    "db:check": "drizzle-kit check",
+    "dev:web": "next dev",
+    "db:server": "tsx scripts/db-server.ts",
+    "db:ping": "tsx scripts/db-ping.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -46,6 +50,8 @@
   "devDependencies": {
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
+    "@electric-sql/pglite": "^0.5.16",
+    "@electric-sql/pglite-socket": "^0.2.19",
     "@next/bundle-analyzer": "16.4.5",
     "@next/env": "^16.4.6",
     "@shadcn/lint": "0.2.5",
@@ -59,6 +65,7 @@
     "@vitest/browser-playwright": "5.1.0",
     "@vitest/coverage-v8": "5.1.0",
     "commitizen": "4.3.2",
+    "concurrently": "^10.0.7",
     "cross-env": "10.1.0",
     "cz-conventional-changelog": "3.3.0",
     "drizzle-kit": "^0.31.11",
@@ -71,6 +78,7 @@
     "oxlint-tsgolint": "7.0.2006",
     "playwright": "1.65.0",
     "tailwindcss": "4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "ultracite": "8.1.1",
     "vitest": "5.1.0",
