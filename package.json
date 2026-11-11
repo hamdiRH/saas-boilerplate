@@ -8,6 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:env": "node scripts/check-env-usage.mjs",
+    "git:pr": "node scripts/git-commit-push-pr.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm knip && pnpm check:env && pnpm check:agents && pnpm db:check && pnpm test && pnpm test:browser",
     "fix": "ultracite fix",
     "lint": "oxlint",
