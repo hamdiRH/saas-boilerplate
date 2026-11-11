@@ -1,7 +1,12 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import type { ReactNode } from 'react';
 
 import '@/styles/global.css';
+
+interface RootLayoutProps {
+  children: ReactNode;
+}
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -18,7 +23,7 @@ export const metadata: Metadata = {
   title: 'Create Next App',
 };
 
-const RootLayout = ({ children }: LayoutProps<'/'>) => (
+const RootLayout = ({ children }: RootLayoutProps) => (
   <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
     <body className="flex min-h-full flex-col">{children}</body>
   </html>

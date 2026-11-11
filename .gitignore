@@ -49,6 +49,8 @@ next-env.d.ts
 local.db
 local.db-*
 
+
+
 # tests
 coverage
 playwright-report
