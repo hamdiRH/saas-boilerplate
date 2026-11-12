@@ -42,4 +42,3 @@ const MobileNav = ({ links }: { links: readonly NavLink[] }) => {
 };
 
 export { MobileNav };
-export default MobileNav;

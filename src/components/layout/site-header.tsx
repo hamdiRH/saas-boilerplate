@@ -43,4 +43,3 @@ const SiteHeader = () => (
 );
 
 export { SiteHeader };
-export default SiteHeader;

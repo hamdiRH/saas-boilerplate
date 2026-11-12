@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { assertRequiredChecksPassed } from '../scripts/git-commit-push-pr.mjs';
+import { assertRequiredChecksPassed, runPhase } from '../scripts/git-commit-push-pr.mjs';
 
 const passingChecks = [
   { bucket: 'pass', name: 'Quality (types, lint, format, knip)' },
@@ -26,5 +26,28 @@ describe('assertRequiredChecksPassed', () => {
     expect(() => assertRequiredChecksPassed(passingChecks.slice(0, 3))).toThrow(
       'Commit messages: expected one check, found 0.',
     );
+  });
+});
+
+describe('runPhase', () => {
+  it('continues after a failed non-blocking phase', async () => {
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const succeeded = await runPhase(
+        'Wait for GitHub PR checks',
+        () => {
+          throw new Error('A check failed');
+        },
+        { continueOnError: true },
+      );
+
+      expect(succeeded).toBe(false);
+      expect(errorLog).toHaveBeenCalledWith(
+        expect.stringContaining('[WARN] Wait for GitHub PR checks'),
+      );
+    } finally {
+      errorLog.mockRestore();
+    }
   });
 });

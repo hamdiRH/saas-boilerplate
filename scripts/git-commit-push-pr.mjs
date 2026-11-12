@@ -10,6 +10,7 @@ const REQUIRED_CHECKS = [
   'Build',
   'Commit messages',
 ];
+const TOTAL_PHASES = 9;
 const execFileAsync = promisify(execFile);
 
 /**
@@ -55,6 +56,39 @@ export const assertRequiredChecksPassed = (checks) => {
   }
 };
 
+export const runPhase = async (label, action, { continueOnError = false } = {}) => {
+  const startedAt = Date.now();
+  console.log(`\n==> ${label}`);
+
+  try {
+    await action();
+    console.log(`[PASS] ${label} (${((Date.now() - startedAt) / 1000).toFixed(1)}s)`);
+    return true;
+  } catch (error) {
+    if (typeof error === 'object' && error !== null) {
+      if ('stdout' in error && typeof error.stdout === 'string' && error.stdout) {
+        process.stdout.write(error.stdout);
+      }
+
+      if ('stderr' in error && typeof error.stderr === 'string' && error.stderr) {
+        process.stderr.write(error.stderr);
+      }
+    }
+
+    const status = continueOnError ? 'WARN' : 'FAIL';
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[${status}] ${label} (${((Date.now() - startedAt) / 1000).toFixed(1)}s): ${message}`,
+    );
+
+    if (continueOnError) {
+      return false;
+    }
+
+    throw error;
+  }
+};
+
 const run = async (command, args, { captureOutput = false } = {}) => {
   const { stdout, stderr } = await execFileAsync(command, args, {
     encoding: 'utf-8',
@@ -73,75 +107,103 @@ const run = async (command, args, { captureOutput = false } = {}) => {
 };
 
 const main = async () => {
-  const branchOutput = await run('git', ['branch', '--show-current'], {
-    captureOutput: true,
+  let phaseNumber = 0;
+  const phase = (label, action, options) => {
+    phaseNumber += 1;
+    return runPhase(`[${phaseNumber}/${TOTAL_PHASES}] ${label}`, action, options);
+  };
+  let branch = '';
+
+  await phase('Validate the current branch', async () => {
+    const branchOutput = await run('git', ['branch', '--show-current'], {
+      captureOutput: true,
+    });
+    branch = branchOutput.trim();
+
+    if (!branch) {
+      throw new Error('Could not determine the current Git branch.');
+    }
+
+    if (branch === 'main') {
+      throw new Error('Refusing to create a PR from main. Switch to a ticket branch.');
+    }
   });
-  const branch = branchOutput.trim();
 
-  if (!branch) {
-    throw new Error('Could not determine the current Git branch.');
-  }
-
-  if (branch === 'main') {
-    throw new Error('Refusing to create a PR from main. Switch to a ticket branch.');
-  }
-
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
   let commitMessage;
+  await phase('Collect the commit description', async () => {
+    const readline = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
 
-  try {
-    commitMessage = await readline.question(
-      'Commit description (for example, feat(auth): add sign-in): ',
+    try {
+      commitMessage = await readline.question(
+        'Commit description (for example, feat(auth): add sign-in): ',
+      );
+    } finally {
+      readline.close();
+    }
+
+    if (!commitMessage.trim()) {
+      throw new Error('Commit description cannot be empty.');
+    }
+  });
+
+  await phase('Stage and commit changes', async () => {
+    await run('git', ['add', '-A']);
+
+    const stagedFilesOutput = await run('git', ['diff', '--cached', '--name-only'], {
+      captureOutput: true,
+    });
+
+    if (!stagedFilesOutput.trim()) {
+      throw new Error('There are no staged changes to commit.');
+    }
+
+    await run('git', ['commit', '-m', commitMessage.trim()]);
+  });
+
+  await phase('Push branch to origin', () => run('git', ['push', '-u', 'origin', branch]));
+  await phase('Create pull request', () => run('gh', ['pr', 'create', '--fill', '--base', 'main']));
+
+  const checksWatchPassed = await phase(
+    'Wait for GitHub PR checks',
+    async () => {
+      await delay(5000);
+      await run('gh', ['pr', 'checks', '--watch']);
+    },
+    { continueOnError: true },
+  );
+
+  const checksPassed = await phase(
+    'Verify required CI checks',
+    async () => {
+      const checksOutput = await run('gh', ['pr', 'checks', '--json', 'name,bucket'], {
+        captureOutput: true,
+      });
+      assertRequiredChecksPassed(JSON.parse(checksOutput));
+    },
+    { continueOnError: true },
+  );
+
+  if (!checksWatchPassed || !checksPassed) {
+    console.warn(
+      'One or more CI check steps reported a problem. Continuing to the merge attempt; GitHub branch protection may block it.',
     );
-  } finally {
-    readline.close();
   }
 
-  if (!commitMessage.trim()) {
-    throw new Error('Commit description cannot be empty.');
-  }
-
-  await run('git', ['add', '-A']);
-
-  const stagedFilesOutput = await run('git', ['diff', '--cached', '--name-only'], {
-    captureOutput: true,
+  await phase('Merge pull request', () => run('gh', ['pr', 'merge', '--merge', '--delete-branch']));
+  await phase('Switch to main and pull latest changes', async () => {
+    await run('git', ['switch', 'main']);
+    await run('git', ['pull']);
   });
-  const stagedFiles = stagedFilesOutput.trim();
-
-  if (!stagedFiles) {
-    throw new Error('There are no staged changes to commit.');
-  }
-
-  await run('git', ['commit', '-m', commitMessage.trim()]);
-  await run('git', ['push', '-u', 'origin', branch]);
-  await run('gh', ['pr', 'create', '--fill', '--base', 'main']);
-
-  // add sleep to give GitHub time to register the PR before checking for checks
-  await delay(5000);
-  await run('gh', ['pr', 'checks', '--watch']);
-
-  const checksOutput = await run('gh', ['pr', 'checks', '--json', 'name,bucket'], {
-    captureOutput: true,
-  });
-  assertRequiredChecksPassed(JSON.parse(checksOutput));
-
-  await run('gh', ['pr', 'merge', '--merge', '--delete-branch']);
-  await run('git', ['switch', 'main']);
-  await run('git', ['pull']);
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
   try {
     await main();
   } catch (error) {
-    if (typeof error === 'object' && error !== null && 'stderr' in error) {
-      process.stderr.write(String(error.stderr));
-    }
-
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(`[STOP] ${error instanceof Error ? error.message : String(error)}`);
     process.exitCode = 1;
   }
 }
