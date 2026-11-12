@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { ThemeProvider } from '@/components/providers/theme-provider';
+
 import '@/styles/global.css';
 
 interface RootLayoutProps {
@@ -24,8 +26,12 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = ({ children }: RootLayoutProps) => (
-  <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-    <body className="flex min-h-full flex-col">{children}</body>
+  <html lang="en" suppressHydrationWarning>
+    <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        {children}
+      </ThemeProvider>
+    </body>
   </html>
 );
 

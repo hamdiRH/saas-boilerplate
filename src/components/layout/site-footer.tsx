@@ -9,4 +9,3 @@ const SiteFooter = () => (
 );
 
 export { SiteFooter };
-export default SiteFooter;
