@@ -9,4 +9,8 @@ export default defineConfig({
   extends: [core, react, next, shadcn],
   ignorePatterns: core.ignorePatterns,
   jsPlugins: shadcn.jsPlugins,
+  rules: {
+    'eslint/func-style': 'off',
+    'react/function-component-definition': 'off',
+  },
 });
