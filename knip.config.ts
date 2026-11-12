@@ -14,7 +14,7 @@ const config: KnipConfig = {
   ],
   // shadcn primitives intentionally export more than we use
   ignore: ['src/components/ui/**', 'src/db/**'],
-  ignoreDependencies: ['lucide-react'],
+  ignoreDependencies: ['lucide-react', '@faker-js/faker'],
   project: ['src/**/*.{ts,tsx,css}', 'scripts/**/*.{ts,mjs}'],
 };
 

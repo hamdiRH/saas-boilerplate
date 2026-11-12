@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
+import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
 const REQUIRED_CHECKS = [
@@ -117,6 +118,9 @@ const main = async () => {
   await run('git', ['commit', '-m', commitMessage.trim()]);
   await run('git', ['push', '-u', 'origin', branch]);
   await run('gh', ['pr', 'create', '--fill', '--base', 'main']);
+
+  // add sleep to give GitHub time to register the PR before checking for checks
+  await delay(5000);
   await run('gh', ['pr', 'checks', '--watch']);
 
   const checksOutput = await run('gh', ['pr', 'checks', '--json', 'name,bucket'], {
