@@ -1,6 +1,7 @@
 'use client';
 
 import { Laptop, Moon, Sun } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 
 import { Button } from '@/components/ui/button';
@@ -11,23 +12,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const themes = [
-  { icon: Sun, label: 'Light', value: 'light' },
-  { icon: Moon, label: 'Dark', value: 'dark' },
-  { icon: Laptop, label: 'System', value: 'system' },
-] as const;
-
 export function ThemeToggle() {
   const { setTheme } = useTheme();
-
+  const t = useTranslations('theme');
+  const themes = [
+    { icon: Sun, label: t('light'), value: 'light' },
+    { icon: Moon, label: t('dark'), value: 'dark' },
+    { icon: Laptop, label: t('system'), value: 'system' },
+  ] as const;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button type="button" variant="ghost" size="icon" aria-label="Change theme" />}
+        render={<Button type="button" variant="ghost" size="icon" aria-label={t('toggle')} />}
       >
         <Sun className="size-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
         <Moon className="absolute size-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-        <span className="sr-only">Change theme</span>
+        <span className="sr-only">{t('toggle')}</span>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
