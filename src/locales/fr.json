@@ -1,1 +1,73 @@
-{ "common": { "appName": "SaaS Boilerplate" } }
+{
+  "common": {
+    "appName": "SaaS Boilerplate",
+    "openMenu": "Ouvrir le menu",
+    "menu": "Menu",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe"
+  },
+  "nav": {
+    "home": "Accueil",
+    "contact": "Contact",
+    "signIn": "Se connecter",
+    "getStarted": "Commencer",
+    "dashboard": "Tableau de bord",
+    "workspace": "Espace de travail"
+  },
+  "theme": {
+    "toggle": "Changer de thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "locale": { "label": "Langue", "en": "English", "fr": "Français" },
+  "footer": { "rights": "Tous droits réservés." },
+  "marketing": {
+    "title": "Lancez votre SaaS plus vite",
+    "subtitle": "Next.js 16 · TypeScript strict · Tailwind CSS 4 · shadcn/ui",
+    "cta": "Ça marche"
+  },
+  "auth": {
+    "signInTitle": "Se connecter",
+    "signUpTitle": "Créez votre compte"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "description": "Votre espace de travail apparaîtra ici."
+  },
+  "admin": { "consoleTitle": "Console d'administration", "title": "Administration" },
+  "contact": {
+    "title": "Nous contacter",
+    "description": "Envoyez-nous un message, nous vous répondrons rapidement.",
+    "name": "Nom",
+    "email": "E-mail",
+    "message": "Message",
+    "send": "Envoyer le message",
+    "success": "Merci ! Nous avons bien reçu votre message."
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "nameMin": "Le nom doit contenir au moins 2 caractères",
+    "email": "Saisissez une adresse e-mail valide",
+    "messageMin": "Le message doit contenir au moins 10 caractères",
+    "messageMax": "Le message ne doit pas dépasser 1000 caractères",
+    "invalid": "Valeur invalide"
+  },
+  "errors": {
+    "title": "Une erreur est survenue",
+    "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "reference": "Référence",
+    "notFoundTitle": "Page introuvable",
+    "notFoundDescription": "La page que vous cherchez n'existe pas.",
+    "backHome": "Retour à l'accueil",
+    "validation": "Certains champs sont invalides.",
+    "unauthenticated": "Veuillez vous connecter pour continuer.",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action.",
+    "notFound": "Nous n'avons pas trouvé ce que vous cherchiez.",
+    "conflict": "Cela entre en conflit avec des données existantes.",
+    "rateLimited": "Trop de requêtes. Veuillez ralentir.",
+    "external": "Un service dont nous dépendons est indisponible.",
+    "internal": "Une erreur inattendue s'est produite."
+  }
+}

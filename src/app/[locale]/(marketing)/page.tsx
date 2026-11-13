@@ -1,16 +1,19 @@
-import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { useTranslations } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
+import { use } from 'react';
+
 import { Button } from '@/components/ui/button';
-import { Env } from '@/libs/env';
 
-const HomePage = () => (
-  <section className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 py-24 text-center">
-    <h1 className="text-4xl font-semibold tracking-tight">{Env.NEXT_PUBLIC_APP_NAME}</h1>
-    <ThemeToggle />
-    <p className="text-muted-foreground">
-      Next.js 16 · TypeScript strict · Tailwind CSS 4 · shadcn/ui
-    </p>
-    <Button>It works</Button>
-  </section>
-);
+export default function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
+  setRequestLocale(locale as 'en' | 'fr');
+  const t = useTranslations('marketing');
 
-export default HomePage;
+  return (
+    <section className="mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 py-24 text-center">
+      <h1 className="text-4xl font-semibold tracking-tight">{t('title')}</h1>
+      <p className="text-muted-foreground">{t('subtitle')}</p>
+      <Button>{t('cta')}</Button>
+    </section>
+  );
+}

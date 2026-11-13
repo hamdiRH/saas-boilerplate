@@ -1,1 +1,65 @@
-{ "common": { "appName": "SaaS Boilerplate" } }
+{
+  "common": {
+    "appName": "SaaS Boilerplate",
+    "openMenu": "Open menu",
+    "menu": "Menu",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "nav": {
+    "home": "Home",
+    "contact": "Contact",
+    "signIn": "Sign in",
+    "getStarted": "Get started",
+    "dashboard": "Dashboard",
+    "workspace": "Workspace"
+  },
+  "theme": { "toggle": "Toggle theme", "light": "Light", "dark": "Dark", "system": "System" },
+  "locale": { "label": "Language", "en": "English", "fr": "Français" },
+  "footer": { "rights": "All rights reserved." },
+  "marketing": {
+    "title": "Ship your SaaS faster",
+    "subtitle": "Next.js 16 · TypeScript strict · Tailwind CSS 4 · shadcn/ui",
+    "cta": "It works"
+  },
+  "auth": {
+    "signInTitle": "Sign in",
+    "signUpTitle": "Create your account"
+  },
+  "dashboard": { "title": "Dashboard", "description": "Your workspace will appear here." },
+  "admin": { "consoleTitle": "Admin console", "title": "Admin" },
+  "contact": {
+    "title": "Contact us",
+    "description": "Send us a message and we'll get back to you.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send message",
+    "success": "Thanks! We received your message."
+  },
+  "validation": {
+    "required": "This field is required",
+    "nameMin": "Name must be at least 2 characters",
+    "email": "Enter a valid email address",
+    "messageMin": "Message must be at least 10 characters",
+    "messageMax": "Message must be at most 1000 characters",
+    "invalid": "Invalid value"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try again",
+    "reference": "Reference",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The page you are looking for does not exist.",
+    "backHome": "Back to home",
+    "validation": "Some fields are invalid.",
+    "unauthenticated": "Please sign in to continue.",
+    "forbidden": "You do not have permission to do this.",
+    "notFound": "We couldn't find what you were looking for.",
+    "conflict": "This conflicts with existing data.",
+    "rateLimited": "Too many requests. Please slow down.",
+    "external": "A service we depend on is unavailable.",
+    "internal": "An unexpected error occurred."
+  }
+}
