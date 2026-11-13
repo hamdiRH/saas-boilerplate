@@ -75,3 +75,5 @@ See `docs/roadmap/README.md` §3. In short: `pnpm check` is green, tests added, 
 1. Read the sprint file in `docs/roadmap/` and `06-project-state.md`.
 2. Implement tasks in listed order; tick checkboxes as you go.
 3. Do not redesign the plan; if something is impossible, stop and propose an ADR in `docs/adr/`.
+
+- Logging: `getLogger('<category>')` from `@/libs/Logger` (categories: app, auth, db, email, security, http). Pass data as properties — never interpolate secrets into messages. Never `console.log` in `src/`.
