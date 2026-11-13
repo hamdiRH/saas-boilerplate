@@ -77,3 +77,20 @@ See `docs/roadmap/README.md` §3. In short: `pnpm check` is green, tests added, 
 3. Do not redesign the plan; if something is impossible, stop and propose an ADR in `docs/adr/`.
 
 - Logging: `getLogger('<category>')` from `@/libs/Logger` (categories: app, auth, db, email, security, http). Pass data as properties — never interpolate secrets into messages. Never `console.log` in `src/`.
+
+## Commands
+
+- `dev` — starts the embedded PGlite database AND Next.js (`pnpm dev:web` = Next only)
+- `db:generate` / `db:migrate` / `db:reset` / `db:seed` / `db:studio` / `db:check` — Drizzle workflow
+- `e2e` — Playwright tests; `pin` — pin dependency versions exactly
+
+## Structure
+
+src/db/ schema, client, seed (migrations in drizzle/) src/i18n/ next-intl routing/navigation src/actions/ Server Actions ('use server') src/validations/ Zod schemas shared client/server src/locales/ en.json, fr.json (add keys to BOTH) scripts/ Node scripts (db, checks)
+
+## Conventions
+
+- User-facing strings: always via next-intl (`useTranslations`/`getTranslations`); Zod messages are i18n keys.
+- Mutations: Server Action built with `createAction(schema, handler)` returning `ActionResult<T>`; throw `AppError` subclasses.
+- Database changes: edit `src/db/schema/*` → `pnpm db:generate` → commit the SQL in `drizzle/`. Never edit generated SQL by hand.
+- Internal links: `Link` from `@/i18n/navigation`, never `next/link`.
