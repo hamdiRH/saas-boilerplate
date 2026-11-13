@@ -69,5 +69,38 @@
     "rateLimited": "Trop de requêtes. Veuillez ralentir.",
     "external": "Un service dont nous dépendons est indisponible.",
     "internal": "Une erreur inattendue s'est produite."
+  },
+  "emails": {
+    "footer": "Vous recevez cet e-mail suite à une activité sur votre compte {appName}.",
+    "verify": {
+      "subject": "Vérifiez votre adresse e-mail",
+      "heading": "Confirmez votre e-mail",
+      "greeting": "Bonjour {name},",
+      "body": "Merci de votre inscription. Confirmez votre adresse e-mail pour activer votre compte.",
+      "button": "Vérifier l'e-mail",
+      "ignore": "Si vous n'avez pas créé de compte, ignorez simplement ce message."
+    },
+    "reset": {
+      "subject": "Réinitialisez votre mot de passe",
+      "heading": "Réinitialisez votre mot de passe",
+      "greeting": "Bonjour {name},",
+      "body": "Nous avons reçu une demande de réinitialisation de votre mot de passe. Ce lien expire dans 1 heure.",
+      "button": "Choisir un nouveau mot de passe",
+      "ignore": "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message — votre mot de passe ne changera pas."
+    },
+    "passwordChanged": {
+      "subject": "Votre mot de passe a été modifié",
+      "heading": "Mot de passe modifié",
+      "greeting": "Bonjour {name},",
+      "body": "Le mot de passe de votre compte vient d'être modifié. Si ce n'était pas vous, réinitialisez-le immédiatement et contactez le support."
+    },
+    "changeEmail": {
+      "subject": "Confirmez le changement d'e-mail",
+      "heading": "Approuvez le changement d'e-mail",
+      "greeting": "Bonjour {name},",
+      "body": "Vous avez demandé à remplacer l'e-mail de votre compte par {newEmail}. Approuvez ce changement pour continuer.",
+      "button": "Approuver le changement",
+      "ignore": "Si vous n'êtes pas à l'origine de cette demande, sécurisez votre compte immédiatement."
+    }
   }
 }
