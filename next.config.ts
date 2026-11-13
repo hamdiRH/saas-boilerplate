@@ -1,10 +1,12 @@
 import bundleAnalyzer from '@next/bundle-analyzer';
 import { createJiti } from 'jiti';
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 const jiti = createJiti(import.meta.url);
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -37,4 +39,4 @@ const validateEnvironment = async (): Promise<void> => {
 
 void validateEnvironment();
 
-export default withBundleAnalyzer(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));
