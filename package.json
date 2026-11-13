@@ -33,7 +33,9 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:reset": "tsx scripts/db-reset.ts && pnpm db:seed",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
@@ -64,6 +66,7 @@
     "@faker-js/faker": "10.6.0",
     "@next/bundle-analyzer": "16.4.5",
     "@next/env": "16.4.6",
+    "@playwright/test": "^1.65.0",
     "@shadcn/lint": "0.2.5",
     "@tailwindcss/turbopack": "4.3.5",
     "@types/node": "26.6.6",
