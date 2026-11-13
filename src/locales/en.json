@@ -61,5 +61,38 @@
     "rateLimited": "Too many requests. Please slow down.",
     "external": "A service we depend on is unavailable.",
     "internal": "An unexpected error occurred."
+  },
+  "emails": {
+    "footer": "You received this email because of activity on your {appName} account.",
+    "verify": {
+      "subject": "Verify your email address",
+      "heading": "Confirm your email",
+      "greeting": "Hi {name},",
+      "body": "Thanks for signing up. Confirm your email address to activate your account.",
+      "button": "Verify email",
+      "ignore": "If you didn't create an account, you can safely ignore this email."
+    },
+    "reset": {
+      "subject": "Reset your password",
+      "heading": "Reset your password",
+      "greeting": "Hi {name},",
+      "body": "We received a request to reset your password. This link expires in 1 hour.",
+      "button": "Choose a new password",
+      "ignore": "If you didn't request this, ignore this email — your password won't change."
+    },
+    "passwordChanged": {
+      "subject": "Your password was changed",
+      "heading": "Password changed",
+      "greeting": "Hi {name},",
+      "body": "The password for your account was just changed. If this wasn't you, reset your password immediately and contact support."
+    },
+    "changeEmail": {
+      "subject": "Confirm your email change",
+      "heading": "Approve email change",
+      "greeting": "Hi {name},",
+      "body": "You asked to change your account email to {newEmail}. Approve this change to continue.",
+      "button": "Approve change",
+      "ignore": "If you didn't ask for this, secure your account right away."
+    }
   }
 }

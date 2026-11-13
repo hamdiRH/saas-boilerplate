@@ -6,6 +6,7 @@ const config: KnipConfig = {
   // Knip's Next.js plugin already treats app-router files (page, layout, route, …) as entries.
   entry: [
     // 'src/proxy.ts',
+    'src/templates/emails/**/*.tsx',
     'scripts/**/*.{ts,mjs}',
     // 'e2e/**/*.ts',
     // 'src/**/*.stories.{ts,tsx}',
@@ -16,13 +17,11 @@ const config: KnipConfig = {
   ignore: [
     'src/components/ui/**',
     'src/db/**',
-    'src/types/**',
-    'src/i18n/navigation.ts',
     'src/components/forms/**/*.tsx',
     'src/libs/email/index.ts',
   ],
   // UI primitives are intentionally ignored as entry points, including their package imports.
-  ignoreDependencies: ['@faker-js/faker', 'sonner', 'react-hook-form', '@hookform/resolvers'],
+  ignoreDependencies: ['@faker-js/faker', 'react-email'],
   project: ['src/**/*.{ts,tsx,css}', 'scripts/**/*.{ts,mjs}'],
 };
 
