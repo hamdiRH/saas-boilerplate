@@ -13,7 +13,7 @@ const links: readonly NavLink[] = [
 const SiteHeader = () => (
   <header className="border-b">
     <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-      <Link href="/" className="font-semibold">
+      <Link href={'/' as Route} className="font-semibold">
         SaaS Boilerplate
       </Link>
 
