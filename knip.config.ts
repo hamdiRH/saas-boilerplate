@@ -14,7 +14,8 @@ const config: KnipConfig = {
   ],
   // shadcn primitives intentionally export more than we use
   ignore: ['src/components/ui/**', 'src/db/**'],
-  ignoreDependencies: ['@faker-js/faker'],
+  // UI primitives are intentionally ignored as entry points, including their package imports.
+  ignoreDependencies: ['@faker-js/faker', 'sonner'],
   project: ['src/**/*.{ts,tsx,css}', 'scripts/**/*.{ts,mjs}'],
 };
 

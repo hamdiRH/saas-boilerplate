@@ -20,8 +20,9 @@ Run: `pnpm knip`
 
 ## Known false positives
 
-| Item                   | Why it's ignored                              |
-| ---------------------- | --------------------------------------------- |
-| `tw-animate-css`       | Imported from CSS, invisible to Knip          |
-| `src/components/ui/**` | shadcn primitives export more than we consume |
+| Item                   | Why it's ignored                                           |
+| ---------------------- | ---------------------------------------------------------- |
+| `tw-animate-css`       | Imported from CSS, invisible to Knip                       |
+| `src/components/ui/**` | shadcn primitives export more than we consume              |
+| `sonner`               | Imported by the intentionally ignored UI toaster primitive |
 ```
