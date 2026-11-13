@@ -19,6 +19,7 @@ const config: KnipConfig = {
     'src/types/**',
     'src/i18n/navigation.ts',
     'src/components/forms/**/*.tsx',
+    'src/libs/email/index.ts',
   ],
   // UI primitives are intentionally ignored as entry points, including their package imports.
   ignoreDependencies: ['@faker-js/faker', 'sonner', 'react-hook-form', '@hookform/resolvers'],
