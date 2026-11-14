@@ -20,6 +20,7 @@ const config: KnipConfig = {
     'src/components/forms/**/*.tsx',
     'src/libs/email/index.ts',
     'src/libs/auth-emails.tsx',
+    'src/libs/auth-client.ts',
     'src/libs/auth.ts',
   ],
   // UI primitives are intentionally ignored as entry points, including their package imports.
