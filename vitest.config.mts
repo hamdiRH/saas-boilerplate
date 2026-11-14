@@ -7,7 +7,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { '@': path.resolve(import.meta.dirname, 'src') },
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+      'server-only': path.resolve(import.meta.dirname, 'tests/stubs/server-only.ts'),
+    },
   },
   test: {
     coverage: {
@@ -24,6 +27,7 @@ export default defineConfig({
     },
     env: {
       // Safe defaults so modules that import Env.ts can load in tests
+      BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-123',
       NEXT_PUBLIC_APP_NAME: 'Test App',
       NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
     },

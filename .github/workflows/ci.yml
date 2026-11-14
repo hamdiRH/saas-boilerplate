@@ -16,6 +16,7 @@ env:
   # Valid dummy values so the build passes env validation (no secrets needed for CI)
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   NEXT_PUBLIC_APP_NAME: SaaS Boilerplate
+  BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-0123456789
 
 jobs:
   quality:

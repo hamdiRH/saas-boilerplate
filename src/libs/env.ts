@@ -9,6 +9,7 @@ export const Env = createEnv({
   emptyStringAsUndefined: true,
   // Next.js inlines NEXT_PUBLIC_* at build time, so each var must be listed explicitly.
   runtimeEnv: {
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
     DB_SERVER_PORT: process.env.DB_SERVER_PORT,
@@ -19,8 +20,10 @@ export const Env = createEnv({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    // ≥ 32 chars. Generate with: pnpm setup:env
   },
   server: {
+    BETTER_AUTH_SECRET: z.string().min(32),
     // Optional locally: when absent we use the PGlite socket server (see S1-T04)
     DATABASE_URL: z.url().optional(),
     // Direct (non-pooled) URL used for migrations in production
