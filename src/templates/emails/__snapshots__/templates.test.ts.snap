@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`email templates > renders HTML + plain text with the action link (en) 1`] = `
+"CONFIRM YOUR EMAIL
+
+Hi Ada,
+
+Thanks for signing up. Confirm your email address to activate your account.
+
+Verify email https://app.test/api/auth/verify-email?token=tok_123
+
+https://app.test/api/auth/verify-email?token=tok_123
+
+If you didn't create an account, you can safely ignore this email.
+
+You received this email because of activity on your Test App account."
+`;
