@@ -33,10 +33,11 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:reset": "tsx scripts/db-reset.ts && pnpm db:seed",
-    "db:seed": "tsx scripts/seed.ts",
+    "db:seed": "tsx --conditions=react-server scripts/seed.ts",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
-    "setup:env": "node scripts/setup-env.mjs"
+    "setup:env": "node scripts/setup-env.mjs",
+    "auth:schema": "pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output src/db/schema/auth.generated.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

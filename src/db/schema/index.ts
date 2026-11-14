@@ -1,1 +1,1 @@
-export { appMeta } from './app-meta';
+export * from './auth';
