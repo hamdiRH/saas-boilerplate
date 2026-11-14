@@ -19,6 +19,7 @@ const config: KnipConfig = {
     'src/db/**',
     'src/components/forms/**/*.tsx',
     'src/libs/email/index.ts',
+    'src/libs/auth-emails.tsx',
   ],
   // UI primitives are intentionally ignored as entry points, including their package imports.
   ignoreDependencies: ['@faker-js/faker', 'react-email'],
