@@ -1,4 +1,6 @@
 import './_env';
+import { hashPassword } from 'better-auth/crypto';
+
 import { Env } from '../src/libs/env';
 
 const main = async (): Promise<void> => {
@@ -8,19 +10,12 @@ const main = async (): Promise<void> => {
   }
 
   const { db } = await import('../src/db/client');
-  const { auth } = await import('../src/libs/auth');
   const { seed, DEMO_USER } = await import('../src/db/seed');
 
-  // 🔍 documented way to reach the password hasher
-  const context = await auth.$context;
+  await seed(db, { hashPassword });
+  console.log(`🌱 Seed complete — sign in with ${DEMO_USER.email} / ${DEMO_USER.password}`);
 
-  try {
-    await seed(db, { hashPassword: context.password.hash });
-  } finally {
-    console.log(`🌱 Seed complete — sign in with ${DEMO_USER.email} / ${DEMO_USER.password}`);
-
-    process.exit(0);
-  }
+  process.exit(0);
 };
 
 const run = async (): Promise<void> => {
