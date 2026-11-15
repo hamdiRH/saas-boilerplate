@@ -11,7 +11,7 @@ let transport: EmailTransport | undefined;
 
 function selectTransport(): EmailTransport {
   let kind = Env.EMAIL_TRANSPORT;
-  if (kind === null) {
+  if (kind === undefined) {
     if (Env.RESEND_API_KEY) {
       kind = 'resend';
     } else if (Env.NODE_ENV !== 'production') {
@@ -24,6 +24,12 @@ function selectTransport(): EmailTransport {
       if (!Env.RESEND_API_KEY) {
         throw new ExternalServiceError({
           message: 'EMAIL_TRANSPORT=resend but RESEND_API_KEY is missing',
+        });
+      }
+      if (!Env.EMAIL_FROM) {
+        throw new ExternalServiceError({
+          message:
+            'EMAIL_TRANSPORT=resend requires EMAIL_FROM to use a sender address on a verified Resend domain',
         });
       }
       return new ResendTransport(Env.RESEND_API_KEY, Env.EMAIL_FROM);
@@ -58,7 +64,8 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
     await getEmailTransport().send(message);
   } catch (error) {
     // Never log the recipient or body (PII / secrets in links)
-    getLogger('email').error('Failed to send email', { error, tags: message.tags });
+    const reason = error instanceof Error ? error.message : 'Unknown email provider error';
+    getLogger('email').error('Failed to send email: {reason}', { reason, tags: message.tags });
     throw error instanceof AppError ? error : new ExternalServiceError({ cause: error });
   }
 }

@@ -4,8 +4,6 @@ import path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ExternalServiceError } from '@/libs/errors';
-
 import { ConsoleTransport, extractLinks, readLastEmail } from './console-transport';
 import { MemoryTransport } from './memory-transport';
 import { ResendTransport } from './resend-transport';
@@ -83,10 +81,11 @@ describe('ResendTransport', () => {
     });
   });
 
-  it('throws a generic ExternalServiceError on failure', async () => {
+  it('includes sender configuration guidance when Resend rejects an email', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response('nope', { status: 422 }));
-    await expect(new ResendTransport('k', 'f', fetchMock).send(message)).rejects.toBeInstanceOf(
-      ExternalServiceError,
-    );
+    await expect(new ResendTransport('k', 'f', fetchMock).send(message)).rejects.toMatchObject({
+      message: expect.stringContaining('verify the sender domain'),
+      name: 'ExternalServiceError',
+    });
   });
 });

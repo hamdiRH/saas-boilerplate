@@ -100,7 +100,6 @@
     },
     "userMenu": {
       "menuLabel": "Menu du compte",
-      "account": "Compte",
       "signOut": "Se déconnecter",
       "signedInAs": "Connecté en tant que"
     },

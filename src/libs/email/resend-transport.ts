@@ -29,8 +29,15 @@ export class ResendTransport implements EmailTransport {
     });
 
     if (!response.ok) {
-      // Details stay server-side; callers only see a generic ExternalServiceError
-      throw new ExternalServiceError({ message: `Resend responded with HTTP ${response.status}` });
+      let hint: string | undefined;
+      if (response.status === 401) {
+        hint = 'Check RESEND_API_KEY.';
+      } else if (response.status === 403 || response.status === 422) {
+        hint = 'Check EMAIL_FROM and verify the sender domain in Resend.';
+      }
+
+      const errorMessage = `Resend responded with HTTP ${response.status}.${hint ? ` ${hint}` : ''}`;
+      throw new ExternalServiceError({ message: errorMessage });
     }
   }
 }

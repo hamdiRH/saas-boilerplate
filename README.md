@@ -207,7 +207,7 @@ Nothing below is required to run locally. Variables are validated at startup by 
 | Service | Set these | What you get | Guide |
 | --- | --- | --- | --- |
 | **Database (production)** | `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (migrations) | Neon or any PostgreSQL | [database](guides/database.md) |
-| **Email** | `EMAIL_TRANSPORT=resend`, `EMAIL_FROM`, `RESEND_API_KEY` | real verification, reset, invitation emails | [deployment](guides/deployment.md#email) |
+| **Email** | `EMAIL_TRANSPORT=resend`, `EMAIL_FROM` on a verified Resend domain, `RESEND_API_KEY` | real verification, reset, invitation emails | [deployment](guides/deployment.md#email) |
 | **Social sign-in** | `<PROVIDER>_CLIENT_ID` + `_CLIENT_SECRET` | the provider's button appears | [social auth](guides/social-auth.md) |
 | **Sentry** | `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_*` for source maps) | error tracking; `pnpm spotlight` locally | [observability](guides/observability.md) |
 | **Better Stack** | `BETTER_STACK_SOURCE_TOKEN`, `BETTER_STACK_INGESTING_HOST` | log shipping | [observability](guides/observability.md) |
