@@ -12,7 +12,8 @@
     "signIn": "Se connecter",
     "getStarted": "Commencer",
     "dashboard": "Tableau de bord",
-    "workspace": "Espace de travail"
+    "workspace": "Espace de travail",
+    "account": "Compte"
   },
   "theme": {
     "toggle": "Changer de thème",
@@ -28,12 +29,144 @@
     "cta": "Ça marche"
   },
   "auth": {
-    "signInTitle": "Se connecter",
-    "signUpTitle": "Créez votre compte"
+    "signIn": {
+      "title": "Content de vous revoir",
+      "description": "Connectez-vous à votre compte",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "forgot": "Mot de passe oublié ?",
+      "noAccount": "Pas encore de compte ?",
+      "signUpLink": "S'inscrire"
+    },
+    "signUp": {
+      "title": "Créez votre compte",
+      "description": "Démarrez en moins d'une minute",
+      "name": "Nom",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "Créer le compte",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "signInLink": "Se connecter",
+      "strengthLabel": "Robustesse du mot de passe",
+      "strength": {
+        "veryWeak": "Très faible",
+        "weak": "Faible",
+        "fair": "Moyen",
+        "good": "Bon",
+        "strong": "Fort"
+      }
+    },
+    "checkEmail": {
+      "title": "Vérifiez votre e-mail",
+      "description": "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus pour activer votre compte.",
+      "resend": "Renvoyer l'e-mail",
+      "resent": "E-mail de vérification renvoyé.",
+      "cooldown": "Renvoi possible dans {seconds} s",
+      "wrongEmail": "Utiliser un autre e-mail"
+    },
+    "verify": {
+      "successTitle": "E-mail vérifié",
+      "successDescription": "Votre e-mail est confirmé et vous êtes connecté.",
+      "signInDescription": "Votre e-mail est confirmé. Connectez-vous pour continuer.",
+      "signIn": "Se connecter",
+      "continue": "Aller au tableau de bord",
+      "errorTitle": "Ce lien est invalide ou a expiré",
+      "errorDescription": "Saisissez votre e-mail et nous vous enverrons un nouveau lien de vérification.",
+      "email": "E-mail",
+      "resendSubmit": "Envoyer un nouveau lien",
+      "resendSent": "Si l'adresse est enregistrée, un nouveau lien est en route."
+    },
+    "forgot": {
+      "title": "Mot de passe oublié ?",
+      "description": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+      "email": "E-mail",
+      "submit": "Envoyer le lien",
+      "sentTitle": "Consultez votre boîte mail",
+      "sentDescription": "Si un compte existe pour {email}, un lien de réinitialisation est en route. Il expire dans 1 heure.",
+      "back": "Retour à la connexion"
+    },
+    "reset": {
+      "title": "Choisissez un nouveau mot de passe",
+      "description": "Utilisez au moins 12 caractères.",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "submit": "Réinitialiser le mot de passe",
+      "success": "Mot de passe mis à jour. Vous pouvez maintenant vous connecter.",
+      "invalidTitle": "Ce lien de réinitialisation est invalide ou a expiré",
+      "invalidDescription": "Demandez un nouveau lien pour continuer.",
+      "requestNew": "Demander un nouveau lien"
+    },
+    "userMenu": {
+      "menuLabel": "Menu du compte",
+      "account": "Compte",
+      "signOut": "Se déconnecter",
+      "signedInAs": "Connecté en tant que"
+    },
+    "errors": {
+      "invalidCredentials": "E-mail ou mot de passe invalide.",
+      "emailNotVerified": "Veuillez d'abord vérifier votre e-mail. Nous venons de vous envoyer un nouveau lien.",
+      "userExists": "Nous n'avons pas pu créer votre compte. Si vous en avez déjà un, connectez-vous ou réinitialisez votre mot de passe.",
+      "invalidToken": "Ce lien est invalide ou a expiré.",
+      "wrongPassword": "Votre mot de passe actuel est incorrect.",
+      "freshRequired": "Pour votre sécurité, déconnectez-vous puis reconnectez-vous, et réessayez."
+    }
+  },
+  "account": {
+    "nav": { "profile": "Profil", "security": "Sécurité" },
+    "profile": {
+      "title": "Profil",
+      "description": "Mettez à jour vos informations personnelles.",
+      "name": "Nom",
+      "save": "Enregistrer",
+      "saved": "Profil mis à jour."
+    },
+    "email": {
+      "title": "Adresse e-mail",
+      "description": "Votre e-mail actuel est {email}. Le modifier nécessite une confirmation.",
+      "newEmail": "Nouvel e-mail",
+      "submit": "Changer d'e-mail",
+      "sent": "Consultez votre boîte mail pour confirmer le changement."
+    },
+    "password": {
+      "title": "Mot de passe",
+      "description": "Choisissez un mot de passe robuste que vous n'utilisez nulle part ailleurs.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer le nouveau mot de passe",
+      "revokeOthers": "Me déconnecter des autres appareils",
+      "submit": "Changer le mot de passe",
+      "changed": "Mot de passe modifié."
+    },
+    "sessions": {
+      "title": "Sessions actives",
+      "description": "Appareils actuellement connectés à votre compte.",
+      "current": "Cet appareil",
+      "revoke": "Révoquer",
+      "revokeOthers": "Déconnecter les autres appareils",
+      "lastActive": "Dernière activité {date}",
+      "revoked": "Session révoquée.",
+      "empty": "Aucune autre session active."
+    },
+    "danger": {
+      "title": "Supprimer le compte",
+      "description": "Supprime définitivement votre compte et toutes les données associées. Cette action est irréversible.",
+      "button": "Supprimer mon compte",
+      "confirmTitle": "Êtes-vous absolument sûr ?",
+      "confirmDescription": "Saisissez {phrase} et votre mot de passe pour confirmer.",
+      "phrase": "SUPPRIMER",
+      "phraseLabel": "Confirmation",
+      "password": "Mot de passe",
+      "submit": "Supprimer définitivement",
+      "cancel": "Annuler",
+      "deleted": "Votre compte a été supprimé."
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "description": "Votre espace de travail apparaîtra ici."
+    "description": "Votre espace de travail apparaîtra ici.",
+    "welcome": "Bon retour, {name}"
   },
   "admin": { "consoleTitle": "Console d'administration", "title": "Administration" },
   "contact": {
@@ -51,7 +184,12 @@
     "email": "Saisissez une adresse e-mail valide",
     "messageMin": "Le message doit contenir au moins 10 caractères",
     "messageMax": "Le message ne doit pas dépasser 1000 caractères",
-    "invalid": "Valeur invalide"
+    "invalid": "Valeur invalide",
+    "passwordMin": "Le mot de passe doit contenir au moins 12 caractères",
+    "passwordMax": "Le mot de passe ne doit pas dépasser 128 caractères",
+    "passwordComplexity": "Utilisez des lettres majuscules et minuscules et un chiffre",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "confirmPhrase": "Tapez le mot de confirmation exact"
   },
   "errors": {
     "title": "Une erreur est survenue",

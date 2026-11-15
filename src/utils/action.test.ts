@@ -1,9 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
 import { ConflictError } from '@/libs/errors';
 
 import { createAction } from './action';
+
+const logError = vi.hoisted(() => vi.fn());
+vi.mock('@/libs/logger', () => ({ getLogger: () => ({ error: logError }) }));
 
 const schema = z.object({ email: z.email({ message: 'validation.email' }) });
 describe('createAction', () => {
@@ -49,5 +52,8 @@ describe('createAction', () => {
       ok: false,
     });
     expect(JSON.stringify(result)).not.toContain('secret db detail');
+    expect(logError).toHaveBeenCalledWith('Unhandled error in server action', {
+      error: expect.any(Error),
+    });
   });
 });
