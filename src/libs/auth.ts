@@ -53,7 +53,6 @@ export function createAuth(database: DbLike) {
       sendOnSignIn: false,
       sendOnSignUp: true,
       sendVerificationEmail: ({ user, url }, request) => {
-        console.log('sendVerificationEmail', { request, url, user });
         runInBackground(() => sendVerificationEmail({ request, url, user }));
         return Promise.resolve();
       },
