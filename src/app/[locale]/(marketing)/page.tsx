@@ -1,14 +1,10 @@
 import { useTranslations } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
-import { use } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { getLogger } from '@/libs/logger';
 
 getLogger('app').info('home rendered', { password: 'hunter2', user: 'ada' });
-export default function HomePage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = use(params);
-  setRequestLocale(locale as 'en' | 'fr');
+export default function HomePage() {
   const t = useTranslations('marketing');
 
   return (

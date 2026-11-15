@@ -12,7 +12,8 @@
     "signIn": "Sign in",
     "getStarted": "Get started",
     "dashboard": "Dashboard",
-    "workspace": "Workspace"
+    "workspace": "Workspace",
+    "account": "Account"
   },
   "theme": { "toggle": "Toggle theme", "light": "Light", "dark": "Dark", "system": "System" },
   "locale": { "label": "Language", "en": "English", "fr": "Français" },
@@ -23,10 +24,145 @@
     "cta": "It works"
   },
   "auth": {
-    "signInTitle": "Sign in",
-    "signUpTitle": "Create your account"
+    "signIn": {
+      "title": "Welcome back",
+      "description": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgot": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up"
+    },
+    "signUp": {
+      "title": "Create your account",
+      "description": "Start in less than a minute",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "strengthLabel": "Password strength",
+      "strength": {
+        "veryWeak": "Very weak",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      }
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "description": "We sent a verification link to {email}. Click it to activate your account.",
+      "resend": "Resend email",
+      "resent": "Verification email sent again.",
+      "cooldown": "Resend available in {seconds}s",
+      "wrongEmail": "Use a different email"
+    },
+    "verify": {
+      "successTitle": "Email verified",
+      "successDescription": "Your email is confirmed and you're signed in.",
+      "signInDescription": "Your email is confirmed. Sign in to continue.",
+      "signIn": "Sign in",
+      "continue": "Continue to dashboard",
+      "errorTitle": "This link is invalid or expired",
+      "errorDescription": "Enter your email and we'll send you a new verification link.",
+      "email": "Email",
+      "resendSubmit": "Send a new link",
+      "resendSent": "If the address is registered, a new link is on its way."
+    },
+    "forgot": {
+      "title": "Forgot your password?",
+      "description": "Enter your email and we'll send you a reset link.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "sentTitle": "Check your inbox",
+      "sentDescription": "If an account exists for {email}, a reset link is on its way. It expires in 1 hour.",
+      "back": "Back to sign in"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "description": "Use at least 12 characters.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "submit": "Reset password",
+      "success": "Password updated. You can now sign in.",
+      "invalidTitle": "This reset link is invalid or expired",
+      "invalidDescription": "Request a new link to continue.",
+      "requestNew": "Request a new link"
+    },
+    "userMenu": {
+      "menuLabel": "Account menu",
+      "account": "Account",
+      "signOut": "Sign out",
+      "signedInAs": "Signed in as"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password.",
+      "emailNotVerified": "Please verify your email first. We just sent you a new link.",
+      "userExists": "We couldn't create your account. If you already have one, sign in or reset your password.",
+      "invalidToken": "This link is invalid or expired.",
+      "wrongPassword": "Your current password is incorrect.",
+      "freshRequired": "For your security, please sign out and sign in again, then retry."
+    }
   },
-  "dashboard": { "title": "Dashboard", "description": "Your workspace will appear here." },
+  "account": {
+    "nav": { "profile": "Profile", "security": "Security" },
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal information.",
+      "name": "Name",
+      "save": "Save changes",
+      "saved": "Profile updated."
+    },
+    "email": {
+      "title": "Email address",
+      "description": "Your current email is {email}. Changing it requires confirmation.",
+      "newEmail": "New email",
+      "submit": "Change email",
+      "sent": "Check your inbox to confirm the change."
+    },
+    "password": {
+      "title": "Password",
+      "description": "Choose a strong password you don't use elsewhere.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "revokeOthers": "Sign me out of other devices",
+      "submit": "Change password",
+      "changed": "Password changed."
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "description": "Devices currently signed in to your account.",
+      "current": "This device",
+      "revoke": "Revoke",
+      "revokeOthers": "Sign out other devices",
+      "lastActive": "Last active {date}",
+      "revoked": "Session revoked.",
+      "empty": "No other active sessions."
+    },
+    "danger": {
+      "title": "Delete account",
+      "description": "Permanently delete your account and all associated data. This cannot be undone.",
+      "button": "Delete my account",
+      "confirmTitle": "Are you absolutely sure?",
+      "confirmDescription": "Type {phrase} and enter your password to confirm.",
+      "phrase": "DELETE",
+      "phraseLabel": "Confirmation",
+      "password": "Password",
+      "submit": "Permanently delete",
+      "cancel": "Cancel",
+      "deleted": "Your account has been deleted."
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Your workspace will appear here.",
+    "welcome": "Welcome back, {name}"
+  },
   "admin": { "consoleTitle": "Admin console", "title": "Admin" },
   "contact": {
     "title": "Contact us",
@@ -43,7 +179,12 @@
     "email": "Enter a valid email address",
     "messageMin": "Message must be at least 10 characters",
     "messageMax": "Message must be at most 1000 characters",
-    "invalid": "Invalid value"
+    "invalid": "Invalid value",
+    "passwordMin": "Password must be at least 12 characters",
+    "passwordMax": "Password must be at most 128 characters",
+    "passwordComplexity": "Use upper and lower case letters and a number",
+    "passwordMismatch": "Passwords do not match",
+    "confirmPhrase": "Type the exact confirmation word"
   },
   "errors": {
     "title": "Something went wrong",

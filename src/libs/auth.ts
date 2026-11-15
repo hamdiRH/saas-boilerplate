@@ -16,13 +16,8 @@ import {
 import { Env } from '@/libs/env';
 import { runInBackground } from '@/utils/background';
 
-interface AuthEmailUser {
-  email: string;
-  name: string;
-}
-
 interface AuthEmailData {
-  user: AuthEmailUser;
+  user: { email: string; name: string };
   url: string;
 }
 
@@ -30,7 +25,7 @@ interface AuthEmailData {
 export function createAuth(database: DbLike) {
   return betterAuth({
     advanced: {
-      // Older versions used advanced.generateId.
+      // 🔍 older versions: advanced.generateId
       database: { generateId: () => randomUUID() },
       useSecureCookies: Env.NODE_ENV === 'production',
     },
@@ -45,7 +40,7 @@ export function createAuth(database: DbLike) {
       // 1 hour (seconds)
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: ({ user, url }: AuthEmailData, request: Request | undefined) => {
+      sendResetPassword: ({ user, url }, request) => {
         runInBackground(() => sendResetPasswordEmail({ request, url, user }));
         return Promise.resolve();
       },
@@ -54,30 +49,35 @@ export function createAuth(database: DbLike) {
       autoSignInAfterVerification: true,
       // 1 hour (seconds)
       expiresIn: 60 * 60,
-      // Re-sent from the sign-in form so the link carries the right callbackURL.
+      // we re-send explicitly from the sign-in form (S2-T08) so the link carries the right callbackURL
       sendOnSignIn: false,
       sendOnSignUp: true,
-      sendVerificationEmail: ({ user, url }: AuthEmailData, request: Request | undefined) => {
+      sendVerificationEmail: ({ user, url }, request) => {
+        console.log('sendVerificationEmail', { request, url, user });
         runInBackground(() => sendVerificationEmail({ request, url, user }));
         return Promise.resolve();
       },
     },
+
+    // Required so cookies set inside Server Actions reach the browser
     plugins: [nextCookies()],
     secret: Env.BETTER_AUTH_SECRET,
     session: {
       cookieCache: { enabled: true, maxAge: 60 * 5 },
       // 7 days
       expiresIn: 60 * 60 * 24 * 7,
-      // "Fresh" for 10 minutes; sensitive actions need recent sign-in.
+      // "fresh" for 10 minutes → sensitive actions need recent sign-in
       freshAge: 60 * 10,
-      // Refresh the expiry once a day.
+      // refresh the expiry once a day,
       updateAge: 60 * 60 * 24,
     },
+
     trustedOrigins: [Env.NEXT_PUBLIC_APP_URL],
+
     user: {
       changeEmail: {
         enabled: true,
-        // Option name and flow differ across Better Auth versions.
+        // 🔍 Option name/flow differs across versions (sendChangeEmailConfirmation in older ones)
         sendChangeEmailVerification: (
           { user, newEmail, url }: AuthEmailData & { newEmail: string },
           request: Request | undefined,
@@ -88,7 +88,6 @@ export function createAuth(database: DbLike) {
       },
       deleteUser: { enabled: true },
     },
-    // Required so cookies set inside Server Actions reach the browser.
   });
 }
 
