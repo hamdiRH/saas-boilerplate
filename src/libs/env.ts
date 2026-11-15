@@ -29,7 +29,7 @@ export const Env = createEnv({
     // Direct (non-pooled) URL used for migrations in production
     DATABASE_URL_UNPOOLED: z.url().optional(),
     DB_SERVER_PORT: z.coerce.number().int().positive().default(5433),
-    EMAIL_FROM: z.string().min(3).default('SaaS Boilerplate <onboarding@resend.dev>'),
+    EMAIL_FROM: z.string().min(3).optional(),
     EMAIL_TRANSPORT: z.enum(['console', 'resend', 'memory']).optional(),
     LOG_LEVEL: z.enum(['debug', 'info', 'warning', 'error']).default('info'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

@@ -1,11 +1,13 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Suspense } from 'react';
 
 import { ResendVerificationForm } from '@/components/auth/resend-verification-form';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getSession } from '@/data/session';
 import { Link } from '@/i18n/navigation';
 
-export default async function VerifyEmailPage({
+async function VerifyEmailContent({
   params,
   searchParams,
 }: {
@@ -46,5 +48,29 @@ export default async function VerifyEmailPage({
         )}
       </Button>
     </div>
+  );
+}
+
+function VerifyEmailFallback() {
+  return (
+    <div className="space-y-4" aria-hidden="true">
+      <Skeleton className="mx-auto h-6 w-40" />
+      <Skeleton className="mx-auto h-4 w-56" />
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
+}
+
+export default function VerifyEmailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
+  return (
+    <Suspense fallback={<VerifyEmailFallback />}>
+      <VerifyEmailContent params={params} searchParams={searchParams} />
+    </Suspense>
   );
 }

@@ -32,4 +32,14 @@ describe('Env', () => {
 
     await expect(import('./env')).rejects.toThrow(/Invalid environment variables/iu);
   });
+
+  it('does not supply a default sender address', async () => {
+    vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
+    vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');
+    vi.stubEnv('EMAIL_FROM', '');
+
+    const { Env } = await import('./env');
+
+    expect(Env.EMAIL_FROM).toBeUndefined();
+  });
 });

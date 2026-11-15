@@ -95,7 +95,6 @@
     },
     "userMenu": {
       "menuLabel": "Account menu",
-      "account": "Account",
       "signOut": "Sign out",
       "signedInAs": "Signed in as"
     },
