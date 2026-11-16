@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { requireSession } from '@/data/session';
 import { Link } from '@/i18n/navigation';
 
+export const instant = false;
+
 async function AuthenticatedAppLayout({ children }: { children: ReactNode }) {
   // cached per request; pages call it too
   const { user } = await requireSession();

@@ -8,7 +8,10 @@ import { auth } from '@/libs/auth';
 import { AuthenticationError } from '@/libs/errors';
 
 /** Validated against the database. `cache()` dedupes calls within one request. */
-export const getSession = cache(async () => auth.api.getSession({ headers: await headers() }));
+export const getSession = cache(async () =>
+  // 🔍 disableCookieCache: always validate against the database (revocation takes effect immediately)
+  auth.api.getSession({ headers: await headers(), query: { disableCookieCache: true } }),
+);
 
 export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
 
