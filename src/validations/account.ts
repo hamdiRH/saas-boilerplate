@@ -16,8 +16,17 @@ export const changePasswordSchema = z
     path: ['confirmPassword'],
   });
 
-export const changeEmailSchema = z.object({ newEmail: emailField });
+export function createDeleteAccountSchema(phrase: string) {
+  return z
+    .object({ confirm: z.string(), password: requiredField })
+    .refine((data) => data.confirm.trim() === phrase, {
+      message: 'validation.confirmPhrase',
+      path: ['confirm'],
+    });
+}
 
+export const changeEmailSchema = z.object({ newEmail: emailField });
+export type DeleteAccountInput = z.infer<ReturnType<typeof createDeleteAccountSchema>>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;

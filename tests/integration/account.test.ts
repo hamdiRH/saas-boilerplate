@@ -1,12 +1,12 @@
 import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { session, user } from '@/db/schema';
+import { account, session, user } from '@/db/schema';
 import { createAuth } from '@/libs/auth';
 import { setEmailTransport } from '@/libs/email';
 import { MemoryTransport } from '@/libs/email/memory-transport';
 
-import { signIn, signUpAndVerify } from '../../src/utils/auth';
+import { signIn, signUpAndVerify, TEST_PASSWORD } from '../../src/utils/auth';
 import { createTestDb } from '../utils/test-db';
 import type { TestDb } from '../utils/test-db';
 
@@ -86,5 +86,24 @@ describe('sessions', () => {
       throw new Error('Sign-up should have created user A');
     }
     expect(listedForA.every((item) => item.userId === rowA.id)).toBe(true);
+  });
+});
+
+describe('account deletion', () => {
+  it('removes the user together with sessions and credentials', async () => {
+    const email = nextEmail();
+    await signUpAndVerify(auth, transport, email);
+    const device = await signIn(auth, email);
+    const [row] = await db.select().from(user).where(eq(user.email, email));
+    if (!row) {
+      throw new Error('Sign-up should have created a user');
+    }
+
+    // 🔍 Option shape may differ by version (e.g. requires `password` or a token)
+    await auth.api.deleteUser({ body: { password: TEST_PASSWORD }, headers: device.headers });
+
+    expect(await db.select().from(user).where(eq(user.id, row.id))).toHaveLength(0);
+    expect(await db.select().from(session).where(eq(session.userId, row.id))).toHaveLength(0);
+    expect(await db.select().from(account).where(eq(account.userId, row.id))).toHaveLength(0);
   });
 });

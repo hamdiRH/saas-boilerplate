@@ -85,7 +85,11 @@ export function createAuth(database: DbLike) {
           return Promise.resolve();
         },
       },
-      deleteUser: { enabled: true },
+      deleteUser: {
+        enabled: true,
+        // Deletion must be blocked or ownership transferred when the user is the sole owner
+        // of an organization that still has other members.
+      },
     },
   });
 }

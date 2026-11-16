@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
 
 import { ChangePasswordForm } from '@/components/account/change-password-form';
+import { DeleteAccountForm } from '@/components/account/delete-account-form';
 import { SessionsList } from '@/components/account/sessions-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,7 @@ async function SecurityContent({ params }: SecurityPageProps) {
   const t = await getTranslations('account.password');
   const sessions = await listUserSessions();
   const tSessions = await getTranslations('account.sessions');
+  const tDanger = await getTranslations('account.danger');
 
   return (
     <div className="space-y-6">
@@ -38,6 +40,17 @@ async function SecurityContent({ params }: SecurityPageProps) {
         </CardHeader>
         <CardContent>
           <SessionsList sessions={sessions} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <span className="text-destructive">{tDanger('title')}</span>
+          </CardTitle>
+          <CardDescription>{tDanger('description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DeleteAccountForm />
         </CardContent>
       </Card>
     </div>
