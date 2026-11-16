@@ -16,6 +16,8 @@ import {
 import { Env } from '@/libs/env';
 import { runInBackground } from '@/utils/background';
 
+import { AUTH_RATE_LIMIT_DEFAULT, AUTH_RATE_LIMIT_RULES } from './auth-rate-limit';
+
 interface AuthEmailData {
   user: { email: string; name: string };
   url: string;
@@ -27,6 +29,7 @@ export function createAuth(database: DbLike) {
     advanced: {
       // 🔍 older versions: advanced.generateId
       database: { generateId: () => randomUUID() },
+      ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
       useSecureCookies: Env.NODE_ENV === 'production',
     },
     appName: Env.NEXT_PUBLIC_APP_NAME,
@@ -60,6 +63,12 @@ export function createAuth(database: DbLike) {
 
     // Required so cookies set inside Server Actions reach the browser
     plugins: [nextCookies()],
+    rateLimit: {
+      ...AUTH_RATE_LIMIT_DEFAULT,
+      customRules: { ...AUTH_RATE_LIMIT_RULES },
+      enabled: Env.AUTH_RATE_LIMIT === 'on',
+      storage: 'database',
+    },
     secret: Env.BETTER_AUTH_SECRET,
     session: {
       cookieCache: { enabled: true, maxAge: 60 * 5 },
@@ -72,7 +81,6 @@ export function createAuth(database: DbLike) {
     },
 
     trustedOrigins: [Env.NEXT_PUBLIC_APP_URL],
-
     user: {
       changeEmail: {
         enabled: true,
