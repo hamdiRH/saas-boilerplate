@@ -14,18 +14,9 @@ const config: KnipConfig = {
     // 'tests/**/*.ts',
   ],
   // shadcn primitives intentionally export more than we use
-  ignore: [
-    'src/components/ui/**',
-    'src/db/**',
-    'src/libs/email/index.ts',
-    'src/libs/auth-emails.tsx',
-    'src/libs/auth.ts',
-    'src/utils/safe-redirect.ts',
-    'src/i18n/navigation.ts',
-    'src/validations/auth.ts',
-  ],
+  ignore: ['src/components/ui/**', 'src/db/**', 'src/libs/auth.ts'],
   // UI primitives are intentionally ignored as entry points, including their package imports.
-  ignoreDependencies: ['@faker-js/faker', 'react-email'],
+  ignoreDependencies: ['@faker-js/faker', '@react-email/ui'],
   project: ['src/**/*.{ts,tsx,css}', 'scripts/**/*.{ts,mjs}'],
 };
 
