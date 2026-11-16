@@ -15,7 +15,10 @@ async function AuthenticatedAppLayout({ children }: { children: ReactNode }) {
   const { user } = await requireSession();
   const t = await getTranslations();
 
-  const links: readonly NavLink[] = [{ href: '/dashboard', label: t('nav.dashboard') }];
+  const links: readonly NavLink[] = [
+    { href: '/dashboard', label: t('nav.dashboard') },
+    { href: '/dashboard/account/profile', label: t('nav.account') },
+  ];
 
   return (
     <div className="flex min-h-screen">

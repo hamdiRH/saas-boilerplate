@@ -20,8 +20,6 @@ const config: KnipConfig = {
     'src/libs/email/index.ts',
     'src/libs/auth-emails.tsx',
     'src/libs/auth.ts',
-    'src/data/session.ts',
-    'src/data/with-auth.ts',
     'src/utils/safe-redirect.ts',
     'src/i18n/navigation.ts',
     'src/validations/auth.ts',

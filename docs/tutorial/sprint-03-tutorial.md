@@ -665,13 +665,12 @@ it('maps redirect error codes', () => {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { useCooldown } from '@/hooks/use-cooldown';
 import { getPathname } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
@@ -725,7 +724,7 @@ export function MagicLinkForm({ callbackUrl }: Props) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form
         onSubmit={form.handleSubmit(({ email }) => send(email))}
         noValidate
@@ -736,7 +735,7 @@ export function MagicLinkForm({ callbackUrl }: Props) {
         <TextField name="email" label={t('email')} type="email" autoComplete="email" />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -2098,7 +2097,7 @@ export function ReauthNotice() {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { deletePasskey } from '@/actions/security';
@@ -2108,7 +2107,6 @@ import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import type { PasskeySummary } from '@/data/security';
 import { usePasskeySupport } from '@/hooks/use-passkey-support';
@@ -2247,7 +2245,7 @@ export function PasskeysCard({ passkeys }: { passkeys: PasskeySummary[] }) {
         </ul>
       )}
 
-      <Form {...form}>
+      <FormProvider {...form}>
         <form onSubmit={form.handleSubmit(add)} noValidate className="flex items-end gap-2">
           <div className="flex-1">
             <TextField
@@ -2260,7 +2258,7 @@ export function PasskeysCard({ passkeys }: { passkeys: PasskeySummary[] }) {
           </div>
           <SubmitButton>{t('add')}</SubmitButton>
         </form>
-      </Form>
+      </FormProvider>
     </div>
   );
 }
@@ -2994,14 +2992,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
 import {
@@ -3017,19 +3015,22 @@ type Props = { callbackUrl: string };
 function TrustDevice({ control }: { control: ReturnType<typeof useForm<TotpInput>>['control'] }) {
   const t = useTranslations('auth.twoFactor');
   return (
-    <FormField
+    <Controller
       control={control}
       name="trustDevice"
-      render={({ field }) => (
-        <FormItem className="flex items-center gap-2">
-          <FormControl>
-            <Checkbox
-              checked={field.value}
-              onCheckedChange={(value) => field.onChange(value === true)}
-            />
-          </FormControl>
-          <FormLabel className="font-normal">{t('trustDevice')}</FormLabel>
-        </FormItem>
+      render={({ field, fieldState }) => (
+        <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+          <Checkbox
+            id="trust-device"
+            name={field.name}
+            checked={field.value}
+            onCheckedChange={(checked) => field.onChange(checked === true)}
+            aria-invalid={fieldState.invalid}
+          />
+          <FieldLabel htmlFor="trust-device" className="font-normal">
+            {t('trustDevice')}
+          </FieldLabel>
+        </Field>
       )}
     />
   );
@@ -3069,7 +3070,7 @@ function TotpForm({ callbackUrl }: Props) {
   }, [code]);
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField
@@ -3082,7 +3083,7 @@ function TotpForm({ callbackUrl }: Props) {
         <TrustDevice control={form.control} />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 
@@ -3110,14 +3111,14 @@ function BackupForm({ callbackUrl }: Props) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <p className="text-muted-foreground text-sm">{t('backupDescription')}</p>
         <TextField name="code" label={t('backupCode')} autoComplete="off" />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 

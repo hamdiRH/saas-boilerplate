@@ -2451,7 +2451,7 @@ export function CheckEmail({ email, callbackURL, onChangeEmail }: Props) {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { CheckEmail } from '@/components/auth/check-email';
 import { PasswordStrength } from '@/components/auth/password-strength';
@@ -2459,7 +2459,6 @@ import { FormError } from '@/components/forms/form-error';
 import { PasswordField } from '@/components/forms/password-field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { getPathname } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -2506,7 +2505,7 @@ export function SignUpForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="name" />
@@ -2522,7 +2521,7 @@ export function SignUpForm() {
         />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -2661,11 +2660,10 @@ git switch main && git pull && git switch -c feat/s2-t07-verify-email
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { getPathname } from '@/i18n/navigation';
 import { authClient } from '@/libs/AuthClient';
 import { type ForgotPasswordInput, forgotPasswordSchema } from '@/validations/auth';
@@ -2696,12 +2694,12 @@ export function ResendVerificationForm() {
     );
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <TextField name="email" label={t('email')} type="email" autoComplete="email" />
         <SubmitButton className="w-full">{t('resendSubmit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -2808,13 +2806,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { FormError } from '@/components/forms/form-error';
 import { PasswordField } from '@/components/forms/password-field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { Link, getPathname } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -2853,7 +2850,7 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="email" label={t('email')} type="email" autoComplete="email" />
@@ -2868,7 +2865,7 @@ export function SignInForm({ callbackUrl }: { callbackUrl: string }) {
         </div>
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -3085,12 +3082,11 @@ git switch main && git pull && git switch -c feat/s2-t09-password-reset
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
 import { Link, getPathname } from '@/i18n/navigation';
 import { authClient } from '@/libs/AuthClient';
 import { type ForgotPasswordInput, forgotPasswordSchema } from '@/validations/auth';
@@ -3127,12 +3123,12 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <TextField name="email" label={t('email')} type="email" autoComplete="email" />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -3145,14 +3141,13 @@ export function ForgotPasswordForm() {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { PasswordStrength } from '@/components/auth/password-strength';
 import { FormError } from '@/components/forms/form-error';
 import { PasswordField } from '@/components/forms/password-field';
 import { SubmitButton } from '@/components/forms/submit-button';
-import { Form } from '@/components/ui/form';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -3182,7 +3177,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <div className="space-y-2">
@@ -3196,7 +3191,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         />
         <SubmitButton className="w-full">{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -3895,13 +3890,12 @@ export function applyActionError<T extends FieldValues>(
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -3929,13 +3923,13 @@ export function ProfileForm({ name }: { name: string }) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="name" />
         <SubmitButton>{t('save')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -3948,7 +3942,7 @@ export function ProfileForm({ name }: { name: string }) {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { changePassword } from '@/actions/account';
@@ -3957,7 +3951,7 @@ import { FormError } from '@/components/forms/form-error';
 import { PasswordField } from '@/components/forms/password-field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { applyActionError } from '@/utils/form-errors';
 import { type ChangePasswordInput, changePasswordSchema } from '@/validations/account';
 
@@ -3988,7 +3982,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <PasswordField
@@ -4001,24 +3995,27 @@ export function ChangePasswordForm() {
           <PasswordStrength name="newPassword" />
         </div>
         <PasswordField name="confirmPassword" label={t('confirm')} autoComplete="new-password" />
-        <FormField
+        <Controller
           control={form.control}
           name="revokeOtherSessions"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(checked) => field.onChange(checked === true)}
-                />
-              </FormControl>
-              <FormLabel className="font-normal">{t('revokeOthers')}</FormLabel>
-            </FormItem>
+          render={({ field, fieldState }) => (
+            <Field orientation="horizontal" data-invalid={fieldState.invalid}>
+              <Checkbox
+                id="revoke-other-sessions"
+                name={field.name}
+                checked={field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+                aria-invalid={fieldState.invalid}
+              />
+              <FieldLabel htmlFor="revoke-other-sessions" className="font-normal">
+                {t('revokeOthers')}
+              </FieldLabel>
+            </Field>
           )}
         />
         <SubmitButton>{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -4192,13 +4189,12 @@ git switch main && git pull && git switch -c feat/s2-t13-email-sessions
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { getPathname } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -4232,13 +4228,13 @@ export function ChangeEmailForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="newEmail" label={t('newEmail')} type="email" autoComplete="email" />
         <SubmitButton>{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -4686,7 +4682,7 @@ export type DeleteAccountInput = z.infer<ReturnType<typeof createDeleteAccountSc
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
@@ -4703,7 +4699,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -4747,7 +4742,7 @@ export function DeleteAccountForm() {
           <DialogTitle>{t('confirmTitle')}</DialogTitle>
           <DialogDescription>{t('confirmDescription', { phrase })}</DialogDescription>
         </DialogHeader>
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
             <FormError messageKey={formError} />
             <TextField name="confirm" label={t('phraseLabel')} autoComplete="off" />
@@ -4759,7 +4754,7 @@ export function DeleteAccountForm() {
               <SubmitButton variant="destructive">{t('submit')}</SubmitButton>
             </DialogFooter>
           </form>
-        </Form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

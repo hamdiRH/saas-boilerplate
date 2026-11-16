@@ -311,12 +311,11 @@ git switch main && git pull && git switch -c test/s5-t02-stories
 ```tsx
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 
 import { PasswordField } from '@/components/forms/password-field';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 
 /** Fields need an RHF context: this shell provides one (and can pre-set an error). */
 function FormShell({
@@ -331,9 +330,9 @@ function FormShell({
     if (error) form.setError(error.field as 'email', { message: error.message });
   }, [error, form]);
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form className="w-80 space-y-4">{children}</form>
-    </Form>
+    </FormProvider>
   );
 }
 

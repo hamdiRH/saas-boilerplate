@@ -1406,10 +1406,10 @@ pnpm check
 
 ```bash
 git switch main && git pull && git switch -c feat/s1-t09-shadcn-set
-pnpm dlx shadcn@latest add input label textarea form card dialog sonner avatar badge separator skeleton tabs select checkbox alert table tooltip
+pnpm dlx shadcn@latest add input label textarea field card dialog sonner avatar badge separator skeleton tabs select checkbox alert table tooltip
 ```
 
-> 🔍 If the CLI says `form` doesn't exist (newer shadcn versions replace it with a `field` component), install `field` instead and adapt the S1-T12 wrappers to its API — the idea (label + control + message) is identical. Dependencies that shadcn adds (e.g. `react-hook-form`, `@hookform/resolvers`, Radix packages) come with caret versions → run `pnpm pin`.
+> 🔄 We install **`field`**, not the deprecated `form` component (see S1-T12). `field` does not bring `react-hook-form` / `@hookform/resolvers` — those are added explicitly in S1-T12. Dependencies that shadcn adds (Radix packages) come with caret versions → run `pnpm pin`.
 
 ### 1. Don't lint generated code
 
@@ -2198,9 +2198,29 @@ mkdir -p src/components/forms src/validations
 
 > 🎯 **Design rule:** Zod error messages are **translation keys** (`'validation.email'`), not English sentences. The UI translates them at render time, so one schema serves both languages — and the same schema runs on the server.
 
-> 🔍 These wrappers build on shadcn's `form` primitives (`FormField`, `FormItem`, `FormLabel`, `FormControl`, `useFormField`). If you installed `field` instead, adapt the imports.
+> 🔄 **Migrated to shadcn `Field`.** The old `Form` primitives (`FormField`, `FormItem`, `FormControl`, `FormMessage`, `useFormField`) are deprecated. The current API ([ui.shadcn.com/docs/components/field](https://ui.shadcn.com/docs/components/field) + [docs/forms/react-hook-form](https://ui.shadcn.com/docs/forms/react-hook-form)) is `Field`, `FieldLabel`, `FieldError`, `FieldGroup`… wired to React Hook Form with `Controller`. There is **no `<Form>` provider** any more: we use RHF's own `FormProvider` so our wrappers (`TextField`, `PasswordField`, …) keep the exact same props and the rest of the tutorial barely changes.
+
+### 0. Install `field` and React Hook Form
+
+The old `form` component used to pull `react-hook-form` and `@hookform/resolvers` in for you. `field` does **not** — add them yourself.
+
+```bash
+pnpm dlx shadcn@latest add field
+pnpm add react-hook-form @hookform/resolvers
+pnpm pin
+```
+
+If you had already installed the deprecated component, remove it (nothing else should import it after this ticket):
+
+```bash
+rm -f src/components/ui/form.tsx
+```
+
+> 🔍 Check `src/components/ui/field.tsx` exists and exports `Field`, `FieldLabel`, `FieldError`, `FieldGroup`. `field` depends on `label` and `separator`; both are already in the S1-T09 set. Use a `@hookform/resolvers` version that supports your Zod major (Zod 4 → resolvers v5+).
 
 ### 1. Translated error message
+
+`FieldError` is the accessible container (it renders `role="alert"`). It accepts children, so we only add the translation step.
 
 📄 **Create `src/components/forms/field-message.tsx`:**
 
@@ -2208,56 +2228,70 @@ mkdir -p src/components/forms src/validations
 'use client';
 
 import { useTranslations } from 'next-intl';
+import type { FieldError as RhfFieldError } from 'react-hook-form';
 
-import { useFormField } from '@/components/ui/form';
+import { FieldError } from '@/components/ui/field';
 
-/** Renders the field error, translating the Zod message key. Must live inside <FormItem>. */
-export function FieldMessage() {
+type FieldMessageProps = {
+  /** `fieldState.error` from RHF's Controller. */
+  error?: RhfFieldError;
+  /** Id referenced by the input's `aria-describedby`. */
+  id?: string;
+};
+
+/** Renders the field error, translating the Zod message key. Place right after the control, inside <Field>. */
+export function FieldMessage({ error, id }: FieldMessageProps) {
   const t = useTranslations();
-  const { error, formMessageId } = useFormField();
 
   if (!error?.message) return null;
 
   const key = error.message;
   return (
-    <p id={formMessageId} className="text-destructive text-sm">
+    <FieldError id={id}>
       {t.has(key as never) ? t(key as never) : t('validation.invalid')}
-    </p>
+    </FieldError>
   );
 }
 ```
 
 ### 2. Fields
 
+Every field follows the same recipe from the shadcn docs: `Controller` → `Field data-invalid` → `FieldLabel htmlFor` → control with `aria-invalid` → error. `useId()` gives a stable id so the label and error are linked even when the same field appears twice on a page.
+
 📄 **Create `src/components/forms/text-field.tsx`:**
 
 ```tsx
 'use client';
 
-import type { ComponentProps } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { type ComponentProps, useId } from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 
 import { FieldMessage } from '@/components/forms/field-message';
-import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
 type TextFieldProps = { name: string; label: string } & Omit<ComponentProps<typeof Input>, 'name'>;
 
 export function TextField({ name, label, ...inputProps }: TextFieldProps) {
   const { control } = useFormContext();
+  const id = useId();
 
   return (
-    <FormField
+    <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Input {...inputProps} {...field} />
-          </FormControl>
-          <FieldMessage />
-        </FormItem>
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Input
+            {...inputProps}
+            {...field}
+            id={id}
+            aria-invalid={fieldState.invalid}
+            aria-describedby={fieldState.invalid ? `${id}-error` : undefined}
+          />
+          <FieldMessage id={`${id}-error`} error={fieldState.error} />
+        </Field>
       )}
     />
   );
@@ -2269,11 +2303,11 @@ export function TextField({ name, label, ...inputProps }: TextFieldProps) {
 ```tsx
 'use client';
 
-import type { ComponentProps } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { type ComponentProps, useId } from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 
 import { FieldMessage } from '@/components/forms/field-message';
-import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 
 type TextareaFieldProps = { name: string; label: string } & Omit<
@@ -2283,19 +2317,24 @@ type TextareaFieldProps = { name: string; label: string } & Omit<
 
 export function TextareaField({ name, label, ...props }: TextareaFieldProps) {
   const { control } = useFormContext();
+  const id = useId();
 
   return (
-    <FormField
+    <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Textarea {...props} {...field} />
-          </FormControl>
-          <FieldMessage />
-        </FormItem>
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
+          <Textarea
+            {...props}
+            {...field}
+            id={id}
+            aria-invalid={fieldState.invalid}
+            aria-describedby={fieldState.invalid ? `${id}-error` : undefined}
+          />
+          <FieldMessage id={`${id}-error`} error={fieldState.error} />
+        </Field>
       )}
     />
   );
@@ -2309,12 +2348,12 @@ export function TextareaField({ name, label, ...props }: TextareaFieldProps) {
 
 import { Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ComponentProps, useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { type ComponentProps, useId, useState } from 'react';
+import { Controller, useFormContext } from 'react-hook-form';
 
 import { FieldMessage } from '@/components/forms/field-message';
 import { Button } from '@/components/ui/button';
-import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
 type PasswordFieldProps = { name: string; label: string } & Omit<
@@ -2326,18 +2365,25 @@ export function PasswordField({ name, label, ...props }: PasswordFieldProps) {
   const t = useTranslations('common');
   const { control } = useFormContext();
   const [visible, setVisible] = useState(false);
+  const id = useId();
 
   return (
-    <FormField
+    <Controller
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <FieldLabel htmlFor={id}>{label}</FieldLabel>
           <div className="relative">
-            <FormControl>
-              <Input {...props} {...field} type={visible ? 'text' : 'password'} className="pe-10" />
-            </FormControl>
+            <Input
+              {...props}
+              {...field}
+              id={id}
+              type={visible ? 'text' : 'password'}
+              className="pe-10"
+              aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? `${id}-error` : undefined}
+            />
             <Button
               type="button"
               variant="ghost"
@@ -2350,8 +2396,8 @@ export function PasswordField({ name, label, ...props }: PasswordFieldProps) {
               {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </Button>
           </div>
-          <FieldMessage />
-        </FormItem>
+          <FieldMessage id={`${id}-error`} error={fieldState.error} />
+        </Field>
       )}
     />
   );
@@ -2359,6 +2405,8 @@ export function PasswordField({ name, label, ...props }: PasswordFieldProps) {
 ```
 
 ### 3. Submit button and form-level error
+
+`SubmitButton` only uses `useFormContext`, so it is **unchanged** by the migration.
 
 📄 **Create `src/components/forms/submit-button.tsx`:**
 
@@ -2388,7 +2436,7 @@ export function SubmitButton({
 }
 ```
 
-📄 **Create `src/components/forms/form-error.tsx`:**
+📄 **Create `src/components/forms/form-error.tsx`** _(unchanged)_:
 
 ```tsx
 'use client';
@@ -2412,7 +2460,9 @@ export function FormError({ messageKey }: { messageKey?: string | null }) {
 }
 ```
 
-> ✅ Accessibility: errors are linked to inputs through shadcn's `aria-describedby`/`aria-invalid`; RHF focuses the first invalid field on submit (`shouldFocusError` default).
+> ✅ Accessibility: each input gets `aria-invalid` + `aria-describedby` pointing at its `FieldError`, and `Field data-invalid` turns the label red. RHF focuses the first invalid field on submit (`shouldFocusError` default).
+>
+> ⚠️ `FieldError` renders `role="alert"`. A field error and the form-level `FormError` can now both be on screen. Any E2E/component test that uses `getByRole('alert')` for the **form-level** error must stay unambiguous — target it by text (as the tutorial's tests already do) or scope it, because Playwright's strict mode fails when two alerts match.
 
 ### 4. Knip: these files are not used yet
 
@@ -2429,11 +2479,14 @@ export function FormError({ messageKey }: { messageKey?: string | null }) {
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm knip
+grep -rn "components/ui/form'" src && echo "❌ still importing the deprecated form" || echo "✅ no deprecated imports"
 ```
+
+> The `grep` will also flag `contact-form.tsx` **until S1-T13** is migrated (it imports `Form`); that is expected if you stop here — T13 below fixes it.
 
 Behavioural verification happens with the browser tests in S1-T13.
 
-**🚢 Ship** — branch `feat/s1-t12-form-components` · message: `feat(forms): add rhf field components with translated zod errors`
+**🚢 Ship** — branch `feat/s1-t12-form-components` · message: `feat(forms): add rhf field components on shadcn field with translated zod errors`
 
 ---
 
@@ -3149,7 +3202,7 @@ export async function submitContact(input: unknown) {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { submitContact } from '@/actions/contact';
@@ -3157,7 +3210,6 @@ import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { TextareaField } from '@/components/forms/textarea-field';
-import { Form } from '@/components/ui/form';
 import { type ContactInput, contactSchema } from '@/validations/contact';
 
 export function ContactForm() {
@@ -3192,7 +3244,7 @@ export function ContactForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="name" />
@@ -3200,7 +3252,7 @@ export function ContactForm() {
         <TextareaField name="message" label={t('message')} rows={5} />
         <SubmitButton>{t('send')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
