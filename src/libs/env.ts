@@ -9,6 +9,7 @@ export const Env = createEnv({
   emptyStringAsUndefined: true,
   // Next.js inlines NEXT_PUBLIC_* at build time, so each var must be listed explicitly.
   runtimeEnv: {
+    AUTH_RATE_LIMIT: process.env.AUTH_RATE_LIMIT,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     DATABASE_URL_UNPOOLED: process.env.DATABASE_URL_UNPOOLED,
@@ -23,6 +24,8 @@ export const Env = createEnv({
     // ≥ 32 chars. Generate with: pnpm setup:env
   },
   server: {
+    // Better Auth rate limiting. "off" is only for local development.
+    AUTH_RATE_LIMIT: z.enum(['on', 'off']).default('on'),
     BETTER_AUTH_SECRET: z.string().min(32),
     // Optional locally: when absent we use the PGlite socket server (see S1-T04)
     DATABASE_URL: z.url().optional(),

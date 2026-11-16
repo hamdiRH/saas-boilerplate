@@ -27,6 +27,7 @@ export default defineConfig({
     },
     env: {
       // Safe defaults so modules that import Env.ts can load in tests
+      AUTH_RATE_LIMIT: 'off',
       BETTER_AUTH_SECRET: 'test-secret-test-secret-test-secret-123',
       NEXT_PUBLIC_APP_NAME: 'Test App',
       NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
