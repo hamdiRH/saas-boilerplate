@@ -65,6 +65,9 @@ docs/roadmap/     plan, sprints, state        docs/adr/           architecture d
 - Authorization is enforced **server-side** in the data-access layer; `proxy.ts` is only an optimistic redirect.
 - Tenant data is accessed only through `tenantDb` helpers (from Sprint 4).
 - Validate all external input with Zod. Never log secrets, tokens, or passwords.
+- EVERY `page.tsx` under `src/app/[locale]/(app)` calls `requireSession()`; Server Actions use `withAuth()`. A layout is never a guard (enforced by `src/data/guard-coverage.test.ts`).
+- Never import `@/libs/Auth` in client code — use `@/libs/AuthClient`. Never read tokens/hashes in components.
+- Post-login redirects go through `sanitizeCallbackUrl`. Auth errors shown to users stay generic.
 
 ## Definition of done
 
@@ -83,10 +86,13 @@ See `docs/roadmap/README.md` §3. In short: `pnpm check` is green, tests added, 
 - `dev` — starts the embedded PGlite database AND Next.js (`pnpm dev:web` = Next only)
 - `db:generate` / `db:migrate` / `db:reset` / `db:seed` / `db:studio` / `db:check` — Drizzle workflow
 - `e2e` — Playwright tests; `pin` — pin dependency versions exactly
+- `pnpm setup:env` — generates `.env.local` with a random `BETTER_AUTH_SECRET`
+- `pnpm auth:schema` — regenerate the Better Auth schema reference after plugin changes
+- `pnpm email:dev` — preview email templates
 
 ## Structure
 
-src/db/ schema, client, seed (migrations in drizzle/) src/i18n/ next-intl routing/navigation src/actions/ Server Actions ('use server') src/validations/ Zod schemas shared client/server src/locales/ en.json, fr.json (add keys to BOTH) scripts/ Node scripts (db, checks)
+src/db/ schema, client, seed (migrations in drizzle/) src/i18n/ next-intl routing/navigation src/actions/ Server Actions ('use server') src/validations/ Zod schemas shared client/server src/locales/ en.json, fr.json (add keys to BOTH) scripts/ Node scripts (db, checks) src/data/ data-access layer: session guards (requireSession, withAuth), tenant helpers later src/hooks/ client hooks src/templates/emails/ React Email templates src/libs/email/ email transports src/libs/Auth.ts (server only) · AuthClient.ts (browser)
 
 ## Conventions
 

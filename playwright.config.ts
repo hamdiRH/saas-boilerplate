@@ -1,6 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isCI = !!process.env.CI;
+const baseURL = 'http://localhost:3000';
+
+// Same settings locally and in CI so tests behave identically
+// The console transport writes .emails/*.json for E2E verification.
+const appEnv = {
+  AUTH_RATE_LIMIT: 'on',
+  EMAIL_TRANSPORT: 'console',
+};
 
 export default defineConfig({
   forbidOnly: isCI,
@@ -9,15 +17,23 @@ export default defineConfig({
   reporter: isCI ? [['html', { open: 'never' }], ['github']] : 'list',
   retries: isCI ? 1 : 0,
   testDir: 'e2e',
-  use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-  },
-  webServer: {
-    // CI tests the PRODUCTION build; locally we reuse your running dev server (or start one)
-    command: isCI ? 'pnpm build && pnpm start' : 'pnpm dev',
-    reuseExistingServer: !isCI,
-    timeout: 180_000,
-    url: 'http://localhost:3000',
-  },
+  use: { baseURL, trace: 'on-first-retry' },
+  webServer: isCI
+    ? [
+        { command: 'pnpm db:server', port: 5433, reuseExistingServer: false, timeout: 120_000 },
+        {
+          command: 'pnpm build && pnpm start',
+          env: appEnv,
+          reuseExistingServer: false,
+          timeout: 300_000,
+          url: baseURL,
+        },
+      ]
+    : {
+        command: 'pnpm dev',
+        env: appEnv,
+        reuseExistingServer: true,
+        timeout: 180_000,
+        url: baseURL,
+      },
 });
