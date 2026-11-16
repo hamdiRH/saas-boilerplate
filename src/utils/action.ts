@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import { AppError } from '@/libs/errors';
+import { AppError, ValidationError } from '@/libs/errors';
 import { getLogger } from '@/libs/logger';
 
-interface ActionError {
+export interface ActionError {
   code: string;
   /** Full i18n key, e.g. "errors.validation" */
   messageKey: string;
@@ -29,6 +29,7 @@ export function createAction<S extends z.ZodType, R>(
     if (!parsed.success) {
       // 🔍 Zod 4: z.flattenError(error). (Zod 3: parsed.error.flatten())
       const { fieldErrors } = z.flattenError(parsed.error);
+
       return {
         error: {
           code: 'VALIDATION_ERROR',
@@ -43,7 +44,16 @@ export function createAction<S extends z.ZodType, R>(
       return { data: await handler(parsed.data), ok: true };
     } catch (error) {
       if (error instanceof AppError) {
-        return { error: { code: error.code, messageKey: error.messageKey }, ok: false };
+        return {
+          error: {
+            code: error.code,
+            messageKey: error.messageKey,
+            ...(error instanceof ValidationError && error.fieldErrors
+              ? { fieldErrors: error.fieldErrors }
+              : {}),
+          },
+          ok: false,
+        };
       }
 
       // Unknown error: log details server-side, return a generic result to the client

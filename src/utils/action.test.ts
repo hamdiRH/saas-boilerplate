@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ConflictError } from '@/libs/errors';
+import { ConflictError, ValidationError } from '@/libs/errors';
 
 import { createAction } from './action';
 
@@ -27,6 +27,22 @@ describe('createAction', () => {
     expect(called).toBe(false);
     expect(result).toMatchObject({
       error: { code: 'VALIDATION_ERROR', fieldErrors: { email: ['validation.email'] } },
+      ok: false,
+    });
+  });
+
+  it('forwards field errors thrown as ValidationError', async () => {
+    const action = createAction(schema, () => {
+      throw new ValidationError({
+        fieldErrors: { currentPassword: ['auth.errors.wrongPassword'] },
+      });
+    });
+    expect(await action({ email: 'a@b.co' })).toEqual({
+      error: {
+        code: 'VALIDATION_ERROR',
+        fieldErrors: { currentPassword: ['auth.errors.wrongPassword'] },
+        messageKey: 'errors.validation',
+      },
       ok: false,
     });
   });

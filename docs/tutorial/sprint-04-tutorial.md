@@ -1118,13 +1118,12 @@ export function useDebouncedValue<T>(value: T, delayMs = 400): T {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
@@ -1184,7 +1183,7 @@ export function CreateOrganizationForm() {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="organization" />
@@ -1207,7 +1206,7 @@ export function CreateOrganizationForm() {
         </div>
         <SubmitButton disabled={availability === 'taken'}>{t('submit')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -2092,13 +2091,13 @@ export type InviteInput = z.infer<typeof inviteSchema>;
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -2142,23 +2141,21 @@ export function InviteMemberForm({
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
           <TextField name="email" label={t('email')} type="email" autoComplete="off" />
-          <FormField
+          <Controller
             control={form.control}
             name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('role')}</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="invite-role">{t('role')}</FieldLabel>
+                <Select name={field.name} value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="invite-role" aria-invalid={fieldState.invalid}>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {roles.map((role) => (
                       <SelectItem key={role} value={role}>
@@ -2167,13 +2164,13 @@ export function InviteMemberForm({
                     ))}
                   </SelectContent>
                 </Select>
-              </FormItem>
+              </Field>
             )}
           />
         </div>
         <SubmitButton>{t('send')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -3647,7 +3644,7 @@ export async function deleteProject(input: unknown) {
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { createProject, updateProject } from '@/actions/projects';
@@ -3655,7 +3652,7 @@ import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
 import { TextareaField } from '@/components/forms/textarea-field';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Field, FieldLabel } from '@/components/ui/field';
 import {
   Select,
   SelectContent,
@@ -3706,34 +3703,32 @@ export function ProjectForm({ orgSlug, project, onDone }: Props) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="off" />
         <TextareaField name="description" label={t('description_field')} rows={4} />
-        <FormField
+        <Controller
           control={form.control}
           name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('status')}</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="project-status">{t('status')}</FieldLabel>
+              <Select name={field.name} value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger id="project-status" aria-invalid={fieldState.invalid}>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">{t('statusActive')}</SelectItem>
                   <SelectItem value="archived">{t('statusArchived')}</SelectItem>
                 </SelectContent>
               </Select>
-            </FormItem>
+            </Field>
           )}
         />
         <SubmitButton>{project ? t('save') : t('create')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
@@ -4045,13 +4040,12 @@ mkdir -p "src/app/[locale]/(app)/dashboard/[orgSlug]/settings"
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { FormError } from '@/components/forms/form-error';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Form } from '@/components/ui/form';
 import { useRouter } from '@/i18n/navigation';
 import { authErrorKey } from '@/libs/auth-error-keys';
 import { authClient } from '@/libs/AuthClient';
@@ -4087,7 +4081,7 @@ export function OrgSettingsForm({ org }: Props) {
   }
 
   return (
-    <Form {...form}>
+    <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormError messageKey={formError} />
         <TextField name="name" label={t('name')} autoComplete="organization" />
@@ -4097,7 +4091,7 @@ export function OrgSettingsForm({ org }: Props) {
         </div>
         <SubmitButton>{t('save')}</SubmitButton>
       </form>
-    </Form>
+    </FormProvider>
   );
 }
 ```
