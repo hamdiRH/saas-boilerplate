@@ -34,6 +34,7 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:reset": "tsx scripts/db-reset.ts && pnpm db:seed",
+    "db:cleanup": "tsx scripts/cleanup-expired.ts",
     "db:seed": "tsx --conditions=react-server scripts/seed.ts",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",

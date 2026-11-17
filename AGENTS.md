@@ -18,7 +18,7 @@ SaaS boilerplate — Next.js 16 (App Router), React 19, TypeScript (strict), Tai
 - `pnpm e2e` — Playwright tests
 - `pnpm check` — runs everything above; **run before declaring any task done**
 - `pnpm commit` — interactive conventional commit
-- `pnpm db:generate` / `db:migrate` / `db:reset` / `db:seed` / `db:studio` / `db:check` — Drizzle workflow (`db:seed` and `db:reset` only touch local databases)
+- `pnpm db:cleanup` (purge expired sessions/tokens/rate limits) / `db:generate` / `db:migrate` / `db:reset` / `db:seed` / `db:studio` / `db:check` — Drizzle workflow (`db:seed` and `db:reset` only touch local databases)
 - `pnpm setup:env` — generates `.env.local` with a random `BETTER_AUTH_SECRET`
 - `pnpm auth:schema` — regenerate the Better Auth schema reference after plugin changes
 - `pnpm email:dev` — preview email templates

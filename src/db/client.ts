@@ -7,7 +7,9 @@ import { getLogger } from '@/libs/logger';
 import { buildPoolConfig } from './pool-config';
 import * as schema from './schema';
 
-// Next.js hot-reload re-evaluates modules; keep ONE pool on globalThis in dev.
+// Keep ONE pool per process: hot reload (dev) and separate server bundles (prod) can both
+// evaluate this module more than once, and every extra pool eats Postgres connections.
+// For Neon/managed Postgres use sslmode=verify-full in DATABASE_URL.
 const globalForDb = globalThis as unknown as { __dbPool?: Pool };
 
 function createPool() {
@@ -19,10 +21,7 @@ function createPool() {
 }
 
 const pool = globalForDb.__dbPool ?? createPool();
-
-if (Env.NODE_ENV !== 'production') {
-  globalForDb.__dbPool = pool;
-}
+globalForDb.__dbPool = pool;
 
 export const db = drizzle(pool, { schema });
 export type Database = typeof db;
