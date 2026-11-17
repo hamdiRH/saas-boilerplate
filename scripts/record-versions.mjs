@@ -14,7 +14,8 @@ const body = [
   '```text',
   `node ${run('node -v')}`,
   `pnpm ${run('pnpm -v')}`,
-  run('pnpm list --depth 0'),
+  // Drop the absolute project path pnpm prints on the header line (it leaks the local user name).
+  run('pnpm list --depth 0').replace(/^(?<name>\S+@\S+) .*$/mu, '$<name>'),
   '```',
   '',
 ].join('\n');

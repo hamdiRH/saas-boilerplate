@@ -25,6 +25,7 @@
     "test:all": "vitest run",
     "check:agents": "node scripts/check-agent-files.mjs",
     "pin": "node scripts/pin-versions.mjs && pnpm install",
+    "versions:record": "node scripts/record-versions.mjs",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "dev:web": "next dev",
@@ -38,7 +39,7 @@
     "e2e:ui": "playwright test --ui",
     "setup:env": "node scripts/setup-env.mjs",
     "email:dev": "email dev --dir src/templates/emails --port 3030",
-    "auth:schema": "pnpm dlx @better-auth/cli@latest generate --config src/libs/Auth.ts --output src/db/schema/auth.generated.ts"
+    "auth:schema": "pnpm dlx @better-auth/cli@latest generate --config src/libs/auth.ts --output src/db/schema/auth.generated.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",

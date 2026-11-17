@@ -29,7 +29,7 @@ export function createAuth(database: DbLike) {
     advanced: {
       // 🔍 older versions: advanced.generateId
       database: { generateId: () => randomUUID() },
-      // Rate limiting trusts this header, so it must be one YOUR proxy sets/overwrites (see Env.ts).
+      // Rate limiting trusts this header, so it must be one YOUR proxy sets/overwrites (see env.ts).
       ipAddress: { ipAddressHeaders: [Env.AUTH_IP_HEADER] },
       useSecureCookies: Env.NODE_ENV === 'production',
     },
