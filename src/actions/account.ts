@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { z } from 'zod';
 
 import { currentRequest } from '@/data/request';
+import { getSessionOrThrow } from '@/data/session';
 import { withAuth } from '@/data/with-auth';
 import { auth } from '@/libs/auth';
 import { mapAuthApiError } from '@/libs/auth-api-errors';
@@ -33,6 +34,7 @@ const handleChangePassword = createAction(
     runInBackground(() => sendPasswordChangedEmail({ request, user: session.user }));
     return { changed: true as const };
   }),
+  { guard: getSessionOrThrow },
 );
 
 export async function changePassword(input: unknown) {
@@ -59,6 +61,7 @@ const handleRevokeSession = createAction(
     }
     return { revoked: true as const };
   }),
+  { guard: getSessionOrThrow },
 );
 
 export async function revokeSession(input: unknown) {
@@ -76,6 +79,7 @@ const handleRevokeOthers = createAction(
     }
     return { revoked: true as const };
   }),
+  { guard: getSessionOrThrow },
 );
 
 export async function revokeOtherSessions() {

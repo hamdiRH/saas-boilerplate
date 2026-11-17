@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { ConflictError, ValidationError } from '@/libs/errors';
+import { AuthenticationError, ConflictError, ValidationError } from '@/libs/errors';
 
 import { createAction } from './action';
 
@@ -71,5 +71,26 @@ describe('createAction', () => {
     expect(logError).toHaveBeenCalledWith('Unhandled error in server action', {
       error: expect.any(Error),
     });
+  });
+
+  it('runs the guard before validation, so anonymous callers never see schema errors', async () => {
+    let called = false;
+    const action = createAction(
+      schema,
+      () => {
+        called = true;
+      },
+      {
+        guard: () => {
+          throw new AuthenticationError();
+        },
+      },
+    );
+
+    const result = await action({ email: 'not-an-email' });
+
+    expect(called).toBe(false);
+    expect(result).toMatchObject({ error: { code: 'UNAUTHENTICATED' }, ok: false });
+    expect(JSON.stringify(result)).not.toContain('validation.email');
   });
 });

@@ -15,15 +15,49 @@ export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: Action
 
 type MaybePromise<T> = T | Promise<T>;
 
+export interface ActionOptions {
+  /**
+   * Runs BEFORE input validation. Throw an AppError (e.g. `getSessionOrThrow`) to reject the call,
+   * so anonymous callers learn nothing about the input schema.
+   */
+  guard?: () => MaybePromise<unknown>;
+}
+
+function toErrorResult(error: unknown): { ok: false; error: ActionError } {
+  if (error instanceof AppError) {
+    return {
+      error: {
+        code: error.code,
+        messageKey: error.messageKey,
+        ...(error instanceof ValidationError && error.fieldErrors
+          ? { fieldErrors: error.fieldErrors }
+          : {}),
+      },
+      ok: false,
+    };
+  }
+
+  // Unknown error: log details server-side, return a generic result to the client
+  getLogger('app').error('Unhandled error in server action', { error });
+  return { error: { code: 'INTERNAL', messageKey: 'errors.internal' }, ok: false };
+}
+
 /**
- * Wraps a server-side handler: validates input with Zod, maps known errors to
- * typed results, logs and hides unknown errors.
+ * Wraps a server-side handler: optionally runs a guard first, validates input with Zod,
+ * maps known errors to typed results, logs and hides unknown errors.
  */
 export function createAction<S extends z.ZodType, R>(
   schema: S,
   handler: (input: z.output<S>) => MaybePromise<R>,
+  options: ActionOptions = {},
 ): (raw: unknown) => Promise<ActionResult<Awaited<R>>> {
   return async (raw: unknown): Promise<ActionResult<Awaited<R>>> => {
+    try {
+      await options.guard?.();
+    } catch (error) {
+      return toErrorResult(error);
+    }
+
     const parsed = schema.safeParse(raw);
 
     if (!parsed.success) {
@@ -43,22 +77,7 @@ export function createAction<S extends z.ZodType, R>(
     try {
       return { data: await handler(parsed.data), ok: true };
     } catch (error) {
-      if (error instanceof AppError) {
-        return {
-          error: {
-            code: error.code,
-            messageKey: error.messageKey,
-            ...(error instanceof ValidationError && error.fieldErrors
-              ? { fieldErrors: error.fieldErrors }
-              : {}),
-          },
-          ok: false,
-        };
-      }
-
-      // Unknown error: log details server-side, return a generic result to the client
-      getLogger('app').error('Unhandled error in server action', { error });
-      return { error: { code: 'INTERNAL', messageKey: 'errors.internal' }, ok: false };
+      return toErrorResult(error);
     }
   };
 }
