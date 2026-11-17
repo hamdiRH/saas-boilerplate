@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
 
 import { ResendVerificationForm } from '@/components/auth/resend-verification-form';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getSession } from '@/data/session';
 import { Link } from '@/i18n/navigation';
@@ -40,13 +40,12 @@ async function VerifyEmailContent({
       <p className="text-muted-foreground text-sm">
         {session ? t('successDescription') : t('signInDescription')}
       </p>
-      <Button className="w-full">
-        {session ? (
-          <Link href="/dashboard">{t('continue')}</Link>
-        ) : (
-          <Link href="/sign-in">{t('signIn')}</Link>
-        )}
-      </Button>
+      <Link
+        href={session ? '/dashboard' : '/sign-in'}
+        className={buttonVariants({ className: 'w-full' })}
+      >
+        {session ? t('continue') : t('signIn')}
+      </Link>
     </div>
   );
 }
