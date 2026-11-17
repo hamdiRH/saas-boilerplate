@@ -10,16 +10,9 @@
 
 <!-- /init:description -->
 
-[![CI](https://github.com/hamdiRH/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/hamdiRH/REPO/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/hamdiRH/REPO/graph/badge.svg)](https://codecov.io/gh/hamdiRH/REPO) [![Release](https://img.shields.io/github/v/release/hamdiRH/REPO?include_prereleases)](https://github.com/hamdiRH/REPO/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
+> **Status: v0.1.0-alpha — work in progress.** Sprints 0–2 are done (foundation, database, authentication core). Features described below that are not built yet — organizations, passkeys, Sentry and the other integrations, Storybook, visual tests — are the roadmap for Sprints 3–8, not the current state. See [`docs/roadmap/06-project-state.md`](docs/roadmap/06-project-state.md) for what exists today.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/landing-dark.png">
-    <img src="docs/images/landing-light.png" alt="Landing page of the starter, light and dark themes" width="860">
-  </picture>
-</p>
-
----
+[![CI](https://github.com/hamdiRH/saas-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/hamdiRH/saas-boilerplate/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/hamdiRH/saas-boilerplate/graph/badge.svg)](https://codecov.io/gh/hamdiRH/saas-boilerplate) [![Release](https://img.shields.io/github/v/release/hamdiRH/saas-boilerplate?include_prereleases)](https://github.com/hamdiRH/saas-boilerplate/releases) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## At a glance
 
@@ -28,12 +21,12 @@
 | **Stack** | Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS 4 · shadcn/ui |
 | **Auth** | Better Auth: password, magic link, social, passkeys, TOTP, sessions, impersonation |
 | **Data** | Drizzle ORM · PostgreSQL — embedded **PGlite** locally, **Neon** (or any Postgres) in production |
-| **Tenancy** | Organizations, invitations, hamdiRH/admin/member roles, tenant-scoped data access |
+| **Tenancy** | Organizations, invitations, owner/admin/member roles, tenant-scoped data access |
 | **Quality** | Vitest (unit + real-browser), Playwright (E2E, visual, accessibility), Storybook, coverage gates |
 | **Ops** | Sentry · Better Stack · Arcjet · Checkly · PostHog — every one optional |
 | **Ship** | Semantic Release · Vercel + Neon pipeline with a migration gate · one-command rebrand |
 
-> **Database: PostgreSQL-first.** SQLite and MySQL are _not_ supported in v1.0 (see the [database guide](guides/database.md#portability)). **Not included:** billing/subscriptions (the data model leaves room; see the roadmap).
+> **Database: PostgreSQL-first.** SQLite and MySQL are _not_ supported in v1.0 (see the [database guide](docs/guides/database.md#portability)). **Not included:** billing/subscriptions (the data model leaves room; see the roadmap).
 
 ## Why this exists
 
@@ -50,7 +43,7 @@ Three ideas run through the whole codebase:
 You need **Node.js 22+** and **pnpm 10+** (`corepack enable`). On Windows use Git Bash or WSL.
 
 ```bash
-git clone https://github.com/hamdiRH/REPO.git my-app && cd my-app
+git clone https://github.com/hamdiRH/saas-boilerplate.git my-app && cd my-app
 pnpm install
 pnpm setup:env        # creates .env.local with a random BETTER_AUTH_SECRET
 pnpm dev              # embedded database on :5433, app on http://localhost:3000
@@ -67,15 +60,6 @@ Sign in with the seeded demo — `demo@example.com` / `Demo-Password-123` — or
 ```bash
 pnpm init:template    # name, slug, repository, default language, accent colour
 ```
-
-<details>
-<summary><b>Screenshots</b></summary>
-
-| Projects (organization workspace) | Account security                 |
-| --------------------------------- | -------------------------------- |
-| ![Projects](images/projects.png)  | ![Security](images/security.png) |
-
-</details>
 
 ## What's inside
 
@@ -96,7 +80,7 @@ Legend: ✅ core · 🔌 optional (works with zero configuration; enable with en
 <summary><b>Organizations, roles & administration</b></summary>
 
 - ✅ Personal workspace on sign-up, organizations, invitations (email, accept, resend, revoke)
-- ✅ Roles `hamdiRH` / `admin` / `member` with a written permission matrix and a test for every cell
+- ✅ Roles `owner` / `admin` / `member` with a written permission matrix and a test for every cell
 - ✅ Tenant isolation: data access goes through `tenantDb`; a boundary test forbids raw database imports in routes, components and actions
 - ✅ Platform admin console (users, ban, role), **audited** impersonation with a persistent banner and guarded endpoints
 - ✅ Append-only audit log (enforced by a database trigger)
@@ -117,7 +101,7 @@ Legend: ✅ core · 🔌 optional (works with zero configuration; enable with en
 <summary><b>Quality & testing</b></summary>
 
 - ✅ Vitest unit/integration tests on an in-memory Postgres, plus component tests in a real browser
-- ✅ Playwright E2E with ready-made **personas** (hamdiRH, admin, member, platform admin) — no UI sign-in in most specs
+- ✅ Playwright E2E with ready-made **personas** (owner, admin, member, platform admin) — no UI sign-in in most specs
 - ✅ Visual regression across theme × language × viewport, baselines generated by CI (Linux)
 - ✅ Accessibility: axe in E2E, contrast tests on the theme tokens, skip link, reduced motion, RTL review run
 - ✅ **Security suites:** an authorization matrix running the real Server Actions against every role, IDOR / injection / mass-assignment tests
@@ -202,41 +186,41 @@ Prefer a full list? Open `package.json` → `scripts`; every command used in the
 
 ## Configure only what you need
 
-Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/Env.ts`); the full, generated table is in the **[environment reference](guides/environment.md)**.
+Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/env.ts`); the full, generated table is in the **[environment reference](docs/guides/environment.md)**.
 
 | Service | Set these | What you get | Guide |
 | --- | --- | --- | --- |
-| **Database (production)** | `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (migrations) | Neon or any PostgreSQL | [database](guides/database.md) |
-| **Email** | `EMAIL_TRANSPORT=resend`, `EMAIL_FROM` on a verified Resend domain, `RESEND_API_KEY` | real verification, reset, invitation emails | [deployment](guides/deployment.md#email) |
-| **Social sign-in** | `<PROVIDER>_CLIENT_ID` + `_CLIENT_SECRET` | the provider's button appears | [social auth](guides/social-auth.md) |
-| **Sentry** | `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_*` for source maps) | error tracking; `pnpm spotlight` locally | [observability](guides/observability.md) |
-| **Better Stack** | `BETTER_STACK_SOURCE_TOKEN`, `BETTER_STACK_INGESTING_HOST` | log shipping | [observability](guides/observability.md) |
-| **Arcjet** | `ARCJET_KEY` (`ARCJET_MODE`) | bot detection, shield, rate limits | [security](guides/security.md) |
-| **PostHog** | `NEXT_PUBLIC_POSTHOG_KEY` | analytics — only after the visitor consents | [privacy](guides/privacy.md) |
-| **Crowdin** | CI secrets `CROWDIN_PROJECT_ID`, `CROWDIN_PERSONAL_TOKEN` | translation sync PRs | [i18n](guides/i18n.md) |
-| **Codecov / Checkly** | CI secrets `CODECOV_TOKEN`, `CHECKLY_*` | coverage reports, uptime checks | [testing](guides/testing.md) · [observability](guides/observability.md) |
+| **Database (production)** | `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (migrations) | Neon or any PostgreSQL | [database](docs/guides/database.md) |
+| **Email** | `EMAIL_TRANSPORT=resend`, `EMAIL_FROM` on a verified Resend domain, `RESEND_API_KEY` | real verification, reset, invitation emails | [deployment](docs/guides/deployment.md#email) |
+| **Social sign-in** | `<PROVIDER>_CLIENT_ID` + `_CLIENT_SECRET` | the provider's button appears | [social auth](docs/guides/social-auth.md) |
+| **Sentry** | `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_*` for source maps) | error tracking; `pnpm spotlight` locally | [observability](docs/guides/observability.md) |
+| **Better Stack** | `BETTER_STACK_SOURCE_TOKEN`, `BETTER_STACK_INGESTING_HOST` | log shipping | [observability](docs/guides/observability.md) |
+| **Arcjet** | `ARCJET_KEY` (`ARCJET_MODE`) | bot detection, shield, rate limits | [security](docs/guides/security.md) |
+| **PostHog** | `NEXT_PUBLIC_POSTHOG_KEY` | analytics — only after the visitor consents | [privacy](docs/guides/privacy.md) |
+| **Crowdin** | CI secrets `CROWDIN_PROJECT_ID`, `CROWDIN_PERSONAL_TOKEN` | translation sync PRs | [i18n](docs/guides/i18n.md) |
+| **Codecov / Checkly** | CI secrets `CODECOV_TOKEN`, `CHECKLY_*` | coverage reports, uptime checks | [testing](docs/guides/testing.md) · [observability](docs/guides/observability.md) |
 
-Don't want a module at all? `pnpm init:template --remove sentry,posthog` deletes its code, dependencies and CI wiring (see [optional modules](guides/modules.md)).
+Don't want a module at all? `pnpm init:template --remove sentry,posthog` deletes its code, dependencies and CI wiring (see [optional modules](docs/guides/modules.md)).
 
 ## Make it yours
 
-- **Rename & rebrand:** `pnpm init:template`, then follow [theming](guides/theming.md) — name, accent, logo and icon take about ten minutes.
+- **Rename & rebrand:** `pnpm init:template`, then follow [theming](docs/guides/theming.md) — name, accent, logo and icon take about ten minutes.
 - **Colours and radius:** one file, `src/styles/theme.css` (OKLCH tokens, light + dark). A contrast test tells you if a colour is unreadable.
 - **Copy:** `src/locales/*.json` (`{appName}` is filled in for you). Legal pages are **templates** — have a lawyer review them.
-- **A new feature:** follow the worked example in [adding a feature](guides/adding-a-feature.md).
-- **A new language:** the checklist is in [i18n](guides/i18n.md#adding-a-language-checklist).
+- **A new feature:** follow the worked example in [adding a feature](docs/guides/adding-a-feature.md).
+- **A new language:** the checklist is in [i18n](docs/guides/i18n.md#adding-a-language-checklist).
 
 ## Quality gates
 
 Pull requests cannot merge until **`CI OK`** passes: types, lint, format, Knip, env and docs checks, `i18n-check`, migration lint, unit + component tests with coverage thresholds, production build with a bundle budget, Storybook build, two E2E shards, visual regression, Lighthouse budgets and accessibility checks. Secret scanning and CodeQL run alongside.
 
-> Visual-regression baselines are produced by CI on Linux — never commit screenshots from your own machine. Add the `update-snapshots` label to a PR instead ([how](guides/visual-testing.md)).
+> Visual-regression baselines are produced by CI on Linux — never commit screenshots from your own machine. Add the `update-snapshots` label to a PR instead ([how](docs/guides/visual-testing.md)).
 
 ## Deploy
 
-1. Create a **Neon** project (branches `main` and `staging`) and a **Vercel** project — [one-time setup](guides/deployment.md#one-time-setup--30-minutes).
+1. Create a **Neon** project (branches `main` and `staging`) and a **Vercel** project — [one-time setup](docs/guides/deployment.md#one-time-setup--30-minutes).
 2. Merge a `feat:` or `fix:` commit: CI runs, **Semantic Release** tags `vX.Y.Z`, the **Deploy** workflow waits for your approval, runs migrations, deploys without going live, smoke-tests `/api/health`, then promotes.
-3. If something is wrong, roll back in one click — the [runbook](guides/deployment.md#rollback-runbook) covers app and database.
+3. If something is wrong, roll back in one click — the [runbook](docs/guides/deployment.md#rollback-runbook) covers app and database.
 
 Migrations are **expand/contract only**: production runs them _before_ the new code is live, so the previous version must keep working.
 
@@ -244,22 +228,22 @@ Migrations are **expand/contract only**: production runs them _before_ the new c
 
 | Start here | Build | Operate |
 | --- | --- | --- |
-| [Getting started](guides/getting-started.md) | [Adding a feature](guides/adding-a-feature.md) | [Deployment](guides/deployment.md) |
-| [Environment](guides/environment.md) | [Authentication](guides/auth.md) · [advanced](guides/auth-security.md) | [Releasing](guides/releasing.md) |
-| [Database](guides/database.md) | [Multi-tenancy](guides/multi-tenancy.md) · [RBAC](guides/rbac.md) | [Observability](guides/observability.md) |
-| [Troubleshooting](guides/troubleshooting.md) | [Testing](guides/testing.md) · [Accessibility](guides/accessibility.md) | [Security](guides/security.md) · [Threat model](security/threat-model.md) |
-| [Upgrading](guides/upgrading.md) | [i18n](guides/i18n.md) · [SEO](guides/seo.md) · [Theming](guides/theming.md) | [Performance](guides/performance.md) · [Privacy](guides/privacy.md) |
+| [Getting started](docs/guides/getting-started.md) | [Adding a feature](docs/guides/adding-a-feature.md) | [Deployment](docs/guides/deployment.md) |
+| [Environment](docs/guides/environment.md) | [Authentication](docs/guides/auth.md) · [advanced](docs/guides/auth-security.md) | [Releasing](docs/guides/releasing.md) |
+| [Database](docs/guides/database.md) | [Multi-tenancy](docs/guides/multi-tenancy.md) · [RBAC](docs/guides/rbac.md) | [Observability](docs/guides/observability.md) |
+| [Troubleshooting](docs/guides/troubleshooting.md) | [Testing](docs/guides/testing.md) · [Accessibility](docs/guides/accessibility.md) | [Security](docs/guides/security.md) · [Threat model](security/threat-model.md) |
+| [Upgrading](docs/guides/upgrading.md) | [i18n](docs/guides/i18n.md) · [SEO](docs/guides/seo.md) · [Theming](docs/guides/theming.md) | [Performance](docs/guides/performance.md) · [Privacy](docs/guides/privacy.md) |
 
-Working with an AI coding agent? Point it at [`AGENTS.md`](../AGENTS.md): architecture, conventions and the rules that tests enforce.
+Working with an AI coding agent? Point it at [`AGENTS.md`](AGENTS.md): architecture, conventions and the rules that tests enforce.
 
 ## FAQ
 
-**Can I use it without any third-party account?** Yes. Database, email (printed to the terminal) and all tooling run locally. **Do I need Vercel and Neon?** No — they are the documented path. Any host and any PostgreSQL work; a Docker/standalone appendix is in the deployment guide. **Where is billing?** Not in v1.0. **Windows?** Supported through Git Bash or WSL; the repository is LF-normalised. **How do I report a vulnerability?** Privately — see [SECURITY.md](../SECURITY.md).
+**Can I use it without any third-party account?** Yes. Database, email (printed to the terminal) and all tooling run locally. **Do I need Vercel and Neon?** No — they are the documented path. Any host and any PostgreSQL work; a Docker/standalone appendix is in the deployment guide. **Where is billing?** Not in v1.0. **Windows?** Supported through Git Bash or WSL; the repository is LF-normalised. **How do I report a vulnerability?** Privately — see [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Issues and pull requests are welcome — start with [CONTRIBUTING.md](../CONTRIBUTING.md) and the [code of conduct](../CODE_OF_CONDUCT.md). Commits follow [Conventional Commits](https://www.conventionalcommits.org/): the type of your commit decides the next version.
+Issues and pull requests are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Commits follow [Conventional Commits](https://www.conventionalcommits.org/): the type of your commit decides the next version.
 
 ## License
 
-[MIT](../LICENSE) © hamdiRH
+[MIT](LICENSE) © hamdiRH

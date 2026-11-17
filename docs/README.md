@@ -201,7 +201,7 @@ Prefer a full list? Open `package.json` → `scripts`; every command used in the
 
 ## Configure only what you need
 
-Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/Env.ts`); the full, generated table is in the **[environment reference](guides/environment.md)**.
+Nothing below is required to run locally. Variables are validated at startup by one typed module (`src/libs/env.ts`); the full, generated table is in the **[environment reference](guides/environment.md)**.
 
 | Service | Set these | What you get | Guide |
 | --- | --- | --- | --- |
