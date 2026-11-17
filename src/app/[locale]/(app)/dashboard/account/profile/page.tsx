@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import { ChangeEmailForm } from '@/actions/change-email-form';
+import { ChangeEmailForm } from '@/components/account/change-email-form';
 import { ProfileForm } from '@/components/account/profile-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireSession } from '@/data/session';
