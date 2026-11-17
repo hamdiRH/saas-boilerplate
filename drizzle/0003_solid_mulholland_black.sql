@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "rate_limit_key_idx" ON "rate_limit" USING btree ("key");
