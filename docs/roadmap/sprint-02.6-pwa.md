@@ -122,6 +122,41 @@ Order: **T01 → T02 → (T03 ∥ T04 ∥ T05 ∥ T07) → T06 → T08 (optional
 | **D11** | Add a `pwa` commit scope to `commitlint.config.mjs` and `AGENTS.md` | Yes, one small `config` commit at the start of T01 (changes tooling rules, so needs your OK) |
 | **D12** | Edits to `AGENTS.md` and project state for PWA rules (never cache auth, kill switch) | Yes, in T09 |
 
+### Decisions log
+
+| ID | Status | Outcome (2026-11-17) |
+| --- | --- | --- |
+| D1 | **Approved** | Small hand-written TypeScript worker built by `scripts/build-sw.mjs`. No Serwist. Confirm the bundler becomes a direct, exactly pinned devDependency (that is a dependency change, approved here only for the bundler the toolchain already uses) |
+| D4 | **Approved** | `web-push` (exact version) and the `push_subscription` table, user-scoped, with a `PUSH_ENABLED` flag |
+| D6 | **Approved** | Brand **Nexora**, see "Brand tokens" below |
+| T08 / D9 | **Deferred** | Advanced offline moves out of Sprint 2.6, to after Sprint 4. The sprint has 8 active tickets |
+| D2, D3, D5, D7, D8, D10, D11, D12 | Pending | The recommendations stay in force as defaults. Say so if you want any changed |
+| D13 (new) | Pending | Apply the Nexora tokens to the app theme (`src/styles/global.css`, shadcn tokens) and rename the default `NEXT_PUBLIC_APP_NAME`. Recommended as a small separate `ui` ticket right after T01, so the PWA ticket stays about PWA. Also decide the font: the brand board names Plus Jakarta Sans (or Inter), while the repo now self-hosts Geist |
+
+### Brand tokens (from the approved Nexora board)
+
+Sources: `docs/brand/nexora-icon-source.png` (layered-stack mark, 1254×1254) and `docs/brand/nexora-brand-board.png`.
+
+| Token            | Hex       | Use in this sprint                                       |
+| ---------------- | --------- | -------------------------------------------------------- |
+| Primary          | `#635BFF` | Manifest `theme_color`, install UI accents               |
+| Primary hover    | `#5145E5` | Hover/pressed state                                      |
+| Background dark  | `#0F172A` | Manifest `background_color` (splash), dark `theme-color` |
+| Foreground       | `#0F172A` | Text on light                                            |
+| Muted            | `#94A3B8` | Secondary UI, **not body text on white**                 |
+| Border           | `#E5E7EB` | Borders                                                  |
+| Background light | `#FFFFFF` | Light `theme-color`                                      |
+
+Name: **Nexora**; short name: **Nexora**; tagline: "Build · Launch · Scale".
+
+Contrast checks (WCAG 2.x, computed from the hex values) that T01/T03 must respect:
+
+- `#635BFF` on `#FFFFFF`: about 4.7:1. Passes AA for normal text, so primary buttons with white text are fine.
+- `#94A3B8` on `#FFFFFF`: about 2.6:1. Fails AA for text. Use it for icons and decoration only, or a darker muted tone for text.
+- `#635BFF` on `#0F172A`: about 3.8:1. Large text and UI components only; small text on dark needs a lighter tint of the primary.
+
+Icon work for T01: derive 192, 512, maskable 512 (safe-zone padded on `#0F172A`), 180 apple-touch and favicon sizes from the source mark. The source has transparency, so the maskable and apple-touch variants need a solid background.
+
 Out of scope: native app store packaging (TWA, Capacitor), background periodic sync, payment/billing flows, caching tenant data, analytics for PWA events (Sprint 6).
 
 ## 7. Testing strategy
@@ -370,13 +405,13 @@ Branch pattern: `feat/s2.6-t0N-<slug>`. Commit scopes from the allowed list (or 
 
 ---
 
-### S2.6-T08 — Advanced offline (optional, P2, recommended to defer)
+### S2.6-T08 — Advanced offline (P2, DEFERRED until after Sprint 4)
 
 - **Priority:** P2 · **Effort:** 3 days · **Depends on:** T04
 - **Objective:** queue user-initiated mutations while offline and replay them safely.
 - **User story:** As a user on an unreliable connection, I want my changes to be kept and sent when I reconnect so that I do not lose work.
 
-**Status:** recommended to **defer until after Sprint 4** (D9). Included here so the design is on record and the dependency (T04) is explicit.
+**Status:** **deferred until after Sprint 4** (D9 approved). Included here so the design is on record and the dependency (T04) is explicit.
 
 **Tasks (when approved)**
 
