@@ -12,7 +12,7 @@ describe('cleanupExpired', () => {
 
   beforeAll(async () => {
     testDb = await createTestDb();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await testDb.destroy();
