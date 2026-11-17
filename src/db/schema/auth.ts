@@ -1,4 +1,13 @@
-import { bigint, boolean, index, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 const tz = (name: string) => timestamp(name, { withTimezone: true });
 
@@ -64,10 +73,18 @@ export const verification = pgTable(
   (table) => [index('verification_identifier_idx').on(table.identifier)],
 );
 
-/** Used by Better Auth's database-backed rate limiter (enabled in S2-T16). */
-export const rateLimit = pgTable('rate_limit', {
-  count: integer('count').notNull(),
-  id: text('id').primaryKey(),
-  key: text('key').notNull(),
-  lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
-});
+/**
+ * Used by Better Auth's database-backed rate limiter (enabled in S2-T16).
+ * The limiter looks rows up by `key` on every limited request and assumes `key` is unique,
+ * hence the unique index.
+ */
+export const rateLimit = pgTable(
+  'rate_limit',
+  {
+    count: integer('count').notNull(),
+    id: text('id').primaryKey(),
+    key: text('key').notNull(),
+    lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
+  },
+  (table) => [uniqueIndex('rate_limit_key_idx').on(table.key)],
+);

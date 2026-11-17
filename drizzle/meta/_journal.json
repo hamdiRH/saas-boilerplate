@@ -15,6 +15,20 @@
       "when": 1794672712350,
       "tag": "0001_loose_sir_ram",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794900525131,
+      "tag": "0002_dedupe_rate_limit",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794900532476,
+      "tag": "0003_solid_mulholland_black",
+      "breakpoints": true
     }
   ]
 }

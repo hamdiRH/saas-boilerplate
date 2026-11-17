@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const baseline = () => {
+  vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
+  vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');
+  vi.stubEnv('NODE_ENV', 'production');
+};
+
 describe('Env', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -41,5 +47,54 @@ describe('Env', () => {
     const { Env } = await import('./env');
 
     expect(Env.EMAIL_FROM).toBeUndefined();
+  });
+
+  describe('production safety', () => {
+    it('requires DATABASE_URL in production', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      baseline();
+      vi.stubEnv('DATABASE_URL', '');
+
+      await expect(import('./env')).rejects.toThrow(/Invalid environment variables/iu);
+    });
+
+    it('rejects the console and memory email transports in production', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      baseline();
+      vi.stubEnv('DATABASE_URL', 'postgres://user:pw@db.example.com/app?sslmode=require');
+      vi.stubEnv('EMAIL_TRANSPORT', 'console');
+
+      await expect(import('./env')).rejects.toThrow(/Invalid environment variables/iu);
+    });
+
+    it('accepts a proper production configuration', async () => {
+      baseline();
+      vi.stubEnv('DATABASE_URL', 'postgres://user:pw@db.example.com/app?sslmode=require');
+      vi.stubEnv('EMAIL_TRANSPORT', 'resend');
+
+      const { Env } = await import('./env');
+
+      expect(Env.NODE_ENV).toBe('production');
+    });
+
+    it('lets CI/e2e opt in to local services with ALLOW_LOCAL_SERVICES', async () => {
+      baseline();
+      vi.stubEnv('DATABASE_URL', '');
+      vi.stubEnv('EMAIL_TRANSPORT', 'console');
+      vi.stubEnv('ALLOW_LOCAL_SERVICES', 'true');
+
+      const { Env } = await import('./env');
+
+      expect(Env.ALLOW_LOCAL_SERVICES).toBe(true);
+    });
+
+    it('defaults the trusted IP header to x-forwarded-for', async () => {
+      vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
+      vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');
+
+      const { Env } = await import('./env');
+
+      expect(Env.AUTH_IP_HEADER).toBe('x-forwarded-for');
+    });
   });
 });

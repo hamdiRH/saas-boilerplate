@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
 
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from '@/i18n/navigation';
 
@@ -23,9 +23,9 @@ async function ResetPasswordContent({ params, searchParams }: ResetPasswordPageP
       <div className="space-y-4 text-center">
         <h1 className="text-xl font-semibold">{t('invalidTitle')}</h1>
         <p className="text-muted-foreground text-sm">{t('invalidDescription')}</p>
-        <Button>
-          <Link href="/forgot-password">{t('requestNew')}</Link>
-        </Button>
+        <Link href="/forgot-password" className={buttonVariants()}>
+          {t('requestNew')}
+        </Link>
       </div>
     );
   }

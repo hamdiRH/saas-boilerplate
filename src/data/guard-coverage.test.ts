@@ -1,21 +1,27 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-const PROTECTED_ROOT = path.join('src', 'app', '[locale]', '(app)');
+// Every route group the proxy treats as protected (see PROTECTED_PREFIXES in route-guard.ts).
+const PROTECTED_ROOTS = [
+  path.join('src', 'app', '[locale]', '(app)'),
+  path.join('src', 'app', '[locale]', '(admin)'),
+];
 
-it('every page under (app) calls requireSession() itself', () => {
-  const pages = (readdirSync(PROTECTED_ROOT, { recursive: true }) as string[])
-    .filter((file) => file.endsWith('page.tsx'))
-    .map((file) => path.join(PROTECTED_ROOT, file));
+describe.each(PROTECTED_ROOTS)('%s', (root) => {
+  it('every page calls requireSession() itself', () => {
+    const pages = (readdirSync(root, { recursive: true }) as string[])
+      .filter((file) => file.endsWith('page.tsx'))
+      .map((file) => path.join(root, file));
 
-  expect(pages.length).toBeGreaterThan(0);
+    expect(pages.length).toBeGreaterThan(0);
 
-  const unguarded = pages.filter(
-    (file) => !/require(?:Session|Admin)\(/u.test(readFileSync(file, 'utf-8')),
-  );
+    const unguarded = pages.filter(
+      (file) => !/require(?:Session|Admin)\(/u.test(readFileSync(file, 'utf-8')),
+    );
 
-  // Layouts are NOT re-rendered on client navigations — a layout-only guard is not a guard.
-  expect(unguarded, `Pages without a guard:\n${unguarded.join('\n')}`).toEqual([]);
+    // Layouts are NOT re-rendered on client navigations — a layout-only guard is not a guard.
+    expect(unguarded, `Pages without a guard:\n${unguarded.join('\n')}`).toEqual([]);
+  });
 });

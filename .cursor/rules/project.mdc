@@ -4,5 +4,5 @@ alwaysApply: true
 ---
 
 Follow AGENTS.md in the repository root.
-Use pnpm. TypeScript strict, no `any`. Never read `process.env` outside `src/libs/Env.ts`.
+Use pnpm. TypeScript strict, no `any`. Never read `process.env` outside `src/libs/env.ts`.
 Run `pnpm check` before finishing a task. Conventional commits.

@@ -63,3 +63,6 @@ e2e/.auth
 # editors (keep shared VS Code config)
 .idea
 .DS_Store
+
+# Vitest browser-mode artifacts
+.vitest/

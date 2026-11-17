@@ -7,7 +7,7 @@ import { FormProvider, useForm } from 'react-hook-form';
 
 import { SubmitButton } from '@/components/forms/submit-button';
 import { TextField } from '@/components/forms/text-field';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Link, getPathname } from '@/i18n/navigation';
 import { authClient } from '@/libs/auth-client';
 import { forgotPasswordSchema } from '@/validations/auth';
@@ -38,9 +38,9 @@ export function ForgotPasswordForm() {
       <output className="block space-y-4 text-center">
         <h1 className="text-xl font-semibold">{t('sentTitle')}</h1>
         <p className="text-muted-foreground text-sm">{t('sentDescription', { email: sentTo })}</p>
-        <Button variant="outline">
-          <Link href="/sign-in">{t('back')}</Link>
-        </Button>
+        <Link href="/sign-in" className={buttonVariants({ variant: 'outline' })}>
+          {t('back')}
+        </Link>
       </output>
     );
   }

@@ -1,11 +1,11 @@
 import type { Route } from 'next';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import type { NavLink } from '@/components/layout/mobile-nav';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
 
 import { ThemeToggle } from './theme-toggle';
 
@@ -18,7 +18,7 @@ const SiteHeader = () => {
   return (
     <header className="border-b">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href={'/' as Route} className="font-semibold">
+        <Link href="/" className="font-semibold">
           {t('common.appName')}
         </Link>
 
@@ -37,12 +37,16 @@ const SiteHeader = () => {
         <div className="flex items-center gap-2">
           <LocaleSwitcher />
           <ThemeToggle />
-          <Button variant="ghost" size="sm">
-            <Link href="/sign-in">{t('nav.signIn')}</Link>
-          </Button>
-          <Button size="sm" className="hidden sm:inline-flex">
-            <Link href="/sign-up">{t('nav.getStarted')}</Link>
-          </Button>
+          {/* Links styled as buttons: a <button> must never wrap an <a>. */}
+          <Link href="/sign-in" className={buttonVariants({ size: 'sm', variant: 'ghost' })}>
+            {t('nav.signIn')}
+          </Link>
+          <Link
+            href="/sign-up"
+            className={`${buttonVariants({ size: 'sm' })} hidden sm:inline-flex`}
+          >
+            {t('nav.getStarted')}
+          </Link>
           <MobileNav links={links} />
         </div>
       </div>

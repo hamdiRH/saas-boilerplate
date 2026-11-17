@@ -6,6 +6,7 @@ const baseURL = 'http://localhost:3000';
 // Same settings locally and in CI so tests behave identically
 // The console transport writes .emails/*.json for E2E verification.
 const appEnv = {
+  ALLOW_LOCAL_SERVICES: 'true',
   AUTH_RATE_LIMIT: 'on',
   EMAIL_TRANSPORT: 'console',
 };

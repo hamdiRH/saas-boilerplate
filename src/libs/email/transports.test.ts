@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -51,8 +51,15 @@ describe('ConsoleTransport', () => {
   });
 
   it('does not throw when the folder cannot be written', async () => {
+    // A regular FILE in the middle of the path makes mkdir fail (ENOTDIR) on every OS.
+    // Never point recursive mkdirSync at /proc: Node loops forever there on Linux.
+    const dir = mkdtempSync(path.join(tmpdir(), 'emails-'));
+    dirs.push(dir);
+    const blocker = path.join(dir, 'blocker');
+    writeFileSync(blocker, '');
+
     await expect(
-      new ConsoleTransport('/proc/definitely/not/writable').send(message),
+      new ConsoleTransport(path.join(blocker, 'sub')).send(message),
     ).resolves.toBeUndefined();
   });
 });
