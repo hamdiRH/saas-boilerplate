@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { eq } from 'drizzle-orm';
 
+import { isLocalUrl, localDatabaseUrl } from './pool-config';
 import { account, user } from './schema';
 import type { DbLike } from './types';
 
@@ -40,4 +41,23 @@ export async function seed(db: DbLike, { hashPassword }: SeedOptions) {
     providerId: 'credential',
     userId,
   });
+}
+
+/**
+ * The demo user has a PUBLIC password, so seeding is only allowed against a local database.
+ * Scripts run with NODE_ENV unset, so checking NODE_ENV alone would not protect a remote DATABASE_URL.
+ */
+export function isSeedAllowed({
+  nodeEnv,
+  databaseUrl,
+  port,
+}: {
+  nodeEnv: string | undefined;
+  databaseUrl: string | undefined;
+  port?: number;
+}): boolean {
+  if (nodeEnv === 'production') {
+    return false;
+  }
+  return isLocalUrl(databaseUrl ?? localDatabaseUrl(port));
 }

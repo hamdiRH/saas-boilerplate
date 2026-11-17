@@ -4,13 +4,21 @@ import { hashPassword } from 'better-auth/crypto';
 import { Env } from '../src/libs/env';
 
 const main = async (): Promise<void> => {
-  if (Env.NODE_ENV === 'production') {
-    console.error('❌ Refusing to seed in production.');
+  const { DEMO_USER, isSeedAllowed, seed } = await import('../src/db/seed');
+
+  // 🔒 The demo user has a public password: never seed anything that is not a local database.
+  if (
+    !isSeedAllowed({
+      databaseUrl: Env.DATABASE_URL,
+      nodeEnv: Env.NODE_ENV,
+      port: Env.DB_SERVER_PORT,
+    })
+  ) {
+    console.error('❌ Refusing to seed: db:seed only runs against a LOCAL database.');
     process.exit(1);
   }
 
   const { db } = await import('../src/db/client');
-  const { seed, DEMO_USER } = await import('../src/db/seed');
 
   await seed(db, { hashPassword });
   console.log(`🌱 Seed complete — sign in with ${DEMO_USER.email} / ${DEMO_USER.password}`);
