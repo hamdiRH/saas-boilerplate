@@ -30,3 +30,8 @@ Update this file at the end of every sprint. It is the first file an agent or a 
 - `db:seed` refuses any non-local database
 - `/admin` now calls `requireSession()`; the guard-coverage test covers `(admin)` as well as `(app)`
 - Server Actions can run a `guard` before input validation (`createAction(schema, handler, { guard })`)
+- `rate_limit.key` has a unique index (migrations `0002_dedupe_rate_limit`, `0003_…`)
+- `pnpm db:cleanup` purges expired sessions, verification tokens and stale rate-limit rows
+- Baseline security headers (`src/libs/security-headers.ts`); Geist fonts are self-hosted (`geist` package)
+- CI runs unit tests and `db:check`; `.github/workflows/security.yml` adds dependency audit, dependency review and CodeQL
+- Dependencies are pinned exactly; `@types/node` follows the Node 22 engine
