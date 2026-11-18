@@ -35,3 +35,10 @@ Update this file at the end of every sprint. It is the first file an agent or a 
 - Baseline security headers (`src/libs/security-headers.ts`); Geist fonts are self-hosted (`geist` package)
 - CI runs unit tests and `db:check`; `.github/workflows/security.yml` adds dependency audit, dependency review and CodeQL
 - Dependencies are pinned exactly; `@types/node` follows the Node 22 engine
+
+## Nexora branding (D13, `feat/d13-nexora-brand`)
+
+- Default app name is **Nexora** (`NEXT_PUBLIC_APP_NAME`, `.env.example`, CI env, `common.appName` in both locales, footer); the page title now comes from `Env.NEXT_PUBLIC_APP_NAME`
+- Theme tokens in `src/styles/global.css` use the brand board colours (primary `#635BFF`, hover `#5145E5` exposed as `--color-primary-hover`, dark background `#0F172A`, border `#E5E7EB`); values not on the board are marked `derived` in the CSS
+- Light-mode `--muted-foreground` is `#64748B`, not the brand Muted `#94A3B8` (2.6:1 on white fails WCAG AA); `#94A3B8` is used in dark mode (7.0:1)
+- Fonts: **Plus Jakarta Sans** (Inter Variable as fallback), self-hosted via `@fontsource-variable/*`; Geist Mono is kept for code

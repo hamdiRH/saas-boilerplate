@@ -1,5 +1,6 @@
+import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
 import { GeistMono } from 'geist/font/mono';
-import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { notFound } from 'next/navigation';
@@ -8,12 +9,13 @@ import type { ReactNode } from 'react';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { routing } from '@/i18n/routing';
+import { Env } from '@/libs/env';
 
 import '@/styles/global.css';
 
 export const metadata: Metadata = {
   description: 'Production-ready SaaS starter',
-  title: 'SaaS Boilerplate',
+  title: Env.NEXT_PUBLIC_APP_NAME,
 };
 
 export function generateStaticParams() {
@@ -33,7 +35,7 @@ export default async function RootLayout({
   }
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+      <body className={`${GeistMono.variable} antialiased`}>
         <NextIntlClientProvider>
           <ThemeProvider
             attribute="class"
