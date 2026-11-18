@@ -10,7 +10,7 @@
 
 ## Neon connection strings
 
-- Runtime (serverless functions): the **pooled** host (contains `-pooler`) with `?sslmode=require`.
+- Runtime (serverless functions): the **pooled** host (contains `-pooler`) with `?sslmode=verify-full`.
 - Migrations: the **direct** host — pooled connections are not suitable for DDL.
 
 ## Local database (PGlite)

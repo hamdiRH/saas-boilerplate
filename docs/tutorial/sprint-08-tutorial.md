@@ -1135,7 +1135,7 @@ PostgreSQL only (v1.0). Drizzle ORM; the schema lives in `src/db/schema/*.ts`, m
 
 ## Production: Neon (or any Postgres)
 
-Use the **pooled** connection string for the app (`DATABASE_URL`) and the **direct** one for migrations (`DATABASE_URL_UNPOOLED`). Serverless functions open many short connections — pooling is what keeps Postgres alive.
+Use the **pooled** connection string for the app (`DATABASE_URL`) and the **direct** one for migrations (`DATABASE_URL_UNPOOLED`), with `sslmode=verify-full` on remote connections. Serverless functions open many short connections — pooling is what keeps Postgres alive.
 
 ## Migration workflow
 

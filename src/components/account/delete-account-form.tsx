@@ -57,9 +57,7 @@ export function DeleteAccountForm() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button variant="destructive">{t('button')}</Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button variant="destructive" />}>{t('button')}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('confirmTitle')}</DialogTitle>

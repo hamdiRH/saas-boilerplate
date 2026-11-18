@@ -51,7 +51,7 @@ test('wrong password shows a generic error', async ({ page, request, baseURL }) 
   await page.goto('/sign-in');
   await signInViaUi(page, user.email, 'Wrong-Passw0rd-123');
 
-  await expect(page.getByRole('alert')).toHaveText('Invalid email or password.');
+  await expect(page.locator('form [data-slot="alert"]')).toHaveText('Invalid email or password.');
   await expect(page).toHaveURL(/\/sign-in/u);
 });
 
@@ -66,7 +66,7 @@ test('an unverified user cannot sign in and gets a new link', async ({
   await page.goto('/sign-in');
   await signInViaUi(page, user.email, user.password);
 
-  await expect(page.getByRole('alert')).toContainText('verify your email');
+  await expect(page.locator('form [data-slot="alert"]')).toContainText('verify your email');
   const mail = await waitForEmail(user.email, { since });
   expect(mail.subject).toBe('Verify your email address');
 });
@@ -93,10 +93,10 @@ test('forgot → reset → old password dead, new password works', async ({
   await page.getByLabel('New password', { exact: true }).fill(newPassword);
   await page.getByLabel('Confirm new password', { exact: true }).fill(newPassword);
   await page.getByRole('button', { name: 'Reset password' }).click();
-  await expect(page).toHaveURL(/\/sign-in/u);
+  await expect(page).toHaveURL(/\/sign-in/u, { timeout: 10_000 });
 
   await signInViaUi(page, user.email, user.password);
-  await expect(page.getByRole('alert')).toHaveText('Invalid email or password.');
+  await expect(page.locator('form [data-slot="alert"]')).toHaveText('Invalid email or password.');
 
   await page.getByLabel('Password', { exact: true }).fill(newPassword);
   await page.getByRole('button', { name: 'Sign in' }).click();
