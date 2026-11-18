@@ -136,7 +136,7 @@ pnpm add -D drizzle-kit @types/pg @next/env
 ```dotenv
 # ─── Database ───────────────────────────────────────
 # Leave empty locally: `pnpm dev` starts an embedded PGlite server on DB_SERVER_PORT.
-# Production: Neon POOLED connection string (host contains "-pooler"), with ?sslmode=require
+# Production: Neon POOLED connection string (host contains "-pooler"), with ?sslmode=verify-full
 DATABASE_URL=
 # Production migrations: Neon DIRECT connection string
 DATABASE_URL_UNPOOLED=
@@ -295,7 +295,7 @@ export function isLocalUrl(url: string): boolean {
 /**
  * - No URL        → embedded PGlite socket server (local development).
  * - Local URL     → same, but explicit.
- * - Remote URL    → Neon/any Postgres. TLS comes from `?sslmode=require` in the URL.
+ * - Remote URL    → Neon/any Postgres. TLS comes from `?sslmode=verify-full` in the URL.
  */
 export function buildPoolConfig(url: string | undefined, port = 5433): PoolConfig {
   const connectionString = url ?? localDatabaseUrl(port);
@@ -337,7 +337,8 @@ describe('buildPoolConfig', () => {
   });
 
   it('uses a small pool for remote hosts and leaves TLS to the URL', () => {
-    const url = 'postgres://u:p@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?sslmode=require';
+    const url =
+      'postgres://u:p@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?sslmode=verify-full';
     const config = buildPoolConfig(url);
     expect(config.connectionString).toBe(url);
     expect(config.max).toBeGreaterThan(1);
@@ -398,7 +399,7 @@ export type Database = typeof db;
 
 ## Neon connection strings
 
-- Runtime (serverless functions): the **pooled** host (contains `-pooler`) with `?sslmode=require`.
+- Runtime (serverless functions): the **pooled** host (contains `-pooler`) with `?sslmode=verify-full`.
 - Migrations: the **direct** host — pooled connections are not suitable for DDL.
 ```
 

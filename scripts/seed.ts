@@ -4,7 +4,7 @@ import { hashPassword } from 'better-auth/crypto';
 import { Env } from '../src/libs/env';
 
 const main = async (): Promise<void> => {
-  const { DEMO_USER, isSeedAllowed, seed } = await import('../src/db/seed');
+  const { isSeedAllowed, seed } = await import('../src/db/seed');
 
   // 🔒 The demo user has a public password: never seed anything that is not a local database.
   if (
@@ -21,8 +21,6 @@ const main = async (): Promise<void> => {
   const { db } = await import('../src/db/client');
 
   await seed(db, { hashPassword });
-  console.log(`🌱 Seed complete — sign in with ${DEMO_USER.email} / ${DEMO_USER.password}`);
-
   process.exit(0);
 };
 

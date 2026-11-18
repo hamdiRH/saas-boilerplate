@@ -5,6 +5,8 @@ import { ProfileForm } from '@/components/account/profile-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireSession } from '@/data/session';
 
+export const instant = false;
+
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale as 'fr' | 'en');

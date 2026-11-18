@@ -16,12 +16,24 @@ describe('buildPoolConfig', () => {
     expect(config.idleTimeoutMillis).toBeLessThan(1000);
   });
 
-  it('uses a small pool for remote hosts and leaves TLS to the URL', () => {
-    const url = 'postgres://u:p@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?sslmode=require';
+  it.each(['prefer', 'require', 'verify-ca'])(
+    'normalizes legacy sslmode=%s to verify-full for remote hosts',
+    (sslmode) => {
+      const url = `postgres://u:p%40ss@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?sslmode=${sslmode}&application_name=saas`;
+      const config = buildPoolConfig(url);
+      expect(config.connectionString).toBe(
+        'postgres://u:p%40ss@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?sslmode=verify-full&application_name=saas',
+      );
+      expect(config.max).toBeGreaterThan(1);
+      expect(config.ssl).toBeUndefined();
+    },
+  );
+
+  it('preserves explicit libpq compatibility mode', () => {
+    const url =
+      'postgres://u:p@ep-cool-123-pooler.eu-central-1.aws.neon.tech/db?uselibpqcompat=true&sslmode=require';
     const config = buildPoolConfig(url);
     expect(config.connectionString).toBe(url);
-    expect(config.max).toBeGreaterThan(1);
-    expect(config.ssl).toBeUndefined();
   });
 });
 
