@@ -18,8 +18,8 @@ The delivery plan for the SaaS boilerplate. One file per sprint, plus this index
 | 0 | Foundation & Tooling | Done | `sprint-00-foundation.md` (not in repo) | [tutorial](../tutorial/sprint-00-tutorial.md) |
 | 1 | Data Layer, App Shell, i18n, Forms, Errors | Done | `sprint-01-data-shell-i18n.md` (not in repo) | [tutorial](../tutorial/sprint-01-tutorial.md) |
 | 2 | Authentication Core (Better Auth) | Done | `sprint-02-auth-core.md` (not in repo) | [tutorial](../tutorial/sprint-02-tutorial.md) |
-| 2.3 | Azure DevOps Integration (infrastructure) | Planned | `sprint-02.3-azure-devops.md` | after backlog approval |
-| 2.6 | PWA & Service Worker Infrastructure | Planned | `sprint-02.6-pwa.md` | after backlog approval |
+| 2.3 | Azure DevOps Integration (infrastructure) | Planned | `sprint-02.3-azure-devops.md` | [tutorial](../tutorial/sprint-02.3-tutorial.md) |
+| 2.6 | PWA & Service Worker Infrastructure | Planned | `sprint-02.6-pwa.md` | [tutorial](../tutorial/sprint-02.6-tutorial.md) |
 | 3 | Advanced Authentication (Magic Links, Social, Passkeys, MFA) | Planned | `sprint-03-auth-advanced.md` (not in repo) | [tutorial](../tutorial/sprint-03-tutorial.md) |
 | 4 | Multi-tenancy, RBAC, Admin & Impersonation | Planned | `sprint-04-tenancy-rbac-admin.md` (not in repo) | [tutorial](../tutorial/sprint-04-tutorial.md) |
 | 5 | Quality & Testing Maturity | Planned | `sprint-05-quality-testing.md` (not in repo) | [tutorial](../tutorial/sprint-05-tutorial.md) |
