@@ -262,3 +262,5 @@ Issues and pull requests are welcome — start with [CONTRIBUTING.md](../CONTRIB
 ## License
 
 [MIT](../LICENSE) © OWNER
+
+- [Azure DevOps](guides/azure-devops.md)

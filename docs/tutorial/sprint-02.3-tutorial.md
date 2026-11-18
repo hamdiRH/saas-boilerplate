@@ -4,7 +4,7 @@
 
 > Companion to `docs/roadmap/sprint-02.3-azure-devops.md`. Every `S2.3-Txx` section is one ticket. Follow them **in the order shown here**.
 
-🪟 **Windows + Cmder:** use the **Git Bash tab**. Bash syntax and Node scripts only. Windows-specific notes are marked 🪟.
+🪟 **Windows + Cmder:** use the **Git Bash tab** for every command in this tutorial (the `wid` helper, `$(...)` and heredocs only work in bash). Windows-specific notes are marked 🪟.
 
 > ⚠️ **About this sprint.** Most of it happens in the Azure DevOps web UI, not in code. Azure DevOps changes its screens and a few YAML/CLI details between releases. Where a name or option may have drifted, the step says **🔍 Verify against docs**. Trust the official Microsoft docs over this tutorial and record deviations in `docs/roadmap/06-project-state.md`.
 
@@ -36,7 +36,7 @@
 
 | ID | Decision taken |
 | --- | --- |
-| D1 | Project `saas-boilerplate`, **private**, **Scrum**, iterations named after the repo sprints |
+| D1 | Project **`Next Boilerplate`** (organization `uzumaki26`), **private**, **Scrum**, iterations named after the repo sprints |
 | D2 | Azure CD owns **staging only**. Production stays with the Sprint 8 workflow. Deploy is **off** until you enable it |
 | D3 | Add a minimal `GET /api/health` in T04 |
 | D4 | Azure CI runs on `main` and PRs, **not** a required check. GitHub CI stays the merge gate |
@@ -45,9 +45,19 @@
 | D7 | GitHub App service connection; the backup uses the pipeline's `System.AccessToken`. **No PAT in GitHub** |
 | D8 | `AGENTS.md` and the state file are updated in T06 |
 
+### Real values used in this run (deviations from the original text)
+
+- Organization: `uzumaki26` · Project: `Next Boilerplate` (with a space; in URLs it is `Next%20Boilerplate`)
+- The Microsoft account (`@live.fr`) has **no Azure subscription**, so `az login` is not needed. We use `az devops login` with a **PAT** instead (T01 step 2).
+- Every `az boards` command gets `--detect false` (the repo remote is GitHub, not Azure Repos, so auto-detect only prints a warning).
+- Iteration and area paths in work items are `Next Boilerplate\Sprint 2.3` and `Next Boilerplate\CI-CD`: **single backslash**, and **no** `Iteration\` or `Area\` segment.
+- Areas must exist **before** a work item uses them (TF401347 otherwise).
+
 ---
 
 ## 🔀 Git workflow (PR-based, same as earlier sprints)
+
+Every ticket below starts with a **🌿 Start** block and ends with a **🚢 Ship** block, both ready to paste. The generic shape is:
 
 ```bash
 git switch main && git pull
@@ -55,7 +65,7 @@ git switch -c <type>/s2.3-tXX-<slug>
 # … work, then verify …
 pnpm check
 git add -A
-git commit -m "<type>(<scope>): <message>"
+git commit -m "<type>(<scope>): <message>" -m "AB#<id>"
 git push -u origin <branch>
 gh pr create --fill --base main
 gh pr checks --watch
@@ -63,7 +73,17 @@ gh pr merge --merge --delete-branch
 git switch main && git pull
 ```
 
-Allowed commit scopes: `deps, auth, db, i18n, ui, ci, docs, tests, config, org, admin, seo, obs, sec`. Pipelines use `ci`, guides use `docs`. Each ticket ends with a **🚢 Ship** line.
+Allowed commit scopes: `deps, auth, db, i18n, ui, ci, docs, tests, config, org, admin, seo, obs, sec`. Pipelines use `ci`, guides use `docs`.
+
+### The `wid` helper (finds a work item id by title)
+
+Paste this once **per Git Bash tab**. It lets every commit and PR below carry the right `AB#` number automatically.
+
+```bash
+wid() { az boards query --wiql "SELECT [System.Id] FROM WorkItems WHERE [System.Title] CONTAINS '$1'" --query "[0].id" -o tsv --detect false | tr -d '\r'; }
+```
+
+Test it after the backlog is seeded: `wid S2.3-T01` prints a number.
 
 ---
 
@@ -87,63 +107,134 @@ Set **Current sprint: Sprint 2.3** in `docs/roadmap/06-project-state.md`.
 
 ## 🎫 S2.3-T01 — Organization, project and Scrum configuration
 
-Branch: `docs/s2.3-t01-azure-devops-setup` · Commit: `docs(docs): add Azure DevOps setup guide stub`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c docs/s2.3-t01-azure-devops-setup
+```
+
+(Already on this branch? Skip it, `git switch -c` would say the branch exists.)
 
 ### 1. Create the organization and the project (web UI)
 
 Organizations cannot be created from the CLI, so start in the browser.
 
-1. Go to <https://dev.azure.com> and sign in. Create an **organization** (for example `nexora-dev`).
-2. **New project** → name `saas-boilerplate`, visibility **Private**, **Advanced** → version control **Git**, work item process **Scrum**.
+1. Go to <https://dev.azure.com> and sign in. Create the **organization** `uzumaki26`.
+2. **New project** → name `Next Boilerplate`, visibility **Private**, **Advanced** → version control **Git**, work item process **Scrum**.
 3. Open **Organization settings → Billing** and **Parallel jobs**. Write down what you see (free Microsoft-hosted parallel jobs, private or public project). 🔍 Verify: the free grant for new organizations may require a request form. If hosted pipelines will not start later, this is why.
 
 > 💡 Public projects have different limits from private ones. We keep the project private (D1), because the repository's work items and pipelines contain internal planning.
 
-### 2. Install the Azure DevOps CLI (optional, speeds up seeding)
+### 2. Install the Azure DevOps CLI and sign in with a PAT
+
+A personal Microsoft account without an Azure subscription cannot use `az login` (it prints `[]` and saves nothing). Azure DevOps does not need it.
+
+**Create the PAT (web UI):** <https://dev.azure.com/uzumaki26/_usersSettings/tokens> → **+ New Token** → name `cli-nextjs-boilerplate`, organization `uzumaki26`, expiration 30–90 days, **Custom defined** → **Show all scopes** → tick **Work Items: Read, write & manage**, **Code: Read & write**, **Build: Read & execute**, **Project and Team: Read** → **Create** → **copy it now** (shown once). Never commit it.
 
 ```bash
-# Azure CLI first (see the Microsoft install page for your OS), then:
 az extension add --name azure-devops
-az login
-az devops configure --defaults organization=https://dev.azure.com/<YOUR_ORG> project=saas-boilerplate
+az devops login --organization https://dev.azure.com/uzumaki26      # paste the PAT when asked
+az devops configure --defaults organization=https://dev.azure.com/uzumaki26 project="Next Boilerplate"
+az devops configure --list                                           # check the defaults
 ```
 
-🪟 On Windows, install the Azure CLI with the MSI and run the commands from Git Bash. If you would rather not install it, every step below can be done in the UI.
+🪟 Install the Azure CLI with the MSI and run the commands from Git Bash. If you would rather not install it, every step below can be done in the UI.
 
 ### 3. Iterations (one per repo sprint)
 
+`Sprint 2.3` may already exist (the first command errors with "already exists": ignore it).
+
 ```bash
-az boards iteration project create --name "Sprint 2.3"
-az boards iteration project create --name "Sprint 2.6"
-for n in 3 4 5 6 7 8; do az boards iteration project create --name "Sprint $n"; done
+az boards iteration project create --name "Sprint 2.3" --detect false
+az boards iteration project create --name "Sprint 2.6" --detect false
+az boards iteration project create --name "Sprint 3" --detect false
+az boards iteration project create --name "Sprint 4" --detect false
+az boards iteration project create --name "Sprint 5" --detect false
+az boards iteration project create --name "Sprint 6" --detect false
+az boards iteration project create --name "Sprint 7" --detect false
+az boards iteration project create --name "Sprint 8" --detect false
 ```
 
-🔍 Verify: the CLI creates iterations under the project root. Then open **Project settings → Project configuration → Iterations**, set dates (two weeks per sprint is a sensible default), and add the iterations to the team under **Team configuration → Iterations**.
-
-### 4. Areas
+Add them to the team so they show in the team backlog:
 
 ```bash
-for a in Auth Database CI-CD PWA UI Docs; do az boards area project create --name "$a"; done
+az devops team list --detect false -o table
+for id in $(az boards iteration project list --path "\\Next Boilerplate\\Iteration" --depth 1 --query "children[].identifier" -o tsv --detect false | tr -d '\r'); do az boards iteration team add --id "$id" --team "Next Boilerplate Team" --detect false -o none; done
+```
+
+🔍 Verify: use the team name printed by `az devops team list` if it is not `Next Boilerplate Team`. Then open **Project settings → Project configuration → Iterations** and set dates (two weeks per sprint is a sensible default). If the loop fails, do it in the UI under **Team configuration → Iterations**.
+
+### 4. Areas (must exist before the backlog is seeded)
+
+```bash
+az boards area project create --name "Auth" --detect false
+az boards area project create --name "Database" --detect false
+az boards area project create --name "CI-CD" --detect false
+az boards area project create --name "PWA" --detect false
+az boards area project create --name "UI" --detect false
+az boards area project create --name "Docs" --detect false
+az boards area project list --depth 2 --detect false -o table
 ```
 
 ### 5. Seed the backlog
 
-Seed the Epic and Features first, then one PBI per ticket of Sprints 2.3 and 2.6. The PBI **title** carries the repo ticket ID so commits and Boards stay traceable (D5).
+The PBI **title** carries the repo ticket ID so commits and Boards stay traceable (D5). Everything below is copy-paste: it creates the Epic and the Features, one PBI per ticket, and links each PBI to its Feature and each Feature to the Epic.
+
+#### 5.1 The `pbi` helper
+
+Paste once per Git Bash tab. Arguments: title, iteration, area, parent Feature id, acceptance criteria.
 
 ```bash
-az boards work-item create --type "Epic" --title "SaaS Boilerplate"
-az boards work-item create --type "Feature" --title "Sprint 2.3 — Azure DevOps Integration" --iteration "saas-boilerplate\\Sprint 2.3"
-az boards work-item create --type "Feature" --title "Sprint 2.6 — PWA & Service Worker" --iteration "saas-boilerplate\\Sprint 2.6"
-
-az boards work-item create --type "Product Backlog Item" \
-  --title "S2.3-T01 Azure DevOps organization, project & Scrum configuration" \
-  --iteration "saas-boilerplate\\Sprint 2.3" --area "saas-boilerplate\\CI-CD" \
-  --fields "Microsoft.VSTS.Common.AcceptanceCriteria=Project exists, private, Scrum; iterations and areas exist; backlog seeded"
+pbi() { id=$(az boards work-item create --type "Product Backlog Item" --title "$1" --iteration "Next Boilerplate\\$2" --area "Next Boilerplate\\$3" --fields "Microsoft.VSTS.Common.AcceptanceCriteria=$5" --query id -o tsv --detect false | tr -d '\r'); az boards work-item relation add --id "$id" --relation-type parent --target-id "$4" --detect false -o none; echo "PBI $id  $1"; }
 ```
 
-Repeat for the other PBIs (T02–T06 of Sprint 2.3, T01–T07 and T09 of Sprint 2.6; T08 stays in a later sprint). Copy each ticket's **acceptance criteria** from the sprint files. In the web UI, link each PBI to its Feature (**Add link → Parent**). 🔍 Verify: the work item type names (`Product Backlog Item`) and field names depend on the Scrum template; the CLI errors tell you the right ones.
+#### 5.2 Epic and Features
 
-> ✅ Tip: tag PBIs `P0`, `P1`, `P2` to match the sprint files, and create one query per sprint (**Boards → Queries**).
+```bash
+EPIC=$(az boards work-item create --type "Epic" --title "SaaS Boilerplate" --query id -o tsv --detect false | tr -d '\r')
+F23=$(az boards work-item create --type "Feature" --title "Sprint 2.3 — Azure DevOps Integration" --iteration "Next Boilerplate\\Sprint 2.3" --query id -o tsv --detect false | tr -d '\r')
+F26=$(az boards work-item create --type "Feature" --title "Sprint 2.6 — PWA & Service Worker" --iteration "Next Boilerplate\\Sprint 2.6" --query id -o tsv --detect false | tr -d '\r')
+az boards work-item relation add --id "$F23" --relation-type parent --target-id "$EPIC" --detect false -o none
+az boards work-item relation add --id "$F26" --relation-type parent --target-id "$EPIC" --detect false -o none
+echo "EPIC=$EPIC F23=$F23 F26=$F26"
+```
+
+> ♻️ Already created the Epic or a Feature earlier? Do **not** run the line that creates it again. Set the variable instead, for example `EPIC=5` or `F23=$(wid "Sprint 2.3 — Azure DevOps Integration")`, and run the rest.
+
+#### 5.3 PBIs of Sprint 2.3 (T01–T06)
+
+```bash
+pbi "S2.3-T01 Azure DevOps organization, project & Scrum configuration" "Sprint 2.3" "CI-CD" "$F23" "Project exists, private, Scrum; iterations and areas exist; backlog seeded; only you can edit the cd variable group; parallel-job availability and expected cost written in the guide; no token, tenant ID or secret in git diff"
+pbi "S2.3-T02 GitHub to Azure Boards integration" "Sprint 2.3" "CI-CD" "$F23" "PR with AB#id shows under Development on the work item; commit with AB#id in the footer is linked and passes the hooks; merging the PR moves the item as configured; an unlinked PR still merges; no change under .github/workflows"
+pbi "S2.3-T03 Azure Pipelines CI" "Sprint 2.3" "CI-CD" "$F23" "A push to main and a PR each start exactly one run; run executes every gate and is green on current main; a type error, a lint error and a failing test each make a run red; log prints Node and pnpm versions equal to .nvmrc and packageManager; second run restores the pnpm cache; ALLOW_LOCAL_SERVICES only in azure-pipelines/ci.yml; .github/workflows untouched and no new dependency; CI durations recorded in the guide"
+pbi "S2.3-T04 Azure Pipelines CD (staging, gated, off by default)" "Sprint 2.3" "CI-CD" "$F23" "Ownership matrix in the guide with one deployer per environment; one merge to main creates exactly one staging deployment; a failed migration or failed health check stops the run; approval gate blocks the deploy stage until approved; no secret in logs or repository and no ALLOW_LOCAL_SERVICES in cd.yml; /api/health is 200, unauthenticated, no DB call, no sensitive data; rollback runbook written and rehearsed"
+pbi "S2.3-T05 Azure Repos one-way backup" "Sprint 2.3" "CI-CD" "$F23" "A push to GitHub main appears in the backup within 10 minutes with the same SHA; tags are synced and the weekly run syncs all branches; a human push to the backup is rejected; a forced divergence fails the job and leaves backup history untouched; no PAT stored anywhere in GitHub; restore rehearsal worked"
+pbi "S2.3-T06 Documentation and end-to-end validation" "Sprint 2.3" "Docs" "$F23" "Scenario completes from a clean checkout with evidence stored; exactly one deployment or one skipped stage for that merge; pnpm check:agents and pnpm check are green; every link in the guide resolves and every path exists with exact casing; a person who has not seen the project can follow the guide"
+```
+
+#### 5.4 PBIs of Sprint 2.6 (T01–T07 and T09; T08 stays in a later sprint)
+
+Use the same `pbi` helper with `"$F26"`, area `PWA` (or `UI` / `Docs` where it fits), and **the title and acceptance criteria copied from `docs/roadmap/sprint-02.6-*.md`**. One line per ticket:
+
+```bash
+# pbi "S2.6-T01 <title from the sprint file>" "Sprint 2.6" "PWA" "$F26" "<acceptance criteria from the sprint file, one line, no double quotes>"
+# pbi "S2.6-T02 …" "Sprint 2.6" "PWA" "$F26" "…"
+# … T03, T04, T05, T06, T07, T09
+```
+
+> ⏳ The Sprint 2.6 titles and criteria are not in this file. Paste the sprint file into the chat and these lines get generated for you.
+
+#### 5.5 Check the result
+
+```bash
+az boards query --wiql "SELECT [System.Id],[System.WorkItemType],[System.Title],[System.IterationPath] FROM WorkItems WHERE [System.TeamProject] = @project ORDER BY [System.Id]" --detect false -o table
+wid S2.3-T01
+```
+
+> ✅ Tip: tag PBIs `P0`, `P1`, `P2` to match the sprint files (add `--fields "System.Tags=P0"` in the `pbi` helper or tag them in the UI), and create one query per sprint (**Boards → Queries**).
+>
+> 🔍 Verify: the work item type names (`Product Backlog Item`) and field names depend on the Scrum template. If the CLI rejects one, the error prints the right name.
 
 ### 6. Permissions and variable groups
 
@@ -156,16 +247,16 @@ Repeat for the other PBIs (T02–T06 of Sprint 2.3, T01–T07 and T09 of Sprint 
 
 ### 7. Guide stub
 
-Create `docs/guides/azure-devops.md`:
-
-```markdown
+```bash
+mkdir -p docs/guides
+cat > docs/guides/azure-devops.md <<'EOF'
 # Azure DevOps
 
 > Status: Sprint 2.3 in progress. Completed in S2.3-T06.
 
 ## Organization and project
 
-- Organization: `<YOUR_ORG>` · Project: `saas-boilerplate` (private, Scrum)
+- Organization: `uzumaki26` · Project: `Next Boilerplate` (private, Scrum)
 - Parallel jobs available: <fill in from Billing>
 - Expected monthly cost: <fill in, expected: free tier>
 
@@ -176,9 +267,15 @@ Epic → "SaaS Boilerplate" · Feature → one per sprint · PBI → one per tic
 ## Iterations and areas
 
 Iterations: Sprint 2.3, 2.6, 3 … 8. Areas: Auth, Database, CI-CD, PWA, UI, Docs.
+EOF
 ```
 
-Add a link in `docs/README.md`. Run `pnpm check:agents` because it verifies paths.
+Add a link in `docs/README.md` (the line below appends it at the end; move it where you like), then run the path check:
+
+```bash
+echo '- [Azure DevOps](guides/azure-devops.md)' >> docs/README.md
+pnpm check:agents
+```
 
 ### ✅ Verify
 
@@ -193,15 +290,25 @@ Add a link in `docs/README.md`. Run `pnpm check:agents` because it verifies path
 
 ```bash
 pnpm check
-git switch -c docs/s2.3-t01-azure-devops-setup
-git add -A && git commit -m "docs(docs): add Azure DevOps setup guide stub"
+git add -A
+git commit -m "docs(docs): add Azure DevOps setup guide stub" -m "AB#$(wid S2.3-T01)"
+git push -u origin docs/s2.3-t01-azure-devops-setup
+gh pr create --fill --base main --body "Seeds the Azure DevOps project. Fixes AB#$(wid S2.3-T01)"
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 ---
 
 ## 🎫 S2.3-T02 — GitHub ↔ Azure Boards integration
 
-Branch: `docs/s2.3-t02-boards-linking` · Commit: `docs(docs): document AB# work item linking`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c docs/s2.3-t02-boards-linking
+```
 
 ### 1. Connect GitHub to Azure Boards
 
@@ -229,23 +336,30 @@ AB#142
 
 ### 3. Update the docs (no workflow changes)
 
-Add to `CONTRIBUTING.md` a short **Linking work items** section with the rules above. In `.github/pull_request_template.md`, add one line under the checklist:
+Append a **Linking work items** section to `CONTRIBUTING.md` and one checklist line to the PR template:
 
-```markdown
-- [ ] Linked work item (optional): `AB#<id>`
+```bash
+cat >> CONTRIBUTING.md <<'EOF'
+
+## Linking work items
+
+- Put `AB#<id>` in the PR description (and optionally the PR title).
+- Put `AB#<id>` in a commit body or footer, never in the header, so commitlint is unaffected.
+- `Fixes AB#<id>` in a PR description moves the work item when the PR merges.
+- Linking is optional: an unlinked PR still merges normally.
+EOF
+echo '- [ ] Linked work item (optional): `AB#<id>`' >> .github/pull_request_template.md
 ```
 
-> Linking is **optional**. An unlinked PR still merges normally (acceptance criterion).
+> The PR template line lands at the end of the file. Move it under the checklist if you prefer.
 
 ### 4. Prove it
 
 ```bash
-git switch -c docs/s2.3-t02-boards-linking
-# edit CONTRIBUTING.md and the PR template
 git add -A
-git commit -m "docs(docs): document AB# work item linking" -m "AB#<id of S2.3-T02>"
+git commit -m "docs(docs): document AB# work item linking" -m "AB#$(wid S2.3-T02)"
 git push -u origin docs/s2.3-t02-boards-linking
-gh pr create --fill --base main --body "Links the work item. Fixes AB#<id of S2.3-T02>"
+gh pr create --fill --base main --body "Links the work item. Fixes AB#$(wid S2.3-T02)"
 ```
 
 Open the PBI in Azure Boards: the PR appears under **Development** within a few minutes. The commit hook (Lefthook + commitlint) must accept the footer **without** `--no-verify`.
@@ -262,14 +376,22 @@ Open the PBI in Azure Boards: the PR appears under **Development** within a few 
 
 ```bash
 pnpm check
-gh pr checks --watch && gh pr merge --merge --delete-branch
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 ---
 
 ## 🎫 S2.3-T03 — Azure Pipelines CI
 
-Branch: `ci/s2.3-t03-azure-pipelines-ci` · Commit: `ci(ci): add Azure Pipelines CI`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c ci/s2.3-t03-azure-pipelines-ci
+mkdir -p azure-pipelines/templates
+```
 
 ### 1. Install the Azure Pipelines GitHub App
 
@@ -277,9 +399,10 @@ In Azure DevOps: **Pipelines → Create Pipeline → GitHub (YAML)**. Authorize 
 
 ### 2. Shared steps template
 
-Create `azure-pipelines/templates/setup-node-pnpm.yml`. One template keeps CI and CD identical.
+One template keeps CI and CD identical.
 
-```yaml
+```bash
+cat > azure-pipelines/templates/setup-node-pnpm.yml <<'EOF'
 # azure-pipelines/templates/setup-node-pnpm.yml
 # Node comes from .nvmrc; pnpm from the "packageManager" field via Corepack.
 steps:
@@ -308,15 +431,15 @@ steps:
 
   - script: pnpm install --frozen-lockfile
     displayName: Install dependencies
+EOF
 ```
 
 🪟 These steps run on Linux agents. Nothing here is Windows-specific, and the repository rule "cross-platform scripts only" still applies to anything these commands call.
 
 ### 3. The CI pipeline
 
-Create `azure-pipelines/ci.yml`:
-
-```yaml
+```bash
+cat > azure-pipelines/ci.yml <<'EOF'
 # azure-pipelines/ci.yml
 # Secondary CI. GitHub Actions stays the merge gate (decision D4).
 trigger:
@@ -408,6 +531,7 @@ stages:
               targetPath: playwright-report
               artifact: playwright-report
               publishLocation: pipeline
+EOF
 ```
 
 Notes on the choices:
@@ -418,25 +542,59 @@ Notes on the choices:
 - Dependabot PRs trigger this pipeline too (D4). If they add noise, restrict `pr:` with `paths:` or exclude their branches.
 - Test result publishing (JUnit) is skipped on purpose: adding a reporter might mean a new dependency. If Vitest's built-in `junit` reporter works for you, add `--reporter=junit --outputFile=...` and a `PublishTestResults@2` step. 🔍 Verify first.
 
-### 4. Create the pipeline in the UI
-
-**Pipelines → New pipeline → GitHub → select the repo → Existing Azure Pipelines YAML file → `/azure-pipelines/ci.yml`**. Name it `saas-boilerplate-ci`. In **Triggers**, leave PR validation on, and do **not** make it a required status check in GitHub (D4).
-
-### 5. Prove the gates work
+### 4. Commit and push the pipeline files
 
 ```bash
-# 1) A clean branch: pipeline must go green
-git switch -c ci/s2.3-t03-azure-pipelines-ci
-git add -A && git commit -m "ci(ci): add Azure Pipelines CI" -m "AB#<id of S2.3-T03>"
-git push -u origin ci/s2.3-t03-azure-pipelines-ci && gh pr create --fill --base main
-
-# 2) A throwaway branch with a deliberate type error: pipeline must go RED
-git switch -c ci/s2.3-t03-probe
-echo 'export const probe: number = "not a number";' > src/probe.ts
-git add -A && git commit -m "test(tests): deliberate type error" && git push -u origin ci/s2.3-t03-probe
+pnpm check
+git add -A
+git commit -m "ci(ci): add Azure Pipelines CI" -m "AB#$(wid S2.3-T03)"
+git push -u origin ci/s2.3-t03-azure-pipelines-ci
+gh pr create --fill --base main --body "Adds Azure Pipelines CI. Fixes AB#$(wid S2.3-T03)"
 ```
 
-Do the same with a lint error and a failing unit test, then **delete the probe branch and close its PR**. Never merge probes.
+### 5. Create the pipeline in the UI
+
+**Pipelines → New pipeline → GitHub → select the repo → Existing Azure Pipelines YAML file → branch `ci/s2.3-t03-azure-pipelines-ci` (or `main` after the merge) → `/azure-pipelines/ci.yml`**. Name it `saas-boilerplate-ci`. In **Triggers**, leave PR validation on, and do **not** make it a required status check in GitHub (D4).
+
+### 6. Prove the gates work (probe branches, never merged)
+
+The probe commits break the rules on purpose, so the pre-commit and pre-push hooks would stop them. `--no-verify` is used **only here**, only on probe branches.
+
+```bash
+# Probe 1: type error
+git switch main && git pull
+git switch -c ci/s2.3-t03-probe-types
+echo 'export const probe: number = "not a number";' > src/probe.ts
+git add -A && git commit --no-verify -m "test(tests): deliberate type error"
+git push --no-verify -u origin ci/s2.3-t03-probe-types
+gh pr create --fill --base main
+
+# Probe 2: lint error
+git switch main
+git switch -c ci/s2.3-t03-probe-lint
+echo 'debugger;' > src/probe.ts
+git add -A && git commit --no-verify -m "test(tests): deliberate lint error"
+git push --no-verify -u origin ci/s2.3-t03-probe-lint
+gh pr create --fill --base main
+
+# Probe 3: failing unit test
+git switch main
+git switch -c ci/s2.3-t03-probe-test
+printf "import { expect, it } from 'vitest';\nit('fails on purpose', () => { expect(1).toBe(2); });\n" > src/probe.test.ts
+git add -A && git commit --no-verify -m "test(tests): deliberate failing test"
+git push --no-verify -u origin ci/s2.3-t03-probe-test
+gh pr create --fill --base main
+```
+
+Every probe run must go **red** in Azure Pipelines. Then clean up, and never merge a probe:
+
+```bash
+git switch ci/s2.3-t03-azure-pipelines-ci
+gh pr close ci/s2.3-t03-probe-types --delete-branch
+gh pr close ci/s2.3-t03-probe-lint --delete-branch
+gh pr close ci/s2.3-t03-probe-test --delete-branch
+git branch -D ci/s2.3-t03-probe-types ci/s2.3-t03-probe-lint ci/s2.3-t03-probe-test
+```
 
 ### ✅ Verify
 
@@ -453,13 +611,21 @@ Do the same with a lint error and a failing unit test, then **delete the probe b
 
 ```bash
 pnpm check
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 ---
 
 ## 🎫 S2.3-T05 — Azure Repos one-way backup
 
-Branch: `ci/s2.3-t05-azure-repos-backup` · Commit: `ci(ci): add Azure Repos one-way backup pipeline`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c ci/s2.3-t05-azure-repos-backup
+```
 
 ### 1. Create the backup repository
 
@@ -468,16 +634,15 @@ Branch: `ci/s2.3-t05-azure-repos-backup` · Commit: `ci(ci): add Azure Repos one
 ### 2. Make it read-only for humans
 
 1. **Project settings → Repositories → `saas-boilerplate-backup` → Security.** Remove **Contribute**, **Force push** and **Bypass policies** from every user and group, including yours.
-2. Give **only** the build identity `saas-boilerplate Build Service (<YOUR_ORG>)` the **Contribute** permission on this repository. This is what lets the pipeline's own token push (D7). No PAT, nothing stored in GitHub.
+2. Give **only** the build identity `Next Boilerplate Build Service (uzumaki26)` the **Contribute** permission on this repository. This is what lets the pipeline's own token push (D7). No PAT, nothing stored in GitHub.
 3. Add a branch policy on `main` of the backup repo if you want an extra guard.
 
 🔍 Verify: the identity name depends on the "project-scoped build service" settings. Search for `Build Service` in the security dialog.
 
 ### 3. The backup pipeline
 
-Create `azure-pipelines/backup.yml`:
-
-```yaml
+```bash
+cat > azure-pipelines/backup.yml <<'EOF'
 # azure-pipelines/backup.yml
 # One-way backup: GitHub (source of truth) -> Azure Repos. Never the other way round.
 trigger:
@@ -502,10 +667,10 @@ resources:
   repositories:
     - repository: backup
       type: git
-      name: saas-boilerplate/saas-boilerplate-backup
+      name: Next Boilerplate/saas-boilerplate-backup
 
 variables:
-  BACKUP_URL: https://dev.azure.com/<YOUR_ORG>/saas-boilerplate/_git/saas-boilerplate-backup
+  BACKUP_URL: https://dev.azure.com/uzumaki26/Next%20Boilerplate/_git/saas-boilerplate-backup
 
 steps:
   - checkout: self
@@ -546,6 +711,7 @@ steps:
     displayName: Verify both remotes agree on main
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+EOF
 ```
 
 Why it is safe (risk R4):
@@ -556,29 +722,46 @@ Why it is safe (risk R4):
 
 🔍 Verify: for a GitHub-hosted repo, YAML `schedules` and `tags` triggers are supported, but confirm in your run that the schedule fires. Also check that the **Build Service** may access the repository resource without extra "Allow" prompts on the first run (approve it once if Azure asks).
 
-### 4. Create the pipeline, then test
-
-Create a pipeline named `saas-boilerplate-backup` from `/azure-pipelines/backup.yml`. Run it manually once, then:
+### 4. Commit, push and open the PR
 
 ```bash
-# 1) A new commit on main must show up in the backup
+pnpm check
+git add -A
+git commit -m "ci(ci): add Azure Repos one-way backup pipeline" -m "AB#$(wid S2.3-T05)"
+git push -u origin ci/s2.3-t05-azure-repos-backup
+gh pr create --fill --base main --body "Adds the one-way backup. Fixes AB#$(wid S2.3-T05)"
+```
+
+### 5. Create the pipeline, then test
+
+In the UI create a pipeline named `saas-boilerplate-backup` from `/azure-pipelines/backup.yml` (point it at this branch until the PR is merged) and run it manually once. Then:
+
+```bash
+# 1) A new commit on main must show up in the backup (after the PR is merged)
 git switch main && git pull
 git commit --allow-empty -m "chore(config): backup probe" && git push
 # 2) A tag must sync
 git tag v0.0.0-backup-probe && git push origin v0.0.0-backup-probe
 # 3) A human push to the backup must be rejected
-git clone https://dev.azure.com/<YOUR_ORG>/saas-boilerplate/_git/saas-boilerplate-backup /tmp/backup-check
+git clone https://dev.azure.com/uzumaki26/Next%20Boilerplate/_git/saas-boilerplate-backup /tmp/backup-check
 cd /tmp/backup-check && git commit --allow-empty -m "should fail" && git push   # expect: rejected
+cd -
 ```
 
-Delete the probe tag on both remotes afterwards (`git push origin :refs/tags/v0.0.0-backup-probe`; delete it in Azure Repos from the UI).
-
-### 5. Restore rehearsal (do it once)
+Delete the probe tag on GitHub afterwards (and in Azure Repos from the UI):
 
 ```bash
-git clone https://dev.azure.com/<YOUR_ORG>/saas-boilerplate/_git/saas-boilerplate-backup restore-check
-cd restore-check && git log --oneline | head -3 && git rev-parse main
-# compare with: git ls-remote https://github.com/hamdiRH/saas-boilerplate refs/heads/main
+git push origin :refs/tags/v0.0.0-backup-probe
+git tag -d v0.0.0-backup-probe
+```
+
+### 6. Restore rehearsal (do it once)
+
+```bash
+git clone https://dev.azure.com/uzumaki26/Next%20Boilerplate/_git/saas-boilerplate-backup /tmp/restore-check
+cd /tmp/restore-check && git log --oneline | head -3 && git rev-parse main
+git ls-remote https://github.com/hamdiRH/saas-boilerplate refs/heads/main     # compare the two SHAs
+cd -
 ```
 
 To restore GitHub from the backup: create an empty GitHub repository, then `git push --mirror <new-github-url>` **from the clone**, and re-install the GitHub Apps and secrets. Write these steps into the guide.
@@ -595,15 +778,22 @@ To restore GitHub from the backup: create an empty GitHub repository, then `git 
 ### 🚢 Ship
 
 ```bash
-pnpm check
-git add -A && git commit -m "ci(ci): add Azure Repos one-way backup pipeline" -m "AB#<id of S2.3-T05>"
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 ---
 
 ## 🎫 S2.3-T04 — Azure Pipelines CD (staging, gated, off by default)
 
-Branch: `ci/s2.3-t04-azure-pipelines-cd` · Commits: `feat(config): add health endpoint` then `ci(ci): add Azure Pipelines CD`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c ci/s2.3-t04-azure-pipelines-cd
+mkdir -p src/app/api/health
+```
 
 > ⚠️ **Read this before writing YAML.** The repository has **no deploy workflow, no `vercel.json` and no `/api/health` yet** (Sprint 8 plans them). So this ticket builds a pipeline that is **safe by default**: it builds once, publishes the artifact, and the deploy stage only runs when you set `DEPLOY_ENABLED=true` in the restricted variable group. That is decision D2 option (c) with a ready path to option (a).
 
@@ -611,19 +801,25 @@ Branch: `ci/s2.3-t04-azure-pipelines-cd` · Commits: `feat(config): add health e
 
 Put this table in `docs/guides/azure-devops.md`. **Exactly one deployer per environment.**
 
+```bash
+cat >> docs/guides/azure-devops.md <<'EOF'
+
+## Ownership matrix
+
 | Environment | Owner | Trigger |
 | --- | --- | --- |
 | Preview | Vercel Git integration | Every PR / branch push |
-| Staging | **Azure CD** (this ticket) | Successful CI on `main`, then approval |
+| Staging | **Azure CD** | Successful CI on `main`, then approval |
 | Production | Sprint 8 GitHub deploy workflow (not built yet) | Release tag + approval |
+EOF
+```
 
 > If you later want Azure to own production, or Vercel to stop deploying `main`, change the matrix **and** add the Vercel `git.deploymentEnabled` setting for `main` in the same PR. Never leave two systems deploying the same environment (risk R1).
 
 ### 2. A health endpoint (decision D3)
 
-`src/app/api/health/route.ts`:
-
-```ts
+```bash
+cat > src/app/api/health/route.ts <<'EOF'
 import { connection } from 'next/server';
 
 /**
@@ -636,11 +832,9 @@ export async function GET() {
   await connection();
   return Response.json({ status: 'ok' }, { headers: { 'Cache-Control': 'no-store' } });
 }
-```
+EOF
 
-`src/app/api/health/route.test.ts`:
-
-```ts
+cat > src/app/api/health/route.test.ts <<'EOF'
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/server', () => ({ connection: () => Promise.resolve() }));
@@ -655,13 +849,12 @@ describe('GET /api/health', () => {
     expect(await response.json()).toEqual({ status: 'ok' });
   });
 });
-```
+EOF
 
-Make sure the proxy does not redirect it: the matcher already excludes `api` (`src/proxy.ts`). Run the test:
-
-```bash
 pnpm test src/app/api/health
 ```
+
+Make sure the proxy does not redirect it: the matcher already excludes `api` (`src/proxy.ts`).
 
 ### 3. Secrets (only in the restricted group)
 
@@ -677,9 +870,10 @@ In **Pipelines → Library → `saas-boilerplate-cd`**, add **secret** variables
 
 ### 5. The CD pipeline
 
-`azure-pipelines/cd.yml`:
+Replace `<PINNED_VERSION>` with the Vercel CLI version you tested (run `npx vercel --version`), never `latest`.
 
-```yaml
+```bash
+cat > azure-pipelines/cd.yml <<'EOF'
 # azure-pipelines/cd.yml
 # Builds once, publishes the build, deploys STAGING only when DEPLOY_ENABLED=true.
 # No ALLOW_LOCAL_SERVICES here, by design.
@@ -772,6 +966,7 @@ stages:
                     done
                     echo "Health check failed"; exit 1
                   displayName: Smoke test /api/health
+EOF
 ```
 
 What each part guarantees:
@@ -783,11 +978,13 @@ What each part guarantees:
 
 🔍 Verify: `DEPLOY_URL` is the unique deployment URL, which can sit behind Vercel's deployment protection. If the smoke test gets 401/403, use a protection-bypass token or a custom staging domain.
 
+Create the pipeline in the UI (**New pipeline → GitHub → Existing YAML → `/azure-pipelines/cd.yml`**), name it `saas-boilerplate-cd`.
+
 ### 6. Prove it (in this order)
 
 1. Merge with `DEPLOY_ENABLED=false`: the Build stage runs, the Staging stage is **skipped**.
 2. Set `DEPLOY_ENABLED=true`, run again: approval is requested, the migration gate and deploy run, the smoke test passes.
-3. Break the health check on purpose (return 500 on a scratch branch): the run fails and nothing is promoted.
+3. Break the health check on purpose (return 500 on a scratch branch, never merged): the run fails and nothing is promoted.
 4. Follow the rollback runbook and time it (target: under 10 minutes).
 
 ### ✅ Verify
@@ -804,8 +1001,15 @@ What each part guarantees:
 
 ```bash
 pnpm check
-git add src/app/api/health && git commit -m "feat(config): add health endpoint" -m "AB#<id of S2.3-T04>"
-git add azure-pipelines docs && git commit -m "ci(ci): add Azure Pipelines CD" -m "AB#<id of S2.3-T04>"
+git add src/app/api/health
+git commit -m "feat(config): add health endpoint" -m "AB#$(wid S2.3-T04)"
+git add azure-pipelines docs
+git commit -m "ci(ci): add Azure Pipelines CD" -m "AB#$(wid S2.3-T04)"
+git push -u origin ci/s2.3-t04-azure-pipelines-cd
+gh pr create --fill --base main --body "Adds the gated staging CD and /api/health. Fixes AB#$(wid S2.3-T04)"
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 If this changes the Sprint 8 plan, add `docs/adr/014-…` in the same PR.
@@ -814,11 +1018,21 @@ If this changes the Sprint 8 plan, add `docs/adr/014-…` in the same PR.
 
 ## 🎫 S2.3-T06 — Documentation and end-to-end validation
 
-Branch: `docs/s2.3-t06-azure-devops-docs` · Commit: `docs(docs): document Azure DevOps delivery and validate end to end`
+### 🌿 Start
+
+```bash
+git switch main && git pull
+git switch -c docs/s2.3-t06-azure-devops-docs
+```
 
 ### 1. Finish the guide
 
-`docs/guides/azure-devops.md` must contain: an architecture diagram, the setup steps, variable groups (names only), permissions, the **ownership matrix**, runbooks (rollback, restore, rotate credentials), troubleshooting, and cost notes. Suggested diagram:
+`docs/guides/azure-devops.md` must contain: an architecture diagram, the setup steps, variable groups (names only), permissions, the **ownership matrix**, runbooks (rollback, restore, rotate credentials), troubleshooting, and cost notes. Append the diagram and the troubleshooting list:
+
+````bash
+cat >> docs/guides/azure-devops.md <<'EOF'
+
+## Architecture
 
 ```text
 GitHub (source of truth)
@@ -827,16 +1041,34 @@ GitHub (source of truth)
   ├─ AB#123     ─► Azure Boards       (planning)
   ├─ main/tags  ─► Azure Pipelines backup ─► Azure Repos (read-only copy)
   └─ main       ─► Azure Pipelines CD ─► Staging (approval, migration gate, smoke test)
-```
+````
 
-Troubleshooting to include: "No hosted parallelism has been purchased or granted" (request the free grant), a `pnpm` version mismatch (Corepack), and a backup push rejected as non-fast-forward (investigate; never force).
+## Troubleshooting
+
+- "No hosted parallelism has been purchased or granted": request the free grant from Microsoft.
+- `pnpm` version mismatch: Corepack reads the `packageManager` field, check it matches the lockfile.
+- Backup push rejected as non-fast-forward: investigate the divergence, never force. EOF
+
+````
+
+> The nested code fence above breaks some Markdown viewers. If yours does, open the file and fix the fence by hand (use four backticks for the outer one).
+
+Then fill in the rest by hand: setup steps, variable groups (names only), permissions, the rollback / restore / rotate-credentials runbooks, CI durations and cost notes.
 
 ### 2. Update the repository docs (decision D8)
 
 - `README.md` (CI/CD section), `CONTRIBUTING.md`, `docs/README.md`
-- `AGENTS.md`: add one structure line, for example `azure-pipelines/   Azure Pipelines YAML (CI, CD, backup)`. `pnpm check:agents` verifies that every path in the file exists.
+- `AGENTS.md`: add one structure line. `pnpm check:agents` verifies that every path in the file exists.
 - `docs/roadmap/06-project-state.md`: pipelines, variable groups (**names only**), environments, new files, decisions taken
 - `docs/adr/014-azure-devops-secondary-delivery.md` (use `docs/adr/0000-template.md`): GitHub is the source of truth; Azure is planning, secondary CI, one-way backup and staging CD only
+
+```bash
+echo 'azure-pipelines/   Azure Pipelines YAML (CI, CD, backup)' >> AGENTS.md
+cp docs/adr/0000-template.md docs/adr/014-azure-devops-secondary-delivery.md
+pnpm check:agents
+````
+
+(Move the `AGENTS.md` line into the structure list, and fill in the ADR.)
 
 ### 3. The end-to-end scenario (record evidence in the guide)
 
@@ -845,7 +1077,12 @@ Troubleshooting to include: "No hosted parallelism has been purchased or granted
 3. **GitHub CI** and **Azure CI** both go green.
 4. Merge. The PBI moves state.
 5. Azure CD runs once (approve it), the smoke test passes. (With `DEPLOY_ENABLED=false` the stage is skipped, and that also counts as a pass for this step.)
-6. The backup shows the same SHA as GitHub `main`.
+6. The backup shows the same SHA as GitHub `main`:
+
+```bash
+git ls-remote https://github.com/hamdiRH/saas-boilerplate refs/heads/main
+git ls-remote https://dev.azure.com/uzumaki26/Next%20Boilerplate/_git/saas-boilerplate-backup refs/heads/main
+```
 
 Then compare GitHub CI and Azure CI durations and any result differences, and write them down.
 
@@ -867,7 +1104,13 @@ Then compare GitHub CI and Azure CI durations and any result differences, and wr
 
 ```bash
 pnpm check
-git add -A && git commit -m "docs(docs): document Azure DevOps delivery and validate end to end" -m "AB#<id of S2.3-T06>"
+git add -A
+git commit -m "docs(docs): document Azure DevOps delivery and validate end to end" -m "AB#$(wid S2.3-T06)"
+git push -u origin docs/s2.3-t06-azure-devops-docs
+gh pr create --fill --base main --body "Documents Azure DevOps and validates it end to end. Fixes AB#$(wid S2.3-T06)"
+gh pr checks --watch
+gh pr merge --merge --delete-branch
+git switch main && git pull
 ```
 
 ---
