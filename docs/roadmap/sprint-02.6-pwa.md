@@ -20,7 +20,7 @@ Facts verified in the repository (branch `fix/audit-sprint-2`, 2026-11-17) and i
 | Auth | Better Auth, session cookie, DAL (`requireSession`) authoritative, `proxy.ts` optimistic (ADR-003). Every `(app)`/`(admin)` page calls `requireSession()` | A cached copy of any protected page would **bypass the DAL**. Protected HTML/RSC must never be served from a cache |
 | Security headers | `getSecurityHeaders()` sets nosniff, Referrer-Policy, `X-Frame-Options: DENY`, HSTS (prod) and **`Permissions-Policy: camera=(), microphone=(), geolocation=()`**. CSP is planned for Sprint 6 | T07's camera/location features are **blocked by the current policy** (D5); the future CSP must allow `worker-src 'self'` and the push endpoints (coordinate with Sprint 6) |
 | i18n | next-intl, `localePrefix: as-needed`, `en` + `fr` | The offline page and install UI exist in both locales; precache must cover both |
-| Fonts | Self-hosted Geist (audit fix) | No third-party font request, so the shell works offline |
+| Fonts | Self-hosted Plus Jakarta Sans / Inter (D13; Geist Mono kept) | No third-party font request, so the shell works offline |
 | Env | `src/libs/env.ts` is the only reader of `process.env`; `check:env` enforces it | VAPID keys are added to the schema and `.env.example`; the private key is server-only |
 | Database | Drizzle + PGlite/Neon, migrations generated, `db:check` in CI | Push subscriptions need a table, a schema change (ask first) |
 | Tooling | pnpm 12, cross-platform scripts only, Knip, Oxlint/Oxfmt, Vitest unit + browser, Playwright (CI uses a production build) | SW build step is a Node script; unit tests for pure policy code; e2e against a production build |
@@ -131,7 +131,7 @@ Order: **T01 → T02 → (T03 ∥ T04 ∥ T05 ∥ T07) → T06 → T08 (optional
 | D6 | **Approved** | Brand **Nexora**, see "Brand tokens" below |
 | T08 / D9 | **Deferred** | Advanced offline moves out of Sprint 2.6, to after Sprint 4. The sprint has 8 active tickets |
 | D2, D3, D5, D7, D8, D10, D11, D12 | Pending | The recommendations stay in force as defaults. Say so if you want any changed |
-| D13 (new) | Pending | Apply the Nexora tokens to the app theme (`src/styles/global.css`, shadcn tokens) and rename the default `NEXT_PUBLIC_APP_NAME`. Recommended as a small separate `ui` ticket right after T01, so the PWA ticket stays about PWA. Also decide the font: the brand board names Plus Jakarta Sans (or Inter), while the repo now self-hosts Geist |
+| D13 | **Approved** | Nexora tokens applied to the app theme, default `NEXT_PUBLIC_APP_NAME` renamed to Nexora, font = Plus Jakarta Sans (Inter fallback), delivered as the separate `ui` change `feat/d13-nexora-brand` (merge it before T01). Light-mode muted text uses `#64748B` because the brand Muted `#94A3B8` fails WCAG AA on white |
 
 ### Brand tokens (from the approved Nexora board)
 

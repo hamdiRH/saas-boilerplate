@@ -46,7 +46,7 @@
 | D6 | Brand **Nexora** — tokens below |
 | T08 | Advanced offline **deferred until after Sprint 4** |
 | D2, D3, D5, D7, D8, D10, D11, D12 | Recommended defaults from the backlog (update prompt via the existing toast, etc.) |
-| D13 | ⏳ **Not answered yet:** apply the Nexora tokens to the app theme / rename the default app name / font choice (brand board says Plus Jakarta Sans + Inter, repo uses Geist). This tutorial keeps Geist and only uses the tokens for the manifest, `theme-color` and the offline page. |
+| D13 | **Approved and delivered separately** in `feat/d13-nexora-brand`: Nexora theme tokens, app name `Nexora`, Plus Jakarta Sans (Inter fallback). Merge it **before** starting T01. The layout diff in §1.5 was captured before D13, so its context lines (fonts, title) may differ slightly — apply only the lines about metadata, viewport and the PWA components |
 
 | Brand token        | Value                  |
 | ------------------ | ---------------------- |
@@ -3620,4 +3620,4 @@ Deferred until **after Sprint 4** (approved): offline queues/mutations depend on
 - [ ] Push opt-in/out works end to end 🔍; `PUSH_ENABLED=false` hides the UI
 - [ ] Kill switch drilled 🔍
 - [ ] Guide + ADR 015/016 + `AGENTS.md` + project state updated
-- [ ] T08 recorded as deferred; D13 decision recorded when answered
+- [ ] T08 recorded as deferred; D13 (Nexora theme) merged before T01
