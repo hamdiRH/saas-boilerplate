@@ -14,7 +14,7 @@ Format: `type(scope): subject` — e.g. `feat(auth): add magic link sign-in`.
 
 Use `pnpm commit` for an interactive prompt.
 
-## Linking work items
+## Linking work items (Azure Board)
 
 - Put `AB#<id>` in the PR description (and optionally the PR title).
 - Put `AB#<id>` in a commit body or footer, never in the header, so commitlint is unaffected.
