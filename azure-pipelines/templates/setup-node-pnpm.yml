@@ -1,0 +1,26 @@
+steps:
+  - task: NodeTool@0
+    displayName: Use Node from .nvmrc
+    inputs:
+      versionSource: fromFile
+      versionFilePath: .nvmrc
+
+  - script: |
+      corepack enable
+      pnpm --version
+      node --version
+    displayName: Enable Corepack (pnpm from packageManager)
+
+  - script: pnpm config set store-dir $(Pipeline.Workspace)/.pnpm-store
+    displayName: Point the pnpm store at a cacheable folder
+
+  - task: Cache@2
+    displayName: Cache pnpm store
+    inputs:
+      key: 'pnpm | "$(Agent.OS)" | pnpm-lock.yaml'
+      restoreKeys: |
+        pnpm | "$(Agent.OS)"
+      path: $(Pipeline.Workspace)/.pnpm-store
+
+  - script: pnpm install --frozen-lockfile
+    displayName: Install dependencies
