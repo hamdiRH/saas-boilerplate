@@ -1,0 +1,3844 @@
+{
+  "epic": "SaaS Boilerplate",
+  "areas": [
+    "Auth",
+    "Database",
+    "CI-CD",
+    "PWA",
+    "UI",
+    "Docs",
+    "I18n",
+    "Observability",
+    "SEO",
+    "Security",
+    "Tenancy",
+    "Testing",
+    "Tooling"
+  ],
+  "sprints": [
+    {
+      "name": "Sprint 0",
+      "start": "2026-10-28",
+      "finish": "2026-11-03",
+      "status": "done",
+      "feature": "Sprint 0 - Foundation & Tooling"
+    },
+    {
+      "name": "Sprint 1",
+      "start": "2026-11-04",
+      "finish": "2026-11-10",
+      "status": "done",
+      "feature": "Sprint 1 - Data Layer, App Shell, i18n, Forms, Errors"
+    },
+    {
+      "name": "Sprint 2",
+      "start": "2026-11-11",
+      "finish": "2026-11-17",
+      "status": "done",
+      "feature": "Sprint 2 - Authentication Core (Better Auth)"
+    },
+    {
+      "name": "Sprint 2.3",
+      "start": "2026-11-18",
+      "finish": "2026-11-24",
+      "status": "planned",
+      "feature": "Sprint 2.3 - Azure DevOps Integration"
+    },
+    {
+      "name": "Sprint 2.6",
+      "start": "2026-11-25",
+      "finish": "2026-12-01",
+      "status": "planned",
+      "feature": "Sprint 2.6 - PWA & Service Worker"
+    },
+    {
+      "name": "Sprint 3",
+      "start": "2026-12-02",
+      "finish": "2026-12-08",
+      "status": "planned",
+      "feature": "Sprint 3 - Advanced Authentication (Magic Links, Social, Passkeys, MFA)"
+    },
+    {
+      "name": "Sprint 4",
+      "start": "2026-12-09",
+      "finish": "2026-12-15",
+      "status": "planned",
+      "feature": "Sprint 4 - Multi-tenancy, RBAC, Admin & Impersonation"
+    },
+    {
+      "name": "Sprint 5",
+      "start": "2026-12-16",
+      "finish": "2026-12-22",
+      "status": "planned",
+      "feature": "Sprint 5 - Quality & Testing Maturity"
+    },
+    {
+      "name": "Sprint 6",
+      "start": "2026-12-23",
+      "finish": "2026-12-29",
+      "status": "planned",
+      "feature": "Sprint 6 - Observability, Security & Analytics"
+    },
+    {
+      "name": "Sprint 7",
+      "start": "2026-12-30",
+      "finish": "2027-01-05",
+      "status": "planned",
+      "feature": "Sprint 7 - SEO, Marketing, i18n Sync, Performance & Accessibility"
+    },
+    {
+      "name": "Sprint 8",
+      "start": "2027-01-06",
+      "finish": "2027-01-12",
+      "status": "planned",
+      "feature": "Sprint 8 - Release Engineering, Documentation, Deployment & Launch"
+    }
+  ],
+  "pbis": [
+    {
+      "id": "S0-T01",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Baseline: Node/pnpm pinning, exact versions, ADRs, roadmap docs",
+      "story": "US-001",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "chore/s0-t01-baseline",
+      "commit": "chore: pin node/pnpm and dependency versions, add ADRs and roadmap docs",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm install --frozen-lockfile; pnpm dev; pnpm build && pnpm start; grep -E '\"packageManager\"|\"engines\"' package.json"
+      ],
+      "tasks": [
+        "Pin Node and pnpm",
+        "Re-pin existing dependencies to exact versions",
+        "Read the Next 16 docs and note deltas (🔍 required)",
+        ".gitignore, .gitattributes, .editorconfig",
+        "License placeholder",
+        "Copy the roadmap into the repo",
+        "ADR folder with stubs",
+        "Record the pinned versions"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S0-T02",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "TypeScript strictness, Tailwind 4, shadcn/ui",
+      "story": "US-001",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "chore/s0-t02-ts-tailwind-shadcn",
+      "commit": "chore: enable strict typescript, tailwind 4 stylesheet and shadcn ui",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm typecheck; pnpm build; pnpm dev; // scripts/verify-build-assets.mjs",
+        "Evidence for minification + cache busting (feature checklist items). 🪟 A tiny Node script does this on every OS — no curl/kill juggling:",
+        "📄 Create scripts/verify-build-assets.mjs:",
+        "Two Cmder tabs (Ctrl+T for the second):",
+        "Stop the server in tab 1 with Ctrl+C.",
+        "Copy the outputs into docs/roadmap/06-project-state.md (\"Evidence\" section)."
+      ],
+      "tasks": [
+        "Strict TypeScript",
+        "next.config.ts",
+        "Tailwind 4 stylesheet location",
+        "Initialise shadcn/ui",
+        "Move the cn helper to src/utils/",
+        "Add a Button and a demo page",
+        "typecheck script"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S0-T03",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Type-safe environment variables (T3 Env)",
+      "story": "US-002",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "feat/s0-t03-env",
+      "commit": "feat(config): add type-safe env validation with t3 env",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check:env; pnpm typecheck; mv .env.development .env.development.bak; pnpm dev"
+      ],
+      "tasks": [
+        "The env module",
+        "Validate at build/boot time",
+        "Env files",
+        "Use it",
+        "Guard: no process.env outside Env.ts"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S0-T04",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Oxlint with the Ultracite preset",
+      "story": "US-003",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t04-oxlint",
+      "commit": "chore: add oxlint with ultracite preset",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm lint; echo 'export const x: any = 1;' > src/scratch.ts; pnpm lint; rm src/scratch.ts"
+      ],
+      "tasks": [
+        "Initialise the Ultracite preset",
+        "Type-aware linting (evaluate)",
+        "Scripts",
+        "Fix the baseline"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T05",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Oxfmt formatter",
+      "story": "US-003",
+      "sp": 1,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t05-oxfmt",
+      "commit": "style: add oxfmt and format the whole repository",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm format:check; echo 'const   x={a:1}' > src/scratch.ts; pnpm format:check; pnpm format && cat src/scratch.ts"
+      ],
+      "tasks": [
+        "Config",
+        "Tailwind class sorting",
+        "Scripts",
+        "Format the whole repo in a dedicated commit"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T06",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Lefthook + lint-staged (pre-commit)",
+      "story": "US-004",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t06-lefthook",
+      "commit": "test: scratch",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: printf 'export const x:any = 1\\n' > src/scratch.ts; git add src/scratch.ts; git commit -m \"test: scratch\"; git restore --staged src/scratch.ts && rm src/scratch.ts",
+        "Confirm no Husky leftovers: ls -a | grep -i husky → nothing."
+      ],
+      "tasks": [
+        "Install hooks automatically for every teammate",
+        "Hook configuration",
+        "lint-staged — only touch staged files",
+        "Install the hook now"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T07",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Commitlint + Commitizen",
+      "story": "US-004",
+      "sp": 1,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t07-commitlint",
+      "commit": "chore: add commitlint and commitizen",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: git commit --allow-empty -m \"bad message\"; git commit --allow-empty -m \"feat: verify commitlint works\"; git reset --soft HEAD~1 && git reset; pnpm commit"
+      ],
+      "tasks": ["Hook it up", "CONTRIBUTING (commit section)"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T08",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Knip (unused files, exports, dependencies)",
+      "story": "US-005",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t08-knip",
+      "commit": "chore: add knip for unused code and dependency detection",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm knip; echo 'export const unused = 1;' > src/utils/unused.ts; pnpm knip; rm src/utils/unused.ts"
+      ],
+      "tasks": ["Config", "Run and resolve"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T09",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Bundle analyzer",
+      "story": "US-005",
+      "sp": 1,
+      "priority": "P2",
+      "area": "Tooling",
+      "branch": "chore/s0-t09-bundle-analyzer",
+      "commit": "chore: add bundle analyzer script",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm analyze",
+        "Open it and confirm you can see the route-level chunks."
+      ],
+      "tasks": [
+        "Try Next's built-in Turbopack analyzer first",
+        "Fallback (only if the built-in command isn't available)",
+        "Document it"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S0-T10",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Vitest (unit project)",
+      "story": "US-006",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "feat/s0-t10-vitest-unit",
+      "commit": "test: add vitest unit project with env and cn tests",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm test:coverage; pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck",
+        "Sabotage check — break cn on purpose (return ''), see the test fail, then git restore src/utils/cn.ts."
+      ],
+      "tasks": [
+        "Config (unit project only for now)",
+        "Scripts",
+        "Sample tests",
+        "Pre-push hook (typecheck + changed tests)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S0-T11",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Vitest browser mode (component tests)",
+      "story": "US-006",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "feat/s0-t11-vitest-browser",
+      "commit": "test: add vitest browser mode project with component test",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm test:browser; pnpm test:all",
+        "Sabotage check: change the expected name to 'Nope' → test must fail → revert.",
+        "Note any API surprises (renamed options, provider package name) in docs/roadmap/06-project-state.md — risk R-01."
+      ],
+      "tasks": [
+        "Browser setup file (so Tailwind styles apply in tests)",
+        "Add the browser project",
+        "Scripts",
+        "First component test",
+        "Debugging cheat-sheet (add to docs/guides/testing.md)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T12",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "AI coding-agent instruction files",
+      "story": "US-007",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "docs/s0-t12-agent-instructions",
+      "commit": "docs: add AGENTS.md and per-tool agent instruction files",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check:agents; mv CLAUDE.md CLAUDE.md.bak && pnpm check:agents; mv CLAUDE.md.bak CLAUDE.md; pnpm check",
+        "Fresh-agent test: open a brand-new Claude Code session in the repo and ask: _\"What command verifies a task is done?\"_ — it should answer pnpm check without you telling it."
+      ],
+      "tasks": [
+        "AGENTS.md (canonical)",
+        "Claude Code",
+        "Cursor",
+        "GitHub Copilot",
+        "Codex & OpenCode",
+        "Consistency check script",
+        "Human-facing doc"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S0-T13",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "VS Code configuration",
+      "story": "US-008",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Tooling",
+      "branch": "chore/s0-t13-vscode",
+      "commit": "chore: add shared vscode settings, tasks and debug configs",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "Open the folder in VS Code → a popup suggests installing the recommended extensions.",
+        "Mess up the formatting of a .tsx file and save → it's auto-formatted.",
+        "Run Run and Debug → Next.js: full stack, set a breakpoint in page.tsx, reload → it hits.",
+        "pnpm format:check still passes (the JSON files are formatted)."
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S0-T14",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "GitHub Actions CI baseline",
+      "story": "US-009",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "ci/s0-t14-github-actions",
+      "commit": "ci: add github actions pipeline for quality, tests and build",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: git add -A; git commit -m \"ci: add github actions pipeline for quality, tests and build\"; git push -u origin ci/s0-t14-github-actions; gh pr create --fill --base main",
+        "All four jobs must be green. If one fails, fix on the branch and push again (never \"fix\" CI by weakening a check).",
+        "Intentional-failure test (recommended): push a commit with a lint error to the branch → quality fails → revert it."
+      ],
+      "tasks": ["Publish the repo (once)", "The workflow", "Badge"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S0-T15",
+      "sprint": "Sprint 0",
+      "featureSprint": "Sprint 0",
+      "title": "Dependabot & repository hygiene",
+      "story": "US-009",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "chore/s0-t15-repo-hygiene",
+      "commit": "chore: add dependabot, security policy and community files",
+      "source": "sprint-00-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm format && pnpm check; git add -A; git commit -m \"chore: add dependabot, security policy and community files\"; git push -u origin chore/s0-t15-repo-hygiene",
+        "Then on GitHub: Insights → Dependency graph → Dependabot shows it's enabled (first PRs appear within a week, or trigger manually from that page)."
+      ],
+      "tasks": [
+        "Dependabot",
+        "Community & security files",
+        "Real README (quick start)",
+        "Protect main (GitHub UI — can't be committed)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T01",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Drizzle config and baseline schema",
+      "story": "US-010",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Database",
+      "branch": "feat/s1-t01-drizzle-config",
+      "commit": "feat(db): add drizzle config, schema helpers and first migration",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm db:check; pnpm typecheck; pnpm dev:web 2>/dev/null || pnpm dev",
+        "Open the generated SQL and confirm: table app_meta, timestamp with time zone columns."
+      ],
+      "tasks": [
+        "Helper script: pnpm pin",
+        "Env variables",
+        "Drizzle config",
+        "Schema helpers + a temporary table",
+        "Scripts + generate the first migration"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T02",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "DB client factory (pool config)",
+      "story": "US-010",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Database",
+      "branch": "feat/s1-t02-db-client",
+      "commit": "feat(db): add pool configuration and database client",
+      "source": "sprint-01-tutorial.md",
+      "criteria": ["These commands succeed: pnpm test; pnpm typecheck && pnpm lint && pnpm knip"],
+      "tasks": ["Pure, testable pool configuration", "The client (HMR-safe singleton)"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T04",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "PGlite socket dev server",
+      "story": "US-010",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Database",
+      "branch": "feat/s1-t04-pglite-server",
+      "commit": "feat(db): add pglite socket dev server and combined dev script",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm db:server; pnpm db:ping; pnpm db:studio; pnpm db:ping",
+        "Open three Cmder tabs (Ctrl+T):",
+        "🪟 If Windows Firewall prompts for node.exe, choose Allow (private networks).",
+        "Stop tab 1 (Ctrl+C) and test the combined flow:",
+        "Ctrl+C must stop both. Check the port is free: netstat -ano | findstr :5433 → no output."
+      ],
+      "tasks": [
+        "Load env files in scripts (same rules as Next)",
+        "The server",
+        "A tiny connectivity probe",
+        "Scripts: dev now starts both processes"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T03",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Migration, reset and seed scripts",
+      "story": "US-010",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Database",
+      "branch": "feat/s1-t03-db-scripts",
+      "commit": "feat(db): add migrate and reset scripts with production guard",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm db:migrate; pnpm db:reset; pnpm db:ping; DATABASE_URL=\"postgres://u:p@db.example.com/x\" pnpm db:reset",
+        "With pnpm db:server running in another tab:",
+        "Safety check — the guard must refuse remote URLs:",
+        "Optional, now or in Sprint 8: create a free Neon project, put its direct URL in .env.local as DATABASE_URL_UNPOOLED, run pnpm db:migrate and watch the tables appear in Neon's console. (Remove the variable afterwards so local dev keeps using PGlite.)"
+      ],
+      "tasks": [
+        "Programmatic migrator (used locally and by deploys)",
+        "Reset (dev only, with guard rails)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T05",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Test database helper",
+      "story": "US-011",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Database",
+      "branch": "test/s1-t05-test-db",
+      "commit": "test(db): add in-memory pglite test database helper",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test",
+        "Rename a column in src/db/schema/app-meta.ts without generating a migration, then run pnpm db:check → drift is reported. Revert."
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T06",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Factories and seed",
+      "story": "US-011",
+      "sp": 1,
+      "priority": "P1",
+      "area": "Database",
+      "branch": "feat/s1-t06-factories-seed",
+      "commit": "feat(db): add test factories and idempotent seed",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm db:reset; pnpm db:seed",
+        "Open Studio → app_meta has one seeded_at row. pnpm knip must pass (use factories in a test or delete app-meta.factory.ts if Knip complains; factories used by tests in Sprint 2)."
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T07",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Route groups and layouts",
+      "story": "US-012",
+      "sp": 2,
+      "priority": "P0",
+      "area": "UI",
+      "branch": "feat/s1-t07-route-groups",
+      "commit": "feat(ui): add route groups, layouts and responsive navigation",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev; pnpm check",
+        "Visit /, /contact, /sign-in, /sign-up, /dashboard, /admin. Each shows its own layout (header/footer, centered card, sidebar, admin bar). Use the browser's responsive mode:",
+        "- 320 px: the hamburger appears and the Sheet opens/closes; no horizontal scrollbar.",
+        "- 1440 px: sidebar visible in /dashboard."
+      ],
+      "tasks": ["Folders", "Layout components", "Group layouts", "Pages"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T08",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Theme (light / dark / system)",
+      "story": "US-012",
+      "sp": 2,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s1-t08-theme",
+      "commit": "feat(ui): add light/dark/system theme with persistent toggle",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev; pnpm check",
+        "Toggle Dark → page turns dark. Hard-reload (Ctrl+Shift+R) → still dark, no white flash.",
+        "Choose System, then switch Windows to dark/light mode (Settings → Personalization → Colors) → the page follows.",
+        "The toggle is reachable with the keyboard (Tab → Enter → arrows)."
+      ],
+      "tasks": ["Provider", "Tokens — minimalist neutral palette", "Toggle"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T09",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "shadcn component set and layout helpers",
+      "story": "US-012",
+      "sp": 1,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s1-t09-shadcn-set",
+      "commit": "feat(ui): add shadcn component set, toaster and layout helpers",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev; pnpm pin; pnpm check",
+        "Delete the gallery (git rm -r \"src/app/(marketing)/ui-kit\"), then:",
+        "Count installed primitives: ls src/components/ui → ≥ 12 files."
+      ],
+      "tasks": [
+        "Don't lint generated code",
+        "Toasts",
+        "Layout helpers",
+        "Component gallery (temporary, to eyeball everything)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T10",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "next-intl: routing, proxy, [locale] segment",
+      "story": "US-013",
+      "sp": 3,
+      "priority": "P0",
+      "area": "I18n",
+      "branch": "feat/s1-t10-next-intl",
+      "commit": "feat(i18n): add next-intl routing, proxy and locale segment",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm typecheck && pnpm dev; pnpm build; pnpm check",
+        "- http://localhost:3000/ → English",
+        "- http://localhost:3000/fr → same page (French strings come in the next ticket)",
+        "- http://localhost:3000/de → 404 (we add a localized 404 in S1-T14)",
+        "- Header links from /fr keep the /fr prefix (/fr/contact)"
+      ],
+      "tasks": [
+        "Routing config",
+        "Minimal message files (filled in S1-T11)",
+        "Typed message keys",
+        "Plugin + proxy.ts",
+        "Move the app under [locale]",
+        "The root layout becomes locale-aware"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T11",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Messages, language switcher, RTL readiness",
+      "story": "US-013",
+      "sp": 2,
+      "priority": "P1",
+      "area": "I18n",
+      "branch": "feat/s1-t11-messages",
+      "commit": "feat(i18n): add en/fr messages, language switcher and rtl direction helper",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm dev; pnpm check",
+        "- / English, /fr French; switcher links keep you on the same page (/contact ⇄ /fr/contact).",
+        "- <html lang=\"fr\"> on French pages (DevTools → Elements).",
+        "- Delete one key from fr.json → pnpm test fails → restore it.",
+        "- Introduce a typo in a t('nav.hom') call → pnpm typecheck fails → fix it."
+      ],
+      "tasks": [
+        "Messages (English)",
+        "Language switcher",
+        "Translate the existing components",
+        "Direction helper (RTL-ready) + <html dir>",
+        "Locale parity test (full tooling arrives in Sprint 5)",
+        "Guide"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T12",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Form components (React Hook Form + Zod + shadcn)",
+      "story": "US-014",
+      "sp": 2,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s1-t12-form-components",
+      "commit": "feat(forms): add rhf field components on shadcn field with translated zod errors",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm typecheck && pnpm lint && pnpm knip; grep -rn \"components/ui/form'\" src && echo \"❌ still importing the deprecated form\" || echo \"✅ no deprecated imports\"",
+        "Behavioural verification happens with the browser tests in S1-T13."
+      ],
+      "tasks": [
+        "Install field and React Hook Form",
+        "Translated error message",
+        "Fields",
+        "Submit button and form-level error",
+        "Knip: these files are not used yet"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T14",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "AppError hierarchy and error pages",
+      "story": "US-015",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tooling",
+      "branch": "feat/s1-t14-errors",
+      "commit": "feat(errors): add AppError hierarchy, error boundaries and localized 404",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm build && pnpm start; pnpm check",
+        "Browser checks (production build shows real error boundaries; dev mode shows the red overlay instead):",
+        "- /does-not-exist → localized 404 (\"Page not found\"); /fr/nimporte-quoi → \"Page introuvable\".",
+        "- /de → English 404 (the proxy treats de as a path, not a locale).",
+        "- Temporarily create src/app/[locale]/(marketing)/boom/page.tsx with export default function Boom() { throw new Error('boom'); } → /boom shows the error boundary with a Try again button and a Reference digest. Delete the file afterwards."
+      ],
+      "tasks": ["Error classes", "Shared error view", "Error boundaries and 404"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T15",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "LogTape structured logging",
+      "story": "US-016",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s1-t15-logging",
+      "commit": "feat(obs): add logtape structured logging with secret redaction",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; import { getLogger } from '@/libs/Logger';; getLogger('app').info('home rendered', { password: 'hunter2', user: 'ada' });; pnpm dev:web",
+        "Quick manual proof — temporarily add to src/app/[locale]/(marketing)/page.tsx (top of the component):",
+        "Remove the temporary log line, then pnpm check."
+      ],
+      "tasks": [
+        "Env",
+        "Redaction (our own, tiny, fully testable)",
+        "The logger",
+        "Keep a single LogTape instance across Next.js bundles",
+        "Use it in the DB client",
+        "Document the conventions in AGENTS.md"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S1-T13",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "createAction, ActionResult and the contact form",
+      "story": "US-014",
+      "sp": 3,
+      "priority": "P0",
+      "area": "UI",
+      "branch": "feat/s1-t13-actions-contact",
+      "commit": "feat(forms): add createAction wrapper, contact form and component tests",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser; pnpm dev; pnpm check",
+        "On /contact and /fr/contact:",
+        "Submit empty → red messages in the right language; focus jumps to the first invalid field.",
+        "Type an invalid email → message under the email field only.",
+        "Fill valid data → button shows a spinner and is disabled while pending → toast \"Thanks!\" and the form resets.",
+        "The terminal shows Contact form received (no name/email/message content)."
+      ],
+      "tasks": [
+        "The action wrapper",
+        "Shared schema (client and server)",
+        "The Server Action",
+        "The form",
+        "The page",
+        "Component tests (browser mode)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S1-T16",
+      "sprint": "Sprint 1",
+      "featureSprint": "Sprint 1",
+      "title": "Playwright setup and smoke tests",
+      "story": "US-017",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s1-t16-playwright",
+      "commit": "test(e2e): add playwright smoke suite and ci job",
+      "source": "sprint-01-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e; pnpm e2e:ui",
+        "Sabotage: change the expected French heading to 'Contactez' → spec fails with a trace → revert.",
+        "After the PR is open, add the E2E check to the required checks of the main ruleset (GitHub → Settings → Branches/Rules).",
+        "🪟 On Windows, if pnpm e2e hangs on the web server: stop any pnpm dev already running on port 3000 (netstat -ano | findstr :3000 → taskkill /PID <pid> /F), or leave your dev server running — reuseExistingServer will use it."
+      ],
+      "tasks": ["Config", "Smoke specs", "Add the E2E job to CI"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T04",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Email transport abstraction",
+      "story": "US-021",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t04-email-transport",
+      "commit": "feat(email): add pluggable email transports (console, resend, memory)",
+      "source": "sprint-02-tutorial.md",
+      "criteria": ["These commands succeed: pnpm test; pnpm typecheck && pnpm lint && pnpm knip"],
+      "tasks": [
+        "Environment variables",
+        "Types",
+        "Memory transport (tests)",
+        "Console transport (development)",
+        "Resend transport (production)",
+        "Selecting a transport",
+        "Tests"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T05",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "React Email templates (translated)",
+      "story": "US-021",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t05-email-templates",
+      "commit": "feat(email): add translated react-email templates and auth email senders",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm typecheck && pnpm lint && pnpm knip && pnpm test:browser",
+        "The locale parity test (Sprint 1) must still pass — both language files have the same emails.* keys."
+      ],
+      "tasks": [
+        "Translations for emails (all four templates at once)",
+        "Translator that works outside a request",
+        "Layout + generic action email",
+        "The four templates",
+        "Rendering (HTML + plain text)",
+        "Pick the language from the request",
+        "Senders used by Better Auth callbacks",
+        "Template tests",
+        "Preview script (optional but handy)",
+        "Knip"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T01",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Install and configure Better Auth",
+      "story": "US-020",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t01-better-auth",
+      "commit": "feat(auth): configure better auth with email verification and password reset",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm typecheck && pnpm lint && pnpm test && pnpm knip",
+        "Remove BETTER_AUTH_SECRET from .env.local and run pnpm dev:web → it must fail with \"Invalid environment variables … BETTER_AUTH_SECRET\". Restore it with pnpm setup:env."
+      ],
+      "tasks": [
+        "Secret (never committed)",
+        "Tell the guard tests how to import server-only",
+        "Run-in-background helper (don't make users wait for SMTP)",
+        "The Better Auth instance"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T02",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Auth schema and migration",
+      "story": "US-020",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Database",
+      "branch": "feat/s2-t02-auth-schema",
+      "commit": "feat(db): add better auth schema and replace app_meta table",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm db:check && pnpm typecheck && pnpm lint && pnpm knip"
+      ],
+      "tasks": [
+        "Generate with the Better Auth CLI (source of truth)",
+        "Our adapted schema",
+        "Replace app_meta",
+        "Update everything that used app_meta",
+        "Generate and apply the migration",
+        "Drift check for the future"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T03",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Route handler, client and smoke test",
+      "story": "US-020",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t03-auth-handler",
+      "commit": "feat(auth): expose better auth route handler and browser client",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev; curl -s http://localhost:3000/api/auth/get-session; curl -s -X POST http://localhost:3000/api/auth/sign-in/email -H \"content-type: application/json\" \\; -d…",
+        "🪟 In Git Bash the quotes above work as written; in cmd.exe prefer Postman or skip this check — the E2E tests cover it later.",
+        "Seeded login check:"
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T10",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Session DAL and optimistic proxy.ts",
+      "story": "US-025",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t10-session-guard",
+      "commit": "feat(auth): add session data-access layer and optimistic proxy guard",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip",
+        "Knip: src/data/* aren't imported by pages yet — add 'src/data/**/*.ts' to the temporary entry list (removed in S2-T11).",
+        "Manual: pnpm dev, open /dashboard while signed out → redirected to /sign-in?callbackUrl=%2Fdashboard (page is still the S1 placeholder, which is fine). /fr/dashboard → /fr/sign-in?callbackUrl=%2Ffr%2Fdashboard."
+      ],
+      "tasks": [
+        "Navigation helpers we now need",
+        "Pure route-guard helpers (easy to test)",
+        "Open-redirect protection",
+        "The data access layer",
+        "The optimistic proxy"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T06",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Sign-up page and form",
+      "story": "US-022",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t06-sign-up",
+      "commit": "feat(auth): add sign-up form with password strength and email confirmation screen",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; pnpm dev",
+        "Open /sign-up (and /fr/sign-up):",
+        "Submit empty → translated errors, focus on the first field.",
+        "Type a password → the strength bar and label update live.",
+        "Submit valid data → Check your email; the terminal prints the email with the verification link, and .emails/ contains a JSON file.",
+        "Check the DB (pnpm db:studio): a user row with email_verified = false, no session row.",
+        "Sign up again with the same email → generic error text (no \"email already registered\")."
+      ],
+      "tasks": [
+        "All authentication strings (one patch for the whole sprint)",
+        "Validation schemas (Zod messages are i18n keys)",
+        "Password strength",
+        "Error key mapping and the cooldown hook",
+        "Components",
+        "The page",
+        "Component test (browser mode)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T07",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Email verification flow",
+      "story": "US-022",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t07-verify-email",
+      "commit": "feat(auth): add email verification landing page and resend form",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev; pnpm check",
+        "Sign up → copy the link from the terminal (or .emails/*.json → links) → open it → Email verified → Continue to dashboard.",
+        "Studio: user.email_verified = true, one session row.",
+        "Open the same link again → error state (token is single-use) with the resend form.",
+        "Tamper with token= in the URL → error state.",
+        "Sign up, wait / change expiresIn temporarily to 5 seconds → link expired → error state. Revert."
+      ],
+      "tasks": ["Resend form (expired / invalid link)", "The page"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T08",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Sign-in and sign-out",
+      "story": "US-023",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s2-t08-sign-in-out",
+      "commit": "feat(auth): add sign-in, sign-out and session-aware app layout",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm dev",
+        "Sign in with demo@example.com / Demo-Password-123 (from pnpm db:seed) → lands on /dashboard; the header shows an avatar with initials.",
+        "Wrong password → \"Invalid email or password.\" (same text for an unknown email).",
+        "Sign up a new user but don't verify, then sign in → \"Please verify your email first…\" and a new email appears in the terminal.",
+        "Open the avatar menu → Sign out → back on /; /dashboard redirects to sign-in. In Studio the session row is gone (server-side invalidation).",
+        "http://localhost:3000/sign-in?callbackUrl=https://evil.example → sign in → you land on /dashboard, not on evil.example.",
+        "While signed in, visit /sign-in → redirected to /dashboard.",
+        "DevTools → Application → Cookies: the session cookie is HttpOnly, SameSite=Lax (and Secure in production builds)."
+      ],
+      "tasks": [
+        "Sign-in form",
+        "The page (with callbackUrl sanitising)",
+        "User menu with sign-out",
+        "The app layout reads the session"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2-T09",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Forgot / reset password",
+      "story": "US-024",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t09-password-reset",
+      "commit": "feat(auth): add forgot and reset password flow with integration tests",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm dev; pnpm check",
+        "Manual flow:",
+        "/forgot-password → enter demo@example.com → \"Check your inbox\" → link in the terminal.",
+        "Enter an unknown email → exactly the same confirmation, and no email in the terminal.",
+        "Open the link → /reset-password?token=… → choose a new password (weak ones are rejected) → toast → sign in works with the new password only.",
+        "Reuse the same link → \"This reset link is invalid or expired\".",
+        "A \"Password changed\" email is printed after the reset.",
+        "In Studio, all other session rows of that user disappeared.",
+        "Run pnpm db:reset afterwards to restore the demo password."
+      ],
+      "tasks": [
+        "Notify the user when the password changes",
+        "Forms",
+        "Pages",
+        "Integration tests with the real auth stack (in-memory DB)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T11",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Protected dashboard and guard tests",
+      "story": "US-025",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t11-protected-dashboard",
+      "commit": "feat(auth): guard dashboard with authoritative session checks and tests",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test",
+        "Mutation check (proves the test has teeth): remove the requireSession() line from the dashboard page → pnpm test fails listing that file → restore it.",
+        "Browser check: sign in, open /dashboard → \"Welcome back, Demo User\". Delete the session cookie in DevTools and reload → redirected to sign-in. Forge a cookie (better-auth.session_token=fake) and reload → the proxy lets you through (cookie present) but the…"
+      ],
+      "tasks": [
+        "The dashboard page calls the guard itself",
+        "Unit tests for the guards — without the proxy",
+        "\"Every protected page calls a guard\" — enforced by a test (risk R-05)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T12",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Profile and change password",
+      "story": "US-026",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t12-profile-password",
+      "commit": "feat(account): add profile editing and password change with notification email",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; pnpm dev",
+        "Sign in as the demo user:",
+        "Profile: change the name → toast; the avatar initials and dashboard greeting update.",
+        "Security → password: wrong current password → error under \"Current password\"; weak new password → translated policy errors; mismatch → error under confirmation.",
+        "Valid change (leave \"sign me out of other devices\" ticked) → toast; a \"Your password was changed\" email is printed; sign out and sign in with the new password works, the old one doesn't. (pnpm db:reset restores the demo password.)",
+        "Open /fr/dashboard/account/security → everything in French.",
+        "Signed out, open /dashboard/account/profile → redirected to sign-in with the callback."
+      ],
+      "tasks": [
+        "Server Actions can now return field errors from AppErrors",
+        "Schemas",
+        "Server-side helpers",
+        "The Server Action (password change + notification email)",
+        "A helper to show action errors in forms",
+        "Components",
+        "Layout and pages"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T13",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Change email and session management",
+      "story": "US-026",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t13-email-sessions",
+      "commit": "feat(account): add change email and active session management",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Sign in from two browsers (e.g. Edge + Chrome, or one in a private window).",
+        "In browser A → Security → Active sessions lists both; \"This device\" is marked and has no revoke button.",
+        "Revoke browser B's session → within one click+reload B is back at sign-in (immediately, not after 5 minutes).",
+        "Sign out other devices works; the list then says \"No other active sessions\".",
+        "Profile → Change email: enter a new address → toast; follow the printed email link(s). After completing the flow the email changes (and the new address must be verified). 🔍 If your version's flow differs, document the observed steps in docs/guides/auth.md."
+      ],
+      "tasks": [
+        "Change email (profile page)",
+        "A tiny user-agent describer (no dependency)",
+        "Session data for the page (tokens never leave the server)",
+        "Actions: revoke by id (the token is resolved server-side)",
+        "The sessions card",
+        "Make the DAL truly authoritative: bypass the cookie cache",
+        "Integration tests: revocation, expiry, ownership"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T14",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Delete account",
+      "story": "US-026",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t14-delete-account",
+      "commit": "feat(account): add account deletion with confirmation and re-authentication",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Create a throw-away account, verify it, open Security → Delete account.",
+        "Wrong confirmation word → error under the first field; wrong password → \"current password incorrect\"-style error.",
+        "Correct values → toast, redirect to /, and /dashboard redirects to sign-in. In Studio the user, session, account rows are gone.",
+        "Sign in, wait 11+ minutes (or temporarily set freshAge to 5 seconds), then try again → \"please sign out and sign in again…\". Revert."
+      ],
+      "tasks": [
+        "Future hook for organizations",
+        "Schema with a translated confirmation word",
+        "The dialog",
+        "Cascade test"
+      ],
+      "tags": ["P1", "Optional"]
+    },
+    {
+      "id": "S2-T16",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Auth rate limiting",
+      "story": "US-027",
+      "sp": 1,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s2-t16-rate-limit",
+      "commit": "feat(auth): add database-backed rate limiting for sensitive endpoints",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; AUTH_RATE_LIMIT=on pnpm dev",
+        "The behaviour is proven by the E2E rate-limit spec in the next ticket. Quick manual check with the limiter on:",
+        "Submit the sign-in form with a wrong password 6 times in a minute → the form shows \"Too many requests. Please slow down.\" Wait a minute → works again. Studio → rate_limit has rows."
+      ],
+      "tasks": ["Switch + rules"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2-T15",
+      "sprint": "Sprint 2",
+      "featureSprint": "Sprint 2",
+      "title": "Auth E2E suite",
+      "story": "US-027",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s2-t15-auth-e2e",
+      "commit": "test(e2e): add authentication end-to-end suite with email inbox helper",
+      "source": "sprint-02-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e; CI=1 pnpm e2e",
+        "Now reproduce exactly what CI does (stop any running pnpm dev first so ports 3000 and 5433 are free):",
+        "All 8 auth specs + the 5 smoke specs pass, including the rate-limit one.",
+        "Sabotage checks (revert after each):",
+        "- Remove requireGuest() from the sign-in page → no spec fails (guests aren't affected) — but remove requireSession() from the dashboard page and the cookie-forgery step in S2-T11 shows the hole; the guard-coverage unit test catches it first.",
+        "- Change the French heading in fr.json → the French spec fails.",
+        "CI: the E2E job already runs pnpm e2e; with CI=true Playwright starts the embedded DB and the production build by itself. Push the branch and confirm all 5 jobs are green."
+      ],
+      "tasks": [
+        "Playwright config: database + app servers, deterministic env",
+        "Helpers",
+        "The specs"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.3-T01",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "Organization, project and Scrum configuration",
+      "story": "",
+      "sp": null,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "docs/s2.3-t01-azure-devops-setup",
+      "commit": "docs(docs): add Azure DevOps setup guide stub",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "Project is private, process Scrum (Project settings → Overview)",
+        "Iterations Sprint 2.3 … Sprint 8 and the six area paths exist",
+        "1 Epic, Features per sprint, and the PBIs of Sprints 2.3/2.6 exist with acceptance criteria",
+        "Only you can edit the saas-boilerplate-cd group",
+        "Parallel-job availability and expected cost are written in the guide",
+        "git diff contains no token, tenant ID or secret"
+      ],
+      "tasks": [
+        "Create the organization and the project (web UI)",
+        "Install the Azure DevOps CLI and sign in with a PAT",
+        "Iterations (one per repo sprint)",
+        "Areas (must exist before the backlog is seeded)",
+        "Seed the backlog",
+        "Permissions and variable groups",
+        "Guide stub"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2.3-T02",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "GitHub ↔ Azure Boards integration",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "docs/s2.3-t02-boards-linking",
+      "commit": "docs(docs): document AB# work item linking",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "PR with AB#id shows under Development on that work item",
+        "Commit with AB#id in the footer is linked and passes the hooks",
+        "Merging the PR moves the item as configured",
+        "An unlinked PR still merges",
+        "git diff main --stat shows no change under .github/workflows/"
+      ],
+      "tasks": [
+        "Connect GitHub to Azure Boards",
+        "The linking convention",
+        "Update the docs (no workflow changes)",
+        "Prove it"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.3-T03",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "Azure Pipelines CI",
+      "story": "",
+      "sp": null,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "ci/s2.3-t03-azure-pipelines-ci",
+      "commit": "ci(ci): add Azure Pipelines CI",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "A push to main and a PR each start exactly one run",
+        "The run executes every command above and is green on the current main",
+        "A type error, a lint error and a failing test each make a run red",
+        "The log prints Node and pnpm versions equal to .nvmrc and packageManager",
+        "A second run restores the pnpm cache (log shows a cache hit) and is faster",
+        "ALLOW_LOCAL_SERVICES appears only in azure-pipelines/ci.yml",
+        ".github/workflows/* untouched, no new dependency",
+        "Record the CI durations in docs/guides/azure-devops.md"
+      ],
+      "tasks": [
+        "Install the Azure Pipelines GitHub App",
+        "Shared steps template",
+        "The CI pipeline",
+        "Create the pipeline in the UI",
+        "Prove the gates work (probe branches, never merged)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2.3-T05",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "Azure Repos one-way backup",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "ci/s2.3-t05-azure-repos-backup",
+      "commit": "ci(ci): add Azure Repos one-way backup pipeline",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "A push to GitHub main appears in the backup within 10 minutes with the same SHA",
+        "Tags are synced; the weekly run syncs all branches",
+        "A human push to the backup is rejected",
+        "A forced divergence fails the job and leaves backup history untouched (test once on a scratch branch)",
+        "No PAT is stored anywhere in GitHub",
+        "The restore rehearsal worked"
+      ],
+      "tasks": [
+        "Create the backup repository",
+        "Make it read-only for humans",
+        "The backup pipeline",
+        "Create the pipeline, then test",
+        "Restore rehearsal (do it once)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.3-T04",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "Azure Pipelines CD (staging, gated, off by default)",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "ci/s2.3-t04-azure-pipelines-cd",
+      "commit": "feat(config): add health endpoint",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "The ownership matrix is in the guide; each environment has one deployer",
+        "One merge to main creates exactly one staging deployment",
+        "A failed migration or failed health check stops the run",
+        "The approval gate blocks the deploy stage until approved",
+        "No secret in logs or in the repository; ALLOW_LOCAL_SERVICES absent from cd.yml",
+        "/api/health is 200, unauthenticated, no DB call, no sensitive data",
+        "Rollback runbook written and rehearsed"
+      ],
+      "tasks": [
+        "The ownership matrix (write it first, get it approved)",
+        "A health endpoint (decision D3)",
+        "Secrets (only in the restricted group)",
+        "Environments and approvals",
+        "The CD pipeline",
+        "Prove it (in this order)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.3-T06",
+      "sprint": "Sprint 2.3",
+      "featureSprint": "Sprint 2.3",
+      "title": "Documentation and end-to-end validation",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "Docs",
+      "branch": "docs/s2.3-t06-azure-devops-docs",
+      "commit": "docs(docs): document Azure DevOps delivery and validate end to end",
+      "source": "sprint-02.3-tutorial.md",
+      "criteria": [
+        "The scenario completes from a clean checkout with no manual fix-ups, with evidence stored",
+        "Exactly one deployment (or one skipped stage) for that merge; none from another path",
+        "pnpm check:agents and pnpm check are green",
+        "Every link in the guide resolves; every path exists with exact casing",
+        "A person who has not seen the project can follow the guide (dry read)"
+      ],
+      "tasks": [
+        "Finish the guide",
+        "Update the repository docs (decision D8)",
+        "The end-to-end scenario (record evidence in the guide)",
+        "Close the sprint"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.6-T01",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "PWA foundation & manifest",
+      "story": "",
+      "sp": null,
+      "priority": "P0",
+      "area": "PWA",
+      "branch": "feat/s2.6-t01-manifest",
+      "commit": "feat(ui): add Nexora web app manifest, icons and PWA env flags",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "Environment variables",
+        "Brand constants and icons",
+        "The manifest (typed route) and its test",
+        "Layout metadata"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2.6-T02",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Service worker infrastructure",
+      "story": "",
+      "sp": null,
+      "priority": "P0",
+      "area": "PWA",
+      "branch": "feat/s2.6-t02-service-worker",
+      "commit": "feat(config): add service worker build pipeline and kill switch",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "Dependency (approved, D1)",
+        "Worker sources",
+        "The build script",
+        "The worker itself",
+        "Wire it into the toolchain",
+        "Registration helper"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2.6-T04",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Caching & offline policy",
+      "story": "",
+      "sp": null,
+      "priority": "P0",
+      "area": "PWA",
+      "branch": "feat/s2.6-t04-cache-policy",
+      "commit": "feat(sec): add allow-list cache policy and offline page",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "The pure policy (the security heart of the sprint)",
+        "The standalone offline page",
+        "Clear on sign-out"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S2.6-T03",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Installation & network experience",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "PWA",
+      "branch": "feat/s2.6-t03-install-offline-update",
+      "commit": "feat(ui): add install prompt, offline banner and update toast",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "Pure helpers",
+        "Provider and hook",
+        "UI",
+        "Translations (add keys to both en.json and fr.json)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.6-T05",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Push notifications",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "PWA",
+      "branch": "feat/s2.6-t05-push",
+      "commit": "feat(db): add push_subscription table",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "Branch and dependencies",
+        "Generate the VAPID keys (once per environment)",
+        "Schema and migration",
+        "Service, transport, validation, actions",
+        "Worker handlers",
+        "UI"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.6-T06",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "PWA developer API & UI",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "PWA",
+      "branch": "feat/s2.6-t06-pwa-api",
+      "commit": "feat(ui): add PWA status page",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.6-T07",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Native-like capabilities",
+      "story": "",
+      "sp": null,
+      "priority": "P2",
+      "area": "PWA",
+      "branch": "",
+      "commit": "",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P2", "Optional"]
+    },
+    {
+      "id": "S2.6-T09",
+      "sprint": "Sprint 2.6",
+      "featureSprint": "Sprint 2.6",
+      "title": "Testing, security & documentation",
+      "story": "",
+      "sp": null,
+      "priority": "P1",
+      "area": "PWA",
+      "branch": "feat/s2.6-t09-tests-docs",
+      "commit": "docs(docs): add PWA guide, ADRs and e2e coverage",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": [
+        "Playwright spec",
+        "Security checklist",
+        "Documentation and ADRs",
+        "Kill-switch drill (do this once before launch)",
+        "Final gate and commit"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S2.6-T08",
+      "sprint": null,
+      "featureSprint": "Sprint 2.6",
+      "title": "Advanced offline",
+      "story": "",
+      "sp": null,
+      "priority": "P2",
+      "area": "PWA",
+      "branch": "",
+      "commit": "",
+      "source": "sprint-02.6-tutorial.md",
+      "criteria": [
+        "Branch merged through a pull request with all checks green",
+        "pnpm check passes"
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P2", "Deferred"]
+    },
+    {
+      "id": "S3-T01",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Magic link sign-in",
+      "story": "US-030",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t01-magic-link",
+      "commit": "feat(auth): add passwordless magic link sign-in",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; pnpm dev",
+        "/sign-in → Email me a sign-in link → enter an email → \"Check your email\"; the terminal prints the link.",
+        "Open the link → you land on /dashboard, signed in. A new email gets a user with email_verified = true and no password.",
+        "Open the same link in a private window → back on /sign-in with \"This link is invalid or expired.\"",
+        "Wait 5 minutes (or set expiresIn: 10 temporarily) → expired link rejected. Revert.",
+        "Set AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK=false in .env.local, restart, request a link for an unknown address → same \"Check your email\" screen, no email printed. Remove the override.",
+        "AUTH_MAGIC_LINK_ENABLED=false → the toggle button disappears.",
+        "/fr/sign-in shows French labels; the email subject is \"Votre lien de connexion\" when your browser has the French locale cookie."
+      ],
+      "tasks": [
+        "Every string of the sprint — in one patch",
+        "Environment flags",
+        "Email: template + sender",
+        "The send policy (testable, enumeration-safe)",
+        "The plugin (server + client)",
+        "OAuth/magic-link error messages on the sign-in page",
+        "The magic-link form and the sign-in panel",
+        "Tests: the policy and the whole link lifecycle"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T02",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Social provider registry (config-driven)",
+      "story": "US-031",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t02-provider-registry",
+      "commit": "feat(auth): add config-driven social provider registry and buttons",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip; pnpm dev",
+        "- With no provider variables: /sign-in shows no social section at all.",
+        "- Put GOOGLE_CLIENT_ID=x (without the secret) in .env.local → still no button, and the terminal warns about the half-configured provider.",
+        "- Add both (GOOGLE_CLIENT_ID=x, GOOGLE_CLIENT_SECRET=y) → a Continue with Google button appears; clicking it navigates to Google's consent screen with an invalid_client error (expected with fake credentials). Remove the fake values afterwards.",
+        "- /sign-in?error=account_not_linked → shows the translated \"already registered\" message."
+      ],
+      "tasks": [
+        "Environment (all optional)",
+        "The registry",
+        "Wire it into Better Auth",
+        "Buttons",
+        "Show them in the sign-in panel"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T03",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Google and GitHub end to end",
+      "story": "US-031",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "docs/s3-t03-google-github",
+      "commit": "docs(auth): document and manually verify google and github sign-in",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "Create a Google OAuth client and a GitHub OAuth app following the guide; put the values in .env.local; restart pnpm dev.",
+        "Walk through the manual acceptance checklist above with real accounts.",
+        "In Studio, check one social user: account.provider_id = 'google' (or github), access/refresh tokens stored.",
+        "Record the result in docs/roadmap/06-project-state.md (\"Google ✅ / GitHub ✅ tested on <date>\"). Keep the keys only in .env.local."
+      ],
+      "tasks": ["A helper that prints the exact redirect URIs to register", "The guide"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T04",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Facebook, X and Apple (config-ready)",
+      "story": "US-031",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Auth",
+      "branch": "feat/s3-t04-other-providers",
+      "commit": "feat(auth): add apple client secret generator and document provider limits",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test; pnpm apple:secret",
+        "With dummy Facebook/X/Apple values in .env.local, three extra buttons appear and the terminal shows no errors on boot; remove the dummy values after checking."
+      ],
+      "tasks": ["Generate Apple's client secret", "Limits to remember"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S3-T05",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Account linking policy and unlink guard",
+      "story": "US-031",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s3-t05-account-linking",
+      "commit": "feat(auth): restrict account linking to trusted providers and add connected accounts UI",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "Manual (needs Google or GitHub from S3-T03):",
+        "Account with email + password and the same verified email at Google → Continue with Google logs you into the same user (one row in user, two in account).",
+        "A user with only a Google account: Disconnect is disabled with the tooltip.",
+        "Add a password-less user (magic link) → connect GitHub → disconnect is disabled (only one account).",
+        "Takeover test (conceptual) — Facebook is _not_ trusted: if a Facebook sign-in arrives with an email that matches an existing account, it must not merge automatically (you get account_not_linked). Verify this once with a Facebook test user, or record it as…"
+      ],
+      "tasks": [
+        "The policy as data (testable)",
+        "Data for the Security page",
+        "Connect / disconnect UI"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S3-T06",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Passkeys: register and manage",
+      "story": "US-032",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t06-passkeys",
+      "commit": "feat(auth): add passkey registration and management with fresh-session guard",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Use Chrome or Edge on http://localhost:3000 (Windows Hello / a security key / phone):",
+        "Security → Passkeys → type a name → Add a passkey → the OS prompt appears → approve → the passkey is listed with its date.",
+        "Cancel the OS prompt → \"Passkey request cancelled.\" (no crash, nothing saved).",
+        "Rename it; delete it → confirmation by toast; the row disappears from Studio (passkey table).",
+        "Sign out, sign in, wait 11 minutes (or set SESSION_FRESH_SECONDS to 5 temporarily) → Delete now shows \"Please sign in again\" with a button. Revert the constant.",
+        "A browser without WebAuthn (or an old one) shows \"This browser doesn't support passkeys.\""
+      ],
+      "tasks": [
+        "Relying-party configuration (testable)",
+        "Plugin (server + client)",
+        "Schema + migration (sequential — nothing else open!)",
+        "\"Fresh sign-in\" for sensitive actions",
+        "Error keys with a per-feature fallback",
+        "Data, validation, action",
+        "UI"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T07",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Passkey sign-in (button + autofill)",
+      "story": "US-032",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t07-passkey-sign-in",
+      "commit": "feat(auth): add passkey sign-in with button and browser autofill",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check; pnpm dev",
+        "With a passkey from S3-T06: sign out → /sign-in → Sign in with a passkey → OS prompt → you're on /dashboard.",
+        "Click the Email field → the browser offers your passkey in the autofill list → pick it → signed in. (Chrome/Edge/Safari; Firefox support varies.)",
+        "Cancel the prompt → \"Passkey request cancelled.\" and the page remains usable.",
+        "A user without passkeys: the button shows, the prompt finds nothing → friendly error, other methods still work.",
+        "/fr/sign-in → \"Se connecter avec une clé d'accès\".",
+        "Studio: passkey.counter increases after each sign-in."
+      ],
+      "tasks": ["Button", "Autofill (\"conditional UI\")", "Offer the button in the panel"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T08",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Two-factor: schema and TOTP enrollment",
+      "story": "US-033",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s3-t08-totp-enroll",
+      "commit": "feat(auth): add two-factor schema and TOTP enrolment with backup codes",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Security → Two-factor → enter your password → Enable → a QR code and a manual key appear.",
+        "Scan with an authenticator app (or compute the code with the key in any TOTP tool) → enter the 6 digits → Verify and enable → the backup codes screen.",
+        "Copy and Download work; Done stays disabled until you tick \"I have saved…\".",
+        "Wrong code → \"That code is not valid…\" and 2FA stays off (Studio: user.two_factor_enabled = false).",
+        "After success: two_factor_enabled = true; the two_factor row's secret is not the base32 string.",
+        "Reload the page → status \"Enabled\" (the full manage UI arrives in S3-T10)."
+      ],
+      "tasks": [
+        "Env, plugin, client",
+        "Schema + migration",
+        "Small utilities",
+        "Components",
+        "Security snapshot + page card",
+        "Integration test: enrolment really works"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S3-T09",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Sign-in challenge and backup codes",
+      "story": "US-033",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s3-t09-mfa-challenge",
+      "commit": "feat(auth): add two-factor sign-in challenge with backup codes and attempt limits",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Sign out; sign in with your 2FA account's password → you land on /two-factor (not the dashboard). In DevTools open /dashboard manually → bounced to sign-in (no session yet).",
+        "Enter a wrong code → \"That code is not valid…\" and the field clears.",
+        "Type the right 6 digits → auto-submits → dashboard.",
+        "Sign in again → Use a backup code instead → enter one saved code → in. Try the same code again on a later sign-in → rejected.",
+        "Tick Trust this device → next sign-in on that browser skips the challenge for 30 days (clear cookies to test again).",
+        "Enter 6 wrong codes quickly (with AUTH_RATE_LIMIT=on) → \"Too many requests. Please slow down.\"",
+        "Passkey and magic-link sign-ins still work for this user (policy: see S3-T13).",
+        "/fr/two-factor is fully translated."
+      ],
+      "tasks": [
+        "Validation and rate-limit rules",
+        "The sign-in form hands over to the challenge page",
+        "The challenge forms",
+        "Integration tests — the contract"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S3-T10",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Disable 2FA, regenerate codes, trusted device, email OTP",
+      "story": "US-033",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t10-mfa-manage",
+      "commit": "feat(auth): add 2fa disable, backup code regeneration and optional email otp",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check; pnpm dev",
+        "Security (2FA enabled) → Regenerate backup codes → password → a new list; an old code no longer works at sign-in.",
+        "Disable two-factor → wrong password → error; right password → status switches back to the enrolment form; sign-in no longer asks for a code.",
+        "Set AUTH_EMAIL_OTP_ENABLED=true, restart: on /two-factor a Email me a code instead option appears → Send me a code → the terminal prints \"Your sign-in code\" with 6 digits → enter it → signed in. With the flag off the option is hidden and no email is…",
+        "\"Trust this device\": covered in S3-T09; confirm the 30-day behaviour once more after re-enabling 2FA."
+      ],
+      "tasks": [
+        "Email OTP flag + sender wiring",
+        "Email option in the challenge",
+        "Manage 2FA: regenerate codes and disable"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T11",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "The Security page, assembled",
+      "story": "US-034",
+      "sp": 5,
+      "priority": "P1",
+      "area": "Auth",
+      "branch": "feat/s3-t11-security-page",
+      "commit": "feat(account): assemble security page with checkup, passwordless hints and skeleton",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; pnpm dev",
+        "Security opens with the checkup (verified email ✓; the others ✗) and a progress bar. Enable a passkey and 2FA → the count climbs to 3/3.",
+        "A magic-link-only user (no password): the password card and the 2FA card show the hint instead of a form that would fail.",
+        "Reload with a throttled network (DevTools → Slow 3G) → the skeleton appears.",
+        "Keyboard only: you can tab through every card and operate every button; the progress bar has an accessible name.",
+        "/fr/dashboard/account/security is entirely French.",
+        "Delete the requireSession() line from this page → pnpm test fails (guard-coverage test). Restore it."
+      ],
+      "tasks": [
+        "Two extra strings",
+        "The score (pure function)",
+        "Presentational components",
+        "The page (final form)",
+        "Component tests (browser mode)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T12",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "E2E for advanced authentication",
+      "story": "US-035",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s3-t12-advanced-auth-e2e",
+      "commit": "test(e2e): cover magic link, passkeys, totp and social sign-in",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e; CI=1 pnpm e2e; pnpm exec playwright test e2e/auth-advanced.spec.ts --repeat-each=10 --workers=2",
+        "Run the passkey and 2FA tests 10 times to look for flakiness:",
+        "Expected: 100 % pass. If TOTP tests flake, check your machine clock sync (Windows: _Settings → Time → Sync now_). In CI the traces are uploaded on failure (playwright-report)."
+      ],
+      "tasks": ["Config: dummy provider credentials for the E2E server", "Helpers", "The specs"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S3-T13",
+      "sprint": "Sprint 3",
+      "featureSprint": "Sprint 3",
+      "title": "Hardening review",
+      "story": "US-035",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Auth",
+      "branch": "feat/s3-t13-auth-hardening",
+      "commit": "feat(auth): block magic links for 2fa users, redact 2fa material and document security policy",
+      "source": "sprint-03-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; CI=1 pnpm e2e",
+        "Manual: with a 2FA account, request a magic link → same \"Check your email\" screen, no email in the terminal and a security log line \"Magic link not sent: skip-mfa-user\"."
+      ],
+      "tasks": [
+        "Close the MFA bypass through magic links",
+        "Never log second-factor material",
+        "Review checklist (record the outcome of each in the PR description)",
+        "Security guide"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T01",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Organization plugin, schema and personal workspaces",
+      "story": "US-040",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t01-organizations",
+      "commit": "feat(org): add organization plugin, schema and personal workspaces",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip; pnpm db:reset && pnpm dev",
+        "Sign up a brand-new user and verify the email. In Studio: one organization (\"<name>'s workspace\") and one member row with role = 'owner'.",
+        "AUTO_CREATE_PERSONAL_ORG=false (restart) → a new user has no organization.",
+        "Make a user the sole owner of an organization with a second member (insert a member row in Studio) → Delete account now fails with \"You are the only owner…\" (the message is in the form error). Remove the extra member → deletion works and the empty…",
+        "pnpm db:reset → demo user owns the demo organization."
+      ],
+      "tasks": [
+        "Every string of the sprint — in one patch",
+        "Environment",
+        "Schema",
+        "Pure helpers (slugs and roles)",
+        "Queries (database-agnostic → testable on PGlite)",
+        "The plugin, the hooks, the client"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T02",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Create an organization",
+      "story": "US-040",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t02-create-org",
+      "commit": "feat(org): add organization creation with slug suggestion and availability check",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "/dashboard redirects to your workspace slug (it 404s until S4-T03 adds [orgSlug] — that's expected right now). For a user with no organization it lands on /dashboard/new-organization.",
+        "Type a name → the slug fills itself; edit the slug manually → it stops following the name.",
+        "Slug admin / ab / Mixed Case → translated errors. A slug that exists (e.g. demo) → \"already taken\" appears while typing.",
+        "Valid input → organization created; Studio shows the new organization + member(owner); the user's session.active_organization_id is set.",
+        "Create organizations until you hit ORG_CREATION_LIMIT_PER_USER → \"maximum number of organizations\"."
+      ],
+      "tasks": [
+        "Validation",
+        "Error keys and a debounce hook",
+        "The form",
+        "Data for the onboarding page",
+        "Pages"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T03",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "[orgSlug] routes, guard and organization switcher",
+      "story": "US-040",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t03-org-routes",
+      "commit": "feat(org): add org-scoped routes, membership guard and organization switcher",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "/dashboard → /dashboard/<your-slug> showing \"Welcome to <org>\" and your role.",
+        "The header switcher lists your organizations; choosing one navigates and (Studio) updates session.active_organization_id. /dashboard later returns to the last active one.",
+        "Tamper: open /dashboard/some-other-users-slug (use a slug from Studio that isn't yours) → a 404, identical to /dashboard/does-not-exist.",
+        "/dashboard/account/profile still works and keeps the sidebar.",
+        "Hamburger menu at 360 px shows the same links as the sidebar.",
+        "Signed out → every /dashboard/... URL redirects to sign-in with the callback."
+      ],
+      "tasks": [
+        "Membership lookup",
+        "The guard (full permission helpers arrive in S4-T07)",
+        "Org layout, overview and navigation"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T04",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Invitations: send and accept",
+      "story": "US-041",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t04-invitations",
+      "commit": "feat(org): add email invitations with accept page and onboarding list",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Use two browsers (or one + a private window):",
+        "As the demo user: Members → invite new@example.com as _member_ → the terminal prints the invitation email (link /accept-invitation/<id>).",
+        "Open the link signed out → \"You've been invited\" with sign-in / create-account buttons — and no organization name.",
+        "Create a _new_ account with that email (verify it) → /dashboard redirects to onboarding (no org if AUTO_CREATE_PERSONAL_ORG=false; otherwise they have a workspace) → the pending invitation appears → open it → Accept invitation → you land in the demo…",
+        "Open the invitation link as a different signed-in user → \"different email address\" notice, no way to accept.",
+        "Invite the same person twice → the first invitation is cancelled (setting cancelPendingInvitationsOnReInvite).",
+        "Invite an existing member → \"This person is already a member.\"",
+        "Use the link after expiresAt (edit the row in Studio to the past) → \"expired\". /fr/accept-invitation/<id> is fully translated, and the email subject is French when your locale cookie is fr."
+      ],
+      "tasks": [
+        "The email",
+        "Wire it in Better Auth",
+        "Queries for invitations",
+        "The accept page",
+        "Pending invitations on the onboarding page",
+        "The invite form (members page, first version)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T05",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Invitation lifecycle and the last-owner rule",
+      "story": "US-041",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t05-invitation-lifecycle",
+      "commit": "feat(org): add invitation resend/revoke and last-owner rules",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "Members shows pending invitations with role badge and an expiry date; an expired one shows \"Expired\".",
+        "Resend prints a fresh email; Revoke removes the row (Studio: status = 'canceled'); the old link then says \"This invitation is no longer valid.\"",
+        "Click Resend quickly 6 times with AUTH_RATE_LIMIT=on → \"Too many requests…\" (per-IP limit).",
+        "pnpm test — org-members.test.ts documents the owner rules; they're used by the member actions in S4-T12."
+      ],
+      "tasks": [
+        "The last-owner and \"who may manage whom\" rules (pure)",
+        "Pending invitations: expiry, resend, revoke",
+        "Tests for the account-deletion rule against the real plugin"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T06",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Access-control statements and roles",
+      "story": "US-042",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t06-permissions",
+      "commit": "feat(rbac): define access-control statements and roles, register on server and client",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip; pnpm dev; fetch('/api/auth/organization/invite-member', {; method: 'POST',",
+        "Sign in as the demo user and invite someone as _member_ → works (owner has invitation:create). Sign in as a plain member (S4-T04 flow) and call the invite endpoint from DevTools:",
+        "→ 403. The plugin enforces the roles you registered, even without our UI."
+      ],
+      "tasks": [
+        "The single source of truth",
+        "Register it on the server and the client",
+        "A first sanity test (the exhaustive matrix comes in S4-T08)",
+        "The matrix, documented"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T07",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Server authorization helpers",
+      "story": "US-042",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t07-authz-helpers",
+      "commit": "feat(rbac): add page and action authorization helpers with tests",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "Mutation check: in requirePermission change !hasPermission( to hasPermission( → the tests fail loudly. Revert."
+      ],
+      "tasks": ["Rewrite src/data/authz.ts", "Tests with mocks (no proxy, no real DB)"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T08",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Client permission hooks and the exhaustive matrix test",
+      "story": "US-042",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t08-client-permissions",
+      "commit": "feat(rbac): add org provider, Can component and exhaustive permission matrix test",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check",
+        "Mutation check: change 'project:delete': F to T for member in the matrix → fails; add a new action to statements → the \"row for EVERY permission\" test fails. Revert."
+      ],
+      "tasks": ["Provider, hook and <Can>", "The exhaustive matrix test", "Browser test for <Can>"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T09",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Tenant-scoped Project, tenantDb and the RLS spike",
+      "story": "US-043",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "feat/s4-t09-projects-tenantdb",
+      "commit": "feat(tenancy): add project resource, tenantDb repository, boundary test and RLS decision",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm db:reset && pnpm db:studio",
+        "Studio: project has 3 rows in demo's org and 2 in other-co's; pnpm db:seed twice creates no duplicates. Log in as other@example.com / Demo-Password-123 → /dashboard redirects to /dashboard/other-co."
+      ],
+      "tasks": [
+        "Schema + migration",
+        "The tenant-scoped repository",
+        "A rule that keeps it that way",
+        "Seed: two tenants, three users, a platform of examples",
+        "The RLS spike (time-box: 3 hours) — and the decision"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T10",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Projects CRUD",
+      "story": "US-043",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t10-projects-crud",
+      "commit": "feat(projects): add tenant-scoped project CRUD with permission-gated actions",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "As demo@example.com:",
+        "Projects lists 3 seeded projects; search \"mobile\" filters; with > 10 projects the pager works (?page=2).",
+        "New project → dialog → empty name shows the translated error → valid → you land on the project page.",
+        "Edit and save → toast; Delete → confirm → back to the list. As teammate@example.com (a _member_ of demo):",
+        "Can create/edit, but the project page shows no Delete button.",
+        "Tamper: copy a project id from other-co (Studio) and open /dashboard/demo/projects/<that id> → 404; the same id under /dashboard/other-co/... → 404 (not a member).",
+        "From DevTools, replay a delete request for a member (the server action returns FORBIDDEN) — the UI hiding was only cosmetic."
+      ],
+      "tasks": [
+        "Validation",
+        "Server Actions — the permission is part of the declaration",
+        "Components",
+        "Pages"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T11",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Organization settings",
+      "story": "US-044",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t11-org-settings",
+      "commit": "feat(org): add organization settings with guarded deletion",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "As demo@example.com (owner):",
+        "Settings → rename the organization → toast; the switcher shows the new name.",
+        "Change the URL name to an existing slug → \"already taken\"; to a valid new one → you are redirected to /dashboard/<new>/settings; the old URL is a 404.",
+        "As teammate@example.com (member) open /dashboard/demo/settings → bounced to the overview.",
+        "Create a throw-away organization, open Delete organization → the button stays disabled until the exact name is typed. Right after sign-in it succeeds; after 11 minutes (or set SESSION_FRESH_SECONDS to 5 temporarily) the dialog shows \"Please sign in again\".…",
+        "An admin (not owner) never sees the danger card; calling deleteOrganization from DevTools returns FORBIDDEN."
+      ],
+      "tasks": [
+        "Rename / change the URL name",
+        "Delete the organization — owner only, recent sign-in, typed name",
+        "The page"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T12",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Members management",
+      "story": "US-044",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t12-members",
+      "commit": "feat(org): add member management with owner safeguards and ownership transfer",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "As owner: change teammate's role to Admin → toast; role badge updates. Back to Member → works.",
+        "Try to demote yourself while you're the only owner → there's no select on your own row; Leave organization → \"An organization must keep at least one owner.\"",
+        "Transfer ownership → pick the teammate → (fresh session) succeeds: you become _Admin_, they become _Owner_. Run it with a stale session → \"Please sign in again\".",
+        "As that admin: the select offers only Member, owners/admins show a badge (no controls), Remove only on plain members. Invite form offers Member only.",
+        "As a member: no controls at all, no invitation sections — but the member list is visible.",
+        "DevTools replay of removeMember/updateMemberRole as a member or against an owner → FORBIDDEN / \"You are not allowed to manage this member.\""
+      ],
+      "tasks": ["Errors may carry their own message key", "Queries", "Server Actions", "The UI"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T13",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Platform admin: plugin, bootstrap and console",
+      "story": "US-045",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t13-admin-console",
+      "commit": "feat(admin): add platform admin plugin, bootstrap script and user console",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm db:reset && pnpm dev",
+        "Sign in as admin@example.com / Demo-Password-123 → /admin/users lists users; search \"alice\"/an email works; View opens a user.",
+        "Sign in as demo@example.com and open /admin/users → a 404 (not 403). Anonymous → redirected to sign-in.",
+        "As admin: Ban teammate with a reason → the teammate's open browser loses its session at the next request, and signing in shows \"This account has been suspended\". Unban → works again.",
+        "Set role admin on a user, check the console is now visible to them; you can't change your own role (no controls).",
+        "Bootstrap: sign up a real user, verify the email, then ADMIN_EMAILS=their@email pnpm admin:grant (🪟 cmd.exe: set ADMIN_EMAILS=their@email&& pnpm admin:grant) → \"✅ … is a platform admin\". Running it for an unverified or unknown address only warns.",
+        "ADMIN_REQUIRE_MFA=true (restart): an admin without 2FA is sent to the security page."
+      ],
+      "tasks": [
+        "Schema, plugin, client",
+        "Bootstrap: the first admin — by script, not by hook",
+        "The data layer for admins",
+        "Server Actions (ban, unban, revoke, role)",
+        "The console"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T14",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Impersonation, banner and the append-only audit log",
+      "story": "US-045",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Tenancy",
+      "branch": "feat/s4-t14-impersonation-audit",
+      "commit": "feat(admin): add impersonation with banner, blocked actions and append-only audit log",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm db:reset && pnpm dev",
+        "As admin@example.com → user page of demo@example.com → Impersonate → you land on the dashboard as Demo User with a yellow banner on every page.",
+        "While impersonating: Security → change password / delete account / enable 2FA → refused (\"Not available while impersonating\"). Normal browsing works.",
+        "Stop impersonating → back on the admin console as yourself.",
+        "Studio → audit_log: impersonation.start (actor = admin) and impersonation.stop (actor = impersonated user, impersonator_id = admin), plus the ban/unban/role events you triggered earlier.",
+        "In Studio try UPDATE audit_log SET action='x' or DELETE FROM audit_log → error: audit_log is append-only.",
+        "Try to impersonate another admin or yourself → refused. As a non-admin call startImpersonation from DevTools → FORBIDDEN.",
+        "The session expires on its own after 1 hour (impersonationSessionDuration)."
+      ],
+      "tasks": [
+        "The audit table — no foreign keys, no updates, no deletes",
+        "Writing audit events",
+        "Impersonation: actions with audit (replace src/actions/admin.ts)",
+        "The banner and the buttons",
+        "Sensitive actions are blocked while impersonating"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S4-T15",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "Tenant isolation integration tests",
+      "story": "US-046",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Tenancy",
+      "branch": "test/s4-t15-isolation",
+      "commit": "test(tenancy): add tenant isolation, membership and invitation integration tests",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test",
+        "Run the mutation experiment from above and keep the proof (pnpm test output) in the PR description."
+      ],
+      "tasks": ["Implement"],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S4-T16",
+      "sprint": "Sprint 4",
+      "featureSprint": "Sprint 4",
+      "title": "E2E: tenancy, RBAC and the admin console",
+      "story": "US-046",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s4-t16-tenancy-e2e",
+      "commit": "test(e2e): cover organizations, role restrictions, tenant tampering and the admin console",
+      "source": "sprint-04-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e; CI=1 pnpm e2e; pnpm exec playwright test e2e/tenancy.spec.ts e2e/admin.spec.ts --repeat-each=5 --workers=2",
+        "All green, 0 flakes in 5 repetitions. In CI, check the E2E job is still under 10 minutes; if not, shard (--shard) in Sprint 5."
+      ],
+      "tasks": ["Helpers", "The specs"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T01",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Storybook setup",
+      "story": "US-050",
+      "sp": 3,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "chore/s5-t01-storybook",
+      "commit": "chore(ui): add storybook with a11y, theme and locale switchers",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm storybook; pnpm build-storybook; pnpm check",
+        "- The Button stories render with Tailwind styles. Theme and Language switchers appear in the toolbar.",
+        "- Open the Accessibility panel: no violations.",
+        "🪟 If port 6006 is busy: pnpm storybook -- -p 6010."
+      ],
+      "tasks": [
+        "Main config",
+        "Stubs",
+        "Preview: global CSS, theme, language",
+        "Scripts and tool config",
+        "A first story to prove the pipeline"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T02",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Stories for the core UI (15+)",
+      "story": "US-050",
+      "sp": 2,
+      "priority": "P2",
+      "area": "UI",
+      "branch": "test/s5-t02-stories",
+      "commit": "test(ui): add 33 stories for forms, auth, account, layout and org components",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm storybook; pnpm build-storybook && pnpm check",
+        "- Count them: Button 5 + Fields 5 + Auth 5 + Account 4 + Layout 7 + Org 7 = 33 stories (≥ 15 ✓).",
+        "- Click through dark and Français on each; long text must wrap; no horizontal overflow at the \"Mobile\" viewport.",
+        "- The Accessibility panel shows 0 violations. If a violation is real (e.g. low contrast in dark mode), fix the component or theme token — only downgrade a story with parameters: { a11y: { test: 'todo' } } plus a comment and a TD- entry."
+      ],
+      "tasks": ["Forms", "Auth widgets", "Account and security", "Layout", "Organizations"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S5-T03",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Factories and a standard test \"world\"",
+      "story": "US-054",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s5-t03-factories-world",
+      "commit": "test: add organization factories, session helper and a standard multi-tenant world",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "world.test.ts takes a few seconds (six sign-ups + sign-ins with real password hashing). Note the duration in 06-project-state.md."
+      ],
+      "tasks": [
+        "Factories",
+        "Session helpers",
+        "The standard world",
+        "A test using the world (and proving it works)",
+        "Document it"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T04",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Isolated E2E stack and per-role sessions",
+      "story": "US-054",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s5-t04-e2e-personas",
+      "commit": "test(e2e): add isolated e2e stack, per-role sessions and persona fixtures",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e:reset; pnpm e2e",
+        "Terminal shows two servers starting (db:server on 5434, the app on 3100) — your own pnpm dev on 3000/5433 can keep running.",
+        "e2e/.auth/ now contains owner.json, orgAdmin.json, member.json, platformAdmin.json, world.json (git-ignored — double-check with git status).",
+        "e2e/rbac-ui.spec.ts passes in a few seconds (no sign-in UI).",
+        "ls local.e2e.db exists; local.db is untouched.",
+        "Measure: total pnpm e2e time vs your pre-sprint number; the persona spec should be ≥ 5× faster than the equivalent UI-sign-in flow. Record both in 06-project-state.md (target: suite ≥ 40 % faster once the older specs migrate).",
+        "CI=1 pnpm e2e also works (same servers; retries on)."
+      ],
+      "tasks": [
+        "The database server learns where to keep its data",
+        "One config for local and CI",
+        "Update the helpers that knew about the old ports",
+        "The global setup: one user per role, created through the app",
+        "Persona fixtures",
+        "A fast spec built on personas"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T05",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Visual regression harness",
+      "story": "US-051",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s5-t05-visual-harness",
+      "commit": "test(visual): add screenshot matrix for 8 pages across theme, language and viewport",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm e2e:reset; pnpm e2e:visual:update; pnpm e2e:visual; pnpm check",
+        "Open a few PNGs: home-fr-dark.png should be French on a dark background; projects-en-light.png shows \"Launch plan\".",
+        "Run again without :update:",
+        "Break something visible (e.g. change a button label in en.json), rerun → the affected tests fail and test-results/ contains *-expected.png, *-actual.png, *-diff.png. Revert.",
+        "Delete the generated images (rm -rf e2e/visual/__screenshots__) — the official baselines come from CI in the next ticket. 🪟 A Windows-made baseline would fail on every Linux run (and vice versa)."
+      ],
+      "tasks": ["A dedicated Playwright config", "Make pages deterministic", "The matrix"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T06",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Baselines produced in CI (Linux)",
+      "story": "US-051",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "ci/s5-t06-visual-baselines",
+      "commit": "ci(visual): add snapshot-update workflow, local guard and the first baselines",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: git add -A && git commit -m \"ci(visual): add workflow to regenerate baselines and a guard against local screenshots\"; git push -u origin ci/s5-t06-visual-baselines; gh pr create --fill --base main; gh label…",
+        "Merge the S5-T05 PR first. Then, in this PR: push the branch, open the PR, and add the label:",
+        "In the Actions tab, _Update visual snapshots_ runs (≈ 6–10 min) and pushes test(visual): update snapshots with 64 PNGs (32 per project).",
+        "Locally: git pull, then review the images in the PR's _Files changed_ (swipe through a few: dark mode, French, mobile).",
+        "Re-trigger the normal checks: git commit --allow-empty -m \"ci: re-run checks\" && git push; wait for green (the visual job itself arrives in S5-T09).",
+        "Guard test: git add any file under e2e/visual/__screenshots__ locally and try to commit → blocked by the hook (\"Visual baselines must come from CI\").",
+        "Merge the PR."
+      ],
+      "tasks": [
+        "The workflow",
+        "A guard against accidentally committing local screenshots",
+        "How to review baseline changes"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T07",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Coverage thresholds and Codecov",
+      "story": "US-052",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "test/s5-t07-coverage",
+      "commit": "test: enforce coverage thresholds with a ratchet and add codecov configuration",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test:coverage && pnpm coverage:summary && pnpm check",
+        "coverage/ is git-ignored (S0). Put the _before_ numbers next to the _floor_ you chose in 06-project-state.md."
+      ],
+      "tasks": [
+        "What counts as \"our code\"",
+        "Measure",
+        "Set the floor (just below what you measured)",
+        "Codecov configuration"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T08",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "CI: parallel jobs, caching and one required check",
+      "story": "US-053",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Testing",
+      "branch": "ci/s5-t08-parallel-ci",
+      "commit": "ci: run quality, tests, build and storybook in parallel behind a single required check",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "Open the PR and watch the Actions tab: Quality, Tests + coverage, Build, Storybook, Commit messages start together. CI OK turns green last.",
+        "Time it: compare against the baseline you noted at the start (goal: whole pipeline < 10 min, typically 5–7 once caches are warm; push an empty commit to see the warm-cache time).",
+        "Docs-only PR: create a branch that only edits a .md file → Changes reports code=false, the heavy jobs are _skipped_, CI OK is green in seconds.",
+        "Break something (lint error) in a throw-away PR → Quality fails → CI OK fails (so the merge button stays blocked). Close the PR.",
+        "Codecov: after merging to main (or on the PR), the Codecov comment shows the coverage diff; the badge in the README resolves."
+      ],
+      "tasks": [
+        "A reusable setup step",
+        "The workflow",
+        "Point branch protection at the single check"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S5-T09",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "E2E and visual jobs, build artifact, bundle budget, drift watch",
+      "story": "US-053",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Testing",
+      "branch": "ci/s5-t09-e2e-visual-jobs",
+      "commit": "ci: shard e2e, add visual job, reuse build artifact, enforce bundle budget and watch auth schema drift",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "Push the branch, open the PR: jobs Build → then E2E (shard 1/2), E2E (shard 2/2) and Visual regression start in parallel. The shards download the build instead of rebuilding.",
+        "Total time < 10 minutes (look at the _Summary_ page's timeline).",
+        "Fail one on purpose, each in a throw-away commit, and look at the artifact:",
+        "- break a visible style → Visual regression fails and visual-diffs contains the diff images;",
+        "- break an E2E expectation → the shard fails and playwright-report-shard-N has traces.",
+        "Increase the bundle (import a big library into the home page) → Build fails with \"The bundle grew by more than 10 %\". Revert.",
+        "Run the drift workflow once: _Actions → Auth schema drift → Run workflow_ (or pnpm auth:schema:check locally) → ✅ (or a readable list of missing columns).",
+        "CI OK is the only required check and goes green."
+      ],
+      "tasks": [
+        "A bundle-size budget",
+        "Build once, reuse everywhere",
+        "E2E (2 shards) and Visual jobs",
+        "Weekly schema-drift watch (advisory)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T10",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "i18n-check as a gate",
+      "story": "US-055",
+      "sp": 3,
+      "priority": "P1",
+      "area": "I18n",
+      "branch": "ci/s5-t10-i18n-check",
+      "commit": "ci(i18n): gate missing keys and invalid ICU messages, report unused keys",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm i18n:check; pnpm check",
+        "Mutation checks (revert after each):",
+        "Delete one key from fr.json → pnpm i18n:check fails naming the key; the Sprint-1 parity test fails too.",
+        "Break a message: \"Hello {name\" → fails with an ICU syntax error.",
+        "Push with the key missing → the pre-push hook blocks it. Push the same commit to a PR with the hook bypassed (LEFTHOOK=0) → CI's Quality job fails."
+      ],
+      "tasks": [
+        "Scripts",
+        "Fix what it finds",
+        "Where it runs",
+        "Unused keys: report, don't block"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S5-T11",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "The authorization matrix (real actions, real roles)",
+      "story": "US-056",
+      "sp": 3,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "test/s5-t11-authz-matrix",
+      "commit": "test(security): run every server action against every role and fail on unclassified actions",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/security",
+        "Expect ~110 assertions, all green. Now prove the suite has teeth — each of these must make it fail (revert after each):",
+        "In deleteProject (src/actions/projects.ts) change { project: ['delete'] } to { project: ['read'] } → deleteProject as memberA fails.",
+        "In getAdminOrThrow remove the isPlatformAdmin check → every platformOnly case fails for owners/members.",
+        "In src/actions/projects.ts add a new exported action export async function archiveProject() {…} → action-coverage.test.ts fails with _\"New action(s) without a security classification: archiveProject\"_.",
+        "In getOrgMembershipOrThrow return the membership without checking the user → outsider/ownerB cases fail.",
+        "Record the four \"it failed as expected\" results in the PR description."
+      ],
+      "tasks": [
+        "Shared mocks (only what must be faked: Next.js plumbing and the database module)",
+        "The registry: every action must be accounted for",
+        "The matrix"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S5-T12",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "IDOR, injection and mass-assignment regression tests",
+      "story": "US-056",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "test/s5-t12-idor-injection",
+      "commit": "test(security): add idor, mass-assignment, hostile-input and enumeration regression tests",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/security; pnpm test:timing; pnpm check",
+        "Mutation proofs (revert after each):",
+        "In tenant-db.ts remove inOrg from update's where → _\"cannot update … another organization’s project\"_ fails.",
+        "Remove .refine(noNullBytes, …) from projectSchema → the \\u0000 rows fail with INTERNAL.",
+        "In createProject's schema use .passthrough() and spread input into create → the mass-assignment test fails.",
+        "In src/actions/account.ts (revokeSession) drop the \"only the caller's own sessions\" lookup and revoke by id directly → the session-IDOR test fails."
+      ],
+      "tasks": [
+        "A real bug the tests will find",
+        "The suite",
+        "Timing sanity (opt-in — timing tests are noisy)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S5-T13",
+      "sprint": "Sprint 5",
+      "featureSprint": "Sprint 5",
+      "title": "Component-test gap closure",
+      "story": "US-057",
+      "sp": 5,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "test/s5-t13-component-tests",
+      "commit": "test(ui): add component tests for auth, org and account flows and raise coverage thresholds",
+      "source": "sprint-05-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test:browser && pnpm test:coverage && pnpm check",
+        "- No test uses setTimeout/sleeps (grep: git grep -n \"setTimeout\" -- 'src/**/*.test.tsx' → nothing). Use vi.waitFor or expect.element.",
+        "- Run the browser project 5 times to check for flakes: for i in 1 2 3 4 5; do pnpm test:browser || break; done (🪟 Git Bash).",
+        "- Mutation spot-checks (revert after each): in BackupCodes remove disabled={!saved} → the \"Done stays disabled\" test fails; in SignInForm drop the twoFactorRedirect branch → the 2FA test fails; in InviteMemberForm hard-code role: 'admin' → the default-role…"
+      ],
+      "tasks": [
+        "Find the gaps",
+        "Shared browser-test plumbing",
+        "Tests that pay for themselves",
+        "The rest of the checklist (same patterns — pick by uncovered lines)",
+        "Raise the bar"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T01",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Sentry (errors, release, optional by design)",
+      "story": "US-060",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s6-t01-sentry",
+      "commit": "feat(obs): add optional sentry error reporting for server, client and error boundaries",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm check:env; pnpm build",
+        "Without a DSN: pnpm dev, break something (temporarily throw new Error('test') in a page) → the error page appears, the terminal shows no Sentry output.",
+        "With a DSN in .env.local (NEXT_PUBLIC_SENTRY_DSN=… from your free Sentry project): restart, trigger the error again → the issue appears in Sentry within seconds: server errors (page throws), client errors (throw inside a useEffect of a client component)…",
+        "Remove the test throws."
+      ],
+      "tasks": [
+        "Environment (all optional)",
+        "Framework hooks",
+        "The adapter the app code uses",
+        "Use it where unexpected errors are caught",
+        "Build plugin: release + source maps (only when a token exists)"
+      ],
+      "tags": ["P1", "Optional"]
+    },
+    {
+      "id": "S6-T02",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Spotlight, scrubbing and source maps",
+      "story": "US-060",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s6-t02-sentry-scrub",
+      "commit": "feat(obs): scrub personal data from sentry events and add local spotlight debugging",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "With Spotlight running and NEXT_PUBLIC_SENTRY_SPOTLIGHT=true: throw an error in a page → it appears in the Spotlight UI with traces; sign in first, then throw inside a Server Action with the message \"Bad token=SECRET\" → in the event, SECRET is not visible,…",
+        "git grep -n \"Sentry.init\" src → exactly two places (server + client configs).",
+        "pnpm build still succeeds without the Sentry variables."
+      ],
+      "tasks": [
+        "The scrubber (pure, tested)",
+        "Spotlight: see events locally, without a Sentry account",
+        "Source maps in CI releases (only when the token exists)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T03",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Better Stack log sink",
+      "story": "US-061",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Observability",
+      "branch": "feat/s6-t03-betterstack",
+      "commit": "feat(obs): ship logs to better stack with a bounded, redacted, non-blocking batch sink",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "Without the two variables: pnpm dev → logs only in the terminal; no network calls (watch with LOG_LEVEL=debug).",
+        "With your Better Stack source (BETTER_STACK_SOURCE_TOKEN, BETTER_STACK_INGESTING_HOST in .env.local): submit the contact form → within a few seconds the line \"Contact form received\" appears in _Live tail_; a line with password in its properties shows…",
+        "Set a wrong token → the app keeps working (check the terminal: no stack traces from the sink).",
+        "Record the serverless caveat in 06-project-state.md: _\"TD-14 — log batches can be lost when a serverless function is frozen; use Better Stack's Vercel integration in production.\"_"
+      ],
+      "tasks": ["Environment", "A batching sink", "Plug it into the logger (only when configured)"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S6-T04",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Request correlation (one id across logs, Sentry and users)",
+      "story": "US-061",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s6-t04-request-id",
+      "commit": "feat(obs): propagate a request id through proxy, logs, sentry and user-facing references",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev",
+        "curl -i http://localhost:3000/ → header x-request-id: <uuid>; with -H \"x-request-id: my-trace-12345\" the same value is echoed; with -H \"x-request-id: bad value!\" a fresh id is generated.",
+        "Submit the contact form; the terminal's log lines for that action show the same requestId.",
+        "Make a Server Action fail unexpectedly (throw a plain Error in a handler): the UI shows Reference: <id>, the same id is on the log line and (with a DSN) on the Sentry event's tags.",
+        "An organization action's logs include orgId and userId."
+      ],
+      "tasks": [
+        "Helpers for the proxy (pure, tested)",
+        "Born in the proxy",
+        "Bind it to every log line (LogTape context)",
+        "Show the reference to people",
+        "How to trace one request (document it)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T05",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Arcjet adapter (optional, observe-first)",
+      "story": "US-062",
+      "sp": 3,
+      "priority": "P2",
+      "area": "Security",
+      "branch": "feat/s6-t05-arcjet-adapter",
+      "commit": "feat(sec): add optional arcjet adapter with dry-run mode and fail-open behaviour",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm check:env; pnpm build",
+        "protectRequest is exported but nothing calls it until S6-T06 — add src/libs/Arcjet.ts to Knip's temporary entry list if it complains."
+      ],
+      "tasks": [
+        "Environment",
+        "Interpreting a decision (pure → testable)",
+        "Where in the app each request belongs (pure)",
+        "The adapter"
+      ],
+      "tags": ["P2", "Optional"]
+    },
+    {
+      "id": "S6-T06",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Shield and bot detection in proxy.ts",
+      "story": "US-062",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Security",
+      "branch": "feat/s6-t06-arcjet-proxy",
+      "commit": "feat(sec): protect pages and auth endpoints with arcjet shield and bot detection in the proxy",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm e2e",
+        "No key: browse the app, run E2E — identical to before. curl -i localhost:3000/ still returns x-request-id.",
+        "With a key, DRY_RUN (ARCJET_KEY=… in .env.local, restart): browse normally → no blocks. Run a bot-like request: curl -A \"python-requests/2.0\" -i http://localhost:3000/ → still 200, but the terminal logs \"Arcjet DRY_RUN would block page /\".",
+        "ARCJET_MODE=LIVE (temporarily): the same curl now gets 403 Automated traffic is not allowed. while your browser keeps working. Revert to DRY_RUN.",
+        "Fail open: set ARCJET_KEY=invalid → requests still succeed and the log shows \"Arcjet failed — letting the request through\".",
+        "/api/health (next ticket) is reachable with any user-agent."
+      ],
+      "tasks": [
+        "Denied responses",
+        "The proxy, now protecting pages and auth endpoints",
+        "Check that nothing legitimate is blocked"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S6-T07",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Rate limits and email validation",
+      "story": "US-062",
+      "sp": 3,
+      "priority": "P2",
+      "area": "Security",
+      "branch": "feat/s6-t07-arcjet-limits",
+      "commit": "feat(sec): add per-ip and per-email rate limits and disposable email rejection via arcjet",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm e2e",
+        "With a real key (ARCJET_MODE=LIVE temporarily, dev server):",
+        "Sign up with a disposable address (e.g. test@mailinator.com) → the form shows \"Please use a valid, permanent email address.\" (HTTP 400, nothing created).",
+        "Per-address limit: request a password reset for the same address 6 times within an hour (use a fake IP header with curl -H \"x-forwarded-for: 1.2.3.4\" and a different one each time) → the 6th is 429, even though the IPs differ.",
+        "Per-IP limit: for i in $(seq 70); do curl -s -o /dev/null -w \"%{http_code} \" -X POST localhost:3000/api/auth/get-session; done → 429s after ~60.",
+        "Back to DRY_RUN: the same actions are allowed but logged as \"would block\".",
+        "Better Auth's own limits (S2/S3) still apply underneath — the two layers are independent."
+      ],
+      "tasks": [
+        "Reading the email from the body (carefully)",
+        "Rate limits and an email client",
+        "Tell users why a sign-up was refused"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S6-T08",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Health endpoint and Checkly monitoring-as-code",
+      "story": "US-064",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s6-t08-health-checkly",
+      "commit": "feat(obs): add health endpoint and checkly monitoring as code",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm dev && curl -i http://localhost:3000/api/health",
+        "200 with {\"status\":\"ok\",\"version\":\"…\",\"db\":\"ok\",\"time\":\"…\"} and Cache-Control: no-store.",
+        "Stop the DB (kill pnpm db:server) → the same URL answers 503 within ~1 s with db\":\"fail\" and nothing else. Restart the DB.",
+        "Health works with any user-agent and is not rate-limited (outside the proxy matcher).",
+        "(Optional, needs a Checkly account) npx checkly login → pnpm checkly:test runs both checks against CHECKLY_BASE_URL (use your local tunnel or deployed preview).",
+        "The new workflow is green on the PR _(it only prints the \"skipping\" message until secrets exist)_."
+      ],
+      "tasks": [
+        "The health check",
+        "Checkly: monitoring as code",
+        "Deploy checks from CI (only when the secrets exist)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T09",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Security headers",
+      "story": "US-065",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "feat/s6-t09-security-headers",
+      "commit": "feat(sec): add security headers with a tested definition and e2e coverage",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; CI=1 pnpm e2e",
+        "DevTools → Network → any document → Response Headers show the six headers (HSTS only on the production build).",
+        "Passkey registration/sign-in (e2e/auth-advanced.spec.ts) still passes — proof that Permissions-Policy didn't break WebAuthn.",
+        "Put the site in an <iframe> from another origin (use a local HTML file) → the browser refuses to render it.",
+        "securityheaders.com (on a deployed preview) — expect an A-ish grade; the CSP in S6-T11 gets it to A+ range."
+      ],
+      "tasks": [
+        "One tested definition",
+        "Apply it to every route",
+        "Prove it from a real browser's point of view"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S6-T10",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Cookie consent",
+      "story": "US-065",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "feat/s6-t10-consent",
+      "commit": "feat(privacy): add versioned cookie consent with gpc support and sentry replay gating",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check; pnpm dev; import { CONSENT_COOKIE, CONSENT_VERSION } from '../../src/libs/consent';; export const consentCookie = (baseURL: string, choice = { analytics: false,…",
+        "First visit (private window): the banner appears; no cookie named consent yet; DevTools → Network shows no third-party requests.",
+        "Reject → banner disappears, cookie consent has analytics:false; reload → no banner. Footer → Cookie settings reopens the dialog; toggle and save; the cookie changes.",
+        "Change CONSENT_VERSION to 2 → everyone is asked again. Revert.",
+        "Chrome with GPC on (or DevTools: Object.defineProperty(navigator,'globalPrivacyControl',{value:true}) before load via an extension) → no banner, analytics stays off; the dialog explains why.",
+        "/fr shows the French banner. Keyboard-only: tab to the three buttons; the dialog traps focus and closes with Esc.",
+        "Fix the E2E and visual suites — a fixed banner would cover buttons and appear in every screenshot. Give every browser context a stored \"denied\" choice:",
+        "📄 Create e2e/helpers/consent.ts:",
+        "📄 Edit e2e/fixtures.ts — in openAs after creating the context: await context.addCookies([consentCookie(baseURL!)]);, and in the auto fixture:",
+        "📄 Create e2e/consent.spec.ts:"
+      ],
+      "tasks": [
+        "Strings",
+        "The consent rules (pure, tested)",
+        "Provider, banner, settings",
+        "Mount it",
+        "Replay: only after consent, only when configured",
+        "Tests"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S6-T11",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Content-Security-Policy (report-only → enforce)",
+      "story": "US-065",
+      "sp": 2,
+      "priority": "P1",
+      "area": "Security",
+      "branch": "feat/s6-t11-csp",
+      "commit": "feat(sec): add two-tier nonce-based csp with report endpoint and e2e enforcement",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; CI=1 pnpm e2e",
+        "DevTools → Console on /sign-in, /dashboard/<org>, /contact: no CSP errors. Network → document → the header is Content-Security-Policy (E2E) or …-Report-Only (default dev).",
+        "Prove it blocks: in the console of a strict page run const s=document.createElement('script'); s.textContent='alert(1)'; document.body.append(s) → _Refused to execute inline script_ (and a report appears in the terminal log). On the relaxed tier it would…",
+        "CSP_MODE=report-only pnpm dev: same page loads, violations only logged.",
+        "Responses on strict pages contain <script nonce=\"…\">; view-source and confirm every inline script has the nonce.",
+        "Re-run pnpm e2e:visual — unchanged."
+      ],
+      "tasks": [
+        "Two tiers (and why)",
+        "The policy builder (pure, tested)",
+        "The report endpoint",
+        "Applied in the proxy",
+        "E2E: _no_ violations, with _every_ integration switched on",
+        "Rollout procedure (document it)"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T12",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Secret scanning",
+      "story": "US-065",
+      "sp": 1,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "ci/s6-t12-secret-scanning",
+      "commit": "ci(sec): add gitleaks config and hooks, codeql workflow and secret rotation guide",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "Local guard (if installed): create leak.txt containing a made-up AWS key: AKIAIOSFODNN7EXAMPLE and aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY → git add leak.txt && git commit -m \"test: leak\" → blocked (\"leaks found\"). Remove the file.",
+        "CI: push a throw-away branch containing that file → the Secret scan job fails. Delete the branch.",
+        ".env.example and the docs containing the dummy ci-only-secret-… values pass (allow-list).",
+        "The CodeQL job completes (first run takes a few minutes); alerts, if any, appear under _Security → Code scanning_.",
+        "Confirm GitHub Push protection is on (try pushing the fake key from a test branch — GitHub rejects it)."
+      ],
+      "tasks": [
+        "gitleaks configuration",
+        "Local guard (optional, automatic if installed)",
+        "CI: scan the whole history, and CodeQL",
+        "GitHub's own protection (settings, not code)",
+        "What to do when a secret leaks"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S6-T13",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "PostHog analytics, strictly after consent",
+      "story": "US-063",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "feat/s6-t13-posthog",
+      "commit": "feat(analytics): add consent-gated posthog with first-party proxy, typed client and server helpers",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check && pnpm e2e",
+        "With a real PostHog key and the dev server: DevTools → Network, filter ingest. Before clicking anything: nothing. Accept all → requests to /ingest/... (same origin) and events in PostHog's _Live events_ (pageviews with paths only).",
+        "Navigate to /reset-password?token=abc → in PostHog the pageview URL has no ?token=.",
+        "Cookie settings → untick Analytics → Save → no more /ingest/e/ requests; localStorage/cookies named ph_* are cleared by reset().",
+        "NEXT_PUBLIC_POSTHOG_KEY unset → the app behaves identically, banner still works.",
+        "CSP: the earlier csp.spec.ts \"all integrations active\" test still passes."
+      ],
+      "tasks": [
+        "Environment and the reverse proxy",
+        "The client wrapper (the ONLY place that talks to posthog-js)",
+        "React side: provider + pageviews",
+        "Server-side events — with the same consent rule",
+        "E2E: the network tells the truth"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S6-T14",
+      "sprint": "Sprint 6",
+      "featureSprint": "Sprint 6",
+      "title": "Typed events and identity",
+      "story": "US-063",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Observability",
+      "branch": "feat/s6-t14-events-identify",
+      "commit": "feat(analytics): add typed events, consent-aware identify and reset, and privacy docs",
+      "source": "sprint-06-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm check && pnpm e2e",
+        "Accept analytics → sign up, sign in, create an organization, invite someone, create a project → PostHog _Live events_ shows user_signed_up, user_signed_in, org_created, member_invited, project_created, linked to a user id (no email anywhere in the properties).",
+        "Sign out → the next action in the same browser is anonymous again (new distinct id).",
+        "Decline analytics → none of these appear, including the server-side project_created.",
+        "Impersonate someone (S4) → no events attributed to either person.",
+        "Try trackEvent('org_created', { via: 'form', email: 'x' }) → pnpm typecheck fails."
+      ],
+      "tasks": [
+        "Identify (when allowed) and reset (always)",
+        "Send the typed events where they happen",
+        "A guard against \"creative\" tracking",
+        "Privacy documentation"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S7-T01",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Marketing pages",
+      "story": "US-070",
+      "sp": 3,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s7-t01-marketing-pages",
+      "commit": "feat(marketing): add home, pricing and about pages with brand config in en/fr",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm typecheck && pnpm lint && pnpm knip && pnpm i18n:check; pnpm build",
+        "The build output lists /, /pricing, /about (and /fr/...) as static (○ / ●), not dynamic (ƒ). If one is dynamic you read headers()/cookies() somewhere in the tree — find and remove it.",
+        "pnpm dev: /, /pricing, /about look right at 360 / 768 / 1280 px, light and dark; /fr is entirely French (no English leftovers, FAQ uses the brand name).",
+        "FAQ opens and closes without JavaScript (disable JS in DevTools to prove it) and with the keyboard (Tab → Enter/Space).",
+        "Disable the network cache and check _Network → JS_: the home page loads no page-specific client code beyond the providers."
+      ],
+      "tasks": [
+        "A small brand config (completed in S7-T13)",
+        "Copy (English)",
+        "Sections (server components, no client JavaScript)",
+        "The pages",
+        "Navigation"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T02",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Contact form that works, and legal templates",
+      "story": "US-070",
+      "sp": 2,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s7-t02-contact-legal",
+      "commit": "feat(marketing): send contact messages with honeypot and rate limit, add legal page templates",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm build; pnpm dev",
+        "/contact: submit the form → the terminal prints the support email (Reply-To is the visitor). Invalid input shows translated errors.",
+        "DevTools: edit the DOM to type text into the invisible website field and submit → success toast, no email printed, a security log line \"Contact honeypot triggered\".",
+        "With ARCJET_KEY + ARCJET_MODE=LIVE temporarily: the 6th submission within an hour from one IP is blocked (429); revert.",
+        "/terms, /privacy, /cookies (and /fr/...): notice on top, sections, \"Cookie settings\" opens the dialog on the cookie page. They're static in pnpm build output."
+      ],
+      "tasks": [
+        "Email building blocks",
+        "The action sends a real message",
+        "A rate limit specific to the contact form",
+        "Legal templates"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T03",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Metadata: titles, canonical, hreflang, Open Graph",
+      "story": "US-071",
+      "sp": 2,
+      "priority": "P0",
+      "area": "SEO",
+      "branch": "feat/s7-t03-metadata",
+      "commit": "feat(seo): add metadata helper with canonical, hreflang, open graph and indexing control",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm build",
+        "View-source on /pricing and /fr/pricing: unique <title>, <meta name=\"description\">, <link rel=\"canonical\"> pointing at itself, <link rel=\"alternate\" hreflang=\"en|fr|x-default\"> (3 entries), og:*, twitter:*. <meta name=\"robots\" content=\"noindex\"> while…",
+        "SITE_INDEXING=true pnpm build && pnpm start → public pages say index, follow; /terms (legal) still noindex (LEGAL_NOINDEX=true); /sign-in, /dashboard/* always noindex.",
+        "The browser tab shows the generated icon; /manifest.webmanifest is valid JSON.",
+        "[Google's Rich Results / Facebook Sharing Debugger / opengraph.xyz] on a deployed preview show the title and description (the image arrives in S7-T05)."
+      ],
+      "tasks": [
+        "Environment",
+        "One helper builds everything (pure → testable)",
+        "Translated titles/descriptions, one wrapper",
+        "Root layout, app areas, icons, manifest"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S7-T04",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "JSON-LD structured data",
+      "story": "US-071",
+      "sp": 1,
+      "priority": "P2",
+      "area": "SEO",
+      "branch": "feat/s7-t04-json-ld",
+      "commit": "feat(seo): add safe json-ld for organization, website, software and faq",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm build",
+        "View-source of / → several <script type=\"application/ld+json\"> blocks; copy one into <https://validator.schema.org> (or Google's Rich Results Test on a deployed preview): no errors; FAQ rich result is eligible.",
+        "/fr: the FAQ JSON-LD is in French and identical in content to the visible FAQ.",
+        "Browser console: no CSP errors (the data blocks aren't executed).",
+        "Set a brand name containing </script> in NEXT_PUBLIC_APP_NAME → the page still renders (escaping works). Revert."
+      ],
+      "tasks": ["Builders and a safe serializer", "Use them"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S7-T05",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "OG images, sitemap and robots",
+      "story": "US-071",
+      "sp": 2,
+      "priority": "P1",
+      "area": "SEO",
+      "branch": "feat/s7-t05-og-sitemap-robots",
+      "commit": "feat(seo): add generated og images, sitemap with hreflang and indexing-aware robots",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm e2e",
+        "/opengraph-image-… (copy the URL from og:image) opens a 1200×630 card in English; the /fr version shows the French title.",
+        "/robots.txt and /sitemap.xml look right with SITE_INDEXING=true; with it false robots says Disallow: / and the sitemap is empty.",
+        "Paste a deployed preview URL into LinkedIn/Slack/Discord to see the card (needs the image to be public).",
+        "Re-baseline the visual suite (new home, pricing, about, footer links): add the update-snapshots label on this PR, review the diffs, then re-run CI."
+      ],
+      "tasks": [
+        "Which pages are public (one list)",
+        "Sitemap and robots builders (pure)",
+        "Open Graph / Twitter images",
+        "End-to-end proof of the whole SEO surface"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T06",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Crowdin translation sync",
+      "story": "US-072",
+      "sp": 2,
+      "priority": "P2",
+      "area": "I18n",
+      "branch": "ci/s7-t06-crowdin",
+      "commit": "ci(i18n): add crowdin config, sync workflow and translation lifecycle docs",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check",
+        "The new config test passes; change /src/locales/%two_letters_code%.json in crowdin.yml to something wrong → it fails. Revert.",
+        "Workflow file lints (gh workflow view crowdin.yml), and on the PR it only prints the \"not configured\" line (no secrets yet) — green.",
+        "_(Optional, needs a Crowdin account)_ create a project, add the two secrets, run the workflow manually: a PR appears. Corrupt a placeholder in Crowdin ({email} → {mail}) and approve it → the PR's Quality job fails on i18n:check. That's the guard working."
+      ],
+      "tasks": ["Crowdin configuration", "The workflow", "Document the whole i18n lifecycle"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S7-T07",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Loading skeletons and empty states",
+      "story": "US-073",
+      "sp": 3,
+      "priority": "P2",
+      "area": "UI",
+      "branch": "feat/s7-t07-loading-empty",
+      "commit": "feat(ui): add skeleton loading states, empty states and a single toast helper",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check && pnpm e2e; pnpm storybook",
+        "DevTools → Network → Slow 3G (or _Fast 3G_) and open /dashboard/<org>/projects: a skeleton of the same shape appears instantly, then the content replaces it without the page jumping.",
+        "Screen reader/inspector: the skeleton region is role=\"status\" with a single \"Loading…\" announcement.",
+        "A new account sees the empty state with a working Create a project button (only for roles allowed to create).",
+        "Search for a nonsense term in projects → \"No results … Nothing matches “xyz”\".",
+        "git grep \"from 'sonner'\" src → only notify.ts and ui/sonner.tsx.",
+        "Storybook shows 4 new states, with 0 a11y violations."
+      ],
+      "tasks": [
+        "Strings",
+        "Reusable pieces",
+        "Use EmptyState where lists can be empty",
+        "One place for toasts",
+        "Stories and tests"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S7-T08",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Lighthouse CI and a measured baseline",
+      "story": "US-074",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Observability",
+      "branch": "ci/s7-t08-lighthouse",
+      "commit": "ci(perf): add lighthouse ci with a reproducible production run and recorded baseline",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check; pnpm lighthouse",
+        "The run ends with a table of assertions (warnings are fine now); .lighthouseci/ holds HTML reports — open one and look at the _Opportunities_: these are your S7-T09 to-do list.",
+        "Servers are cleaned up (nothing left on 3100/5434: netstat -ano | findstr :3100 empty).",
+        "CI: the Lighthouse job is green and the artifact contains the reports.",
+        "The Baseline table is filled in and committed."
+      ],
+      "tasks": [
+        "Share the E2E environment",
+        "One script runs the whole thing (Windows-safe)",
+        "The assertions — as warnings first",
+        "Record the baseline",
+        "CI job"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T09",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Performance tuning (measure → change → measure)",
+      "story": "US-074",
+      "sp": 5,
+      "priority": "P1",
+      "area": "SEO",
+      "branch": "perf/s7-t09-tuning",
+      "commit": "perf: lazy-load analytics, toaster, consent dialog and mobile menu, and enforce lighthouse budgets",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check && pnpm e2e && pnpm lighthouse",
+        "pnpm lighthouse ends with no assertion errors: performance ≥ 95 on /, /fr, /pricing; LCP ≤ 2.5 s, CLS ≤ 0.05, TBT ≤ 200 ms; JS within budget.",
+        "Before/after table in the docs shows a real improvement from the lazy-loading changes (initial JS down by tens of KB).",
+        "Analytics still works after consent (E2E analytics.spec.ts green): the library downloads at the moment of \"Accept all\" (Network tab).",
+        "The consent banner and the mobile menu still work with keyboard and screen reader; toasts still appear.",
+        "CI's Lighthouse job is now blocking: make a throw-away change that adds a large import to the home page → the job fails. Revert."
+      ],
+      "tasks": [
+        "Don't download analytics code for people who said no",
+        "Lazy-load what isn't needed on first paint",
+        "Fonts without layout shift or extra downloads",
+        "Measure again — and decide about Sentry",
+        "Turn warnings into errors, set the budget from the measurement"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T10",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Verify the production output, evaluate the React Compiler",
+      "story": "US-075",
+      "sp": 2,
+      "priority": "P1",
+      "area": "SEO",
+      "branch": "perf/s7-t10-build-output",
+      "commit": "perf: verify minification, cache busting and compression in e2e and record the react compiler decision",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && CI=1 pnpm e2e",
+        "e2e/build-output.spec.ts is green; sabotage it to prove it bites: set productionBrowserSourceMaps: true in next.config.ts, rebuild → _\"must not reference a source map\"_ fails. Revert.",
+        "curl -I -H \"accept-encoding: gzip\" http://localhost:3100/_next/static/chunks/<file>.js shows content-encoding: gzip and cache-control: public, max-age=31536000, immutable.",
+        "The compiler table is filled in and the decision applied; pnpm lighthouse still passes."
+      ],
+      "tasks": [
+        "Prove what we ship: minified, hashed, compressed, cacheable, no leaks",
+        "The React Compiler: measure, then decide"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S7-T11",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Accessibility (WCAG 2.2 AA)",
+      "story": "US-076",
+      "sp": 3,
+      "priority": "P0",
+      "area": "UI",
+      "branch": "feat/s7-t11-a11y",
+      "commit": "feat(a11y): add skip link, reduced motion, axe e2e gate and token contrast tests",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check && pnpm e2e",
+        "pnpm e2e e2e/a11y.spec.ts — green. If it reports violations, fix the component (label, contrast, heading order, landmark…), not the test. Anything that truly can't be fixed this sprint gets a one-line exclusion in the test (.exclude('selector')) plus a TD-…",
+        "Proof the contrast test bites: set --muted-foreground: oklch(0.8 0 0) in the light theme → _muted-foreground on background ≥ 4.5:1_ fails. Revert.",
+        "Walk through the manual checklist once with NVDA/VoiceOver and write findings into docs/guides/accessibility.md → _Known issues_.",
+        "Press Tab on any page: the skip link appears at the top-start corner; Enter jumps to #main."
+      ],
+      "tasks": [
+        "A skip link, reduced motion, and a reliable #main",
+        "Contrast, calculated from the real tokens",
+        "axe in the E2E suite",
+        "The human part"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S7-T12",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "RTL readiness",
+      "story": "US-077",
+      "sp": 2,
+      "priority": "P2",
+      "area": "I18n",
+      "branch": "feat/s7-t12-rtl",
+      "commit": "feat(i18n): make the layout rtl-ready with logical properties, direction provider and a forced-rtl review run",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm check; pnpm e2e:rtl",
+        "pnpm e2e:rtl is green: every page is dir=\"rtl\", no horizontal overflow at 1280 and 360 px, the header mirrored.",
+        "Look at it: run NEXT_PUBLIC_FORCE_DIR=rtl pnpm dev (🪟 set NEXT_PUBLIC_FORCE_DIR=rtl&& pnpm dev) and click through home, sign-in, dashboard, a dropdown and a dialog: text aligns right, the sidebar/menus appear on the correct side, chevrons point the right…",
+        "Add className=\"ml-2\" to a component → the logical-properties test fails with the file and line; revert.",
+        "Storybook's _Direction_ toolbar flips the stories.",
+        "Remember to run the normal pnpm e2e afterwards — it rebuilds in LTR (the RTL flag was only in that process's environment)."
+      ],
+      "tasks": [
+        "Direction as data",
+        "A guard against physical properties",
+        "Prove it with a forced-RTL run",
+        "Storybook gets a direction switch",
+        "Document the recipe"
+      ],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S7-T13",
+      "sprint": "Sprint 7",
+      "featureSprint": "Sprint 7",
+      "title": "Final theme and one brand config",
+      "story": "US-078",
+      "sp": 3,
+      "priority": "P1",
+      "area": "UI",
+      "branch": "feat/s7-t13-theme-brand",
+      "commit": "feat(theme): finalise minimalist tokens with accent presets, logo and a single brand config",
+      "source": "sprint-07-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm test:browser && pnpm check && pnpm build",
+        "NEXT_PUBLIC_ACCENT=blue pnpm dev → buttons, focus rings and links turn blue in light and dark; green likewise; neutral is the monochrome default.",
+        "Contrast tests green for all 8 combinations; the visible input borders are noticeably firmer than the default shadcn (that's WCAG 1.4.11 at work).",
+        "Rename the product via .env.local only → header, footer, titles, emails, OG image, manifest, JSON-LD and legal pages all show the new name (and nothing shows the old one).",
+        "Re-run the axe E2E spec: still zero blocking violations. Toggle theme: persists across reloads.",
+        "Open the PR and add the update-snapshots label: review the new baselines (home, pricing, about, footer, borders) — they should look deliberate, not accidental — then push the empty \"re-run checks\" commit."
+      ],
+      "tasks": [
+        "Tokens in their own file",
+        "Accent switch and layout wiring",
+        "A logo, used everywhere",
+        "One brand, enforced",
+        "The ten-minute rebrand drill"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T01",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Semantic Release configuration",
+      "story": "US-080",
+      "sp": 3,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "ci/s8-t01-semantic-release",
+      "commit": "ci(release): add semantic release configuration and release guide",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check",
+        "git tag -l 'v*' is empty; git tag -l 'milestone/*' lists the bookmarks (and they are on GitHub).",
+        "The dry run reports sensible versions for feat, fix, perf, feat! (try each with a throw-away empty commit) and _no release_ for docs/chore/docs(readme).",
+        "pnpm format:check still passes after the first real changelog is created (you'll confirm in S8-T02)."
+      ],
+      "tasks": [
+        "Free the version namespace",
+        "The configuration",
+        "Keep the formatter and Knip out of the way",
+        "Release rules, written down",
+        "Prove the rules without publishing anything"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S8-T02",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "The release workflow",
+      "story": "US-080",
+      "sp": 2,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "ci/s8-t02-release-workflow",
+      "commit": "ci(release): publish releases automatically after ci succeeds",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "v1.0.0-rc.1 exists as a pre-release on GitHub with generated notes; CHANGELOG.md on rc has a 1.0.0-rc.1 section.",
+        "A subsequent docs: merge to main produces no release.",
+        "Push a commit to main while a CI run is in progress → the older run's _Release_ step prints \"Branch moved on\" and does nothing (the newer run decides).",
+        "pnpm format:check is green on the rc branch after the changelog was committed."
+      ],
+      "tasks": [
+        "A token that can push (outside the repository — do this once)",
+        "CI also runs on the pre-release branches",
+        "The workflow",
+        "Hooks for later tickets (nothing to do yet)",
+        "Rehearse the first pre-release (safe, reversible)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S8-T03",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "README and root documents",
+      "story": "US-082",
+      "sp": 2,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "docs/s8-t03-readme",
+      "commit": "docs: rewrite the readme with postgres-first statement and add license, contributing, security and conduct files",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check",
+        "The README renders correctly on GitHub; every link in it resolves (the link checker arrives in S8-T05).",
+        "The PostgreSQL-first statement is in the first screen of the README.",
+        "Follow the Quick start literally in a fresh folder (git clone … /tmp/clean && cd /tmp/clean): time it; write the result in 06-project-state.md (target ≤ 5 min).",
+        "LICENSE, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md exist; GitHub's _Community Standards_ page (Insights → Community) shows them all green."
+      ],
+      "tasks": [
+        "Screenshots made by a script (so they never go stale)",
+        "The README",
+        "Root documents"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T04",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Guides, part 1: start, environment, database, auth",
+      "story": "US-082",
+      "sp": 3,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "docs/s8-t04-guides-1",
+      "commit": "docs: add generated environment reference and getting started, database and auth guides",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm docs:env && pnpm docs:check-env && pnpm test tests/scripts && pnpm check",
+        "environment.md lists every variable of Env.ts; add a fake variable to Env.ts without a description → docs:check-env fails; add the description but forget pnpm docs:env → it fails with \"out of date\".",
+        "Follow getting-started.md in a clean checkout, on a machine that has never run the project: note every hiccup and fix the guide.",
+        "database.md's expand/contract table matches what you'd tell a new teammate."
+      ],
+      "tasks": ["The environment documentation generator", "The guides"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T05",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Guides, part 2, and verification by script",
+      "story": "US-082",
+      "sp": 3,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "docs/s8-t05-guides-2",
+      "commit": "docs: complete the guides, verify commands and links in ci and time the quick start",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check",
+        "Break a doc (pnpm doesnotexist) → docs:check-commands names the file and line. Fix it.",
+        "Open the PR: _Links_, _Env table and commands_ and _README quick start_ are green; the last one prints the elapsed seconds (target well under 5 minutes of the roadmap's budget, install dominated).",
+        "docs/guides/ has every guide of the table above; each is linked from the README; lychee finds no broken link.",
+        "Clean-clone results recorded for at least two operating systems."
+      ],
+      "tasks": [
+        "Don't let the docs invent commands",
+        "Guides to write",
+        "Verify links automatically, and the quick start from scratch",
+        "The human verification: a clean clone on other machines"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T06",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Vercel + Neon deployment and the email domain",
+      "story": "US-084",
+      "sp": 3,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "ci/s8-t06-deployment-setup",
+      "commit": "ci(deploy): add vercel build script, preview url fallback, unpooled migrations and deployment guide",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test && pnpm docs:check && pnpm check && pnpm build",
+        "With NEXT_PUBLIC_APP_URL unset and NEXT_PUBLIC_VERCEL_URL=my-preview.vercel.app, pnpm build (or the unit test) yields https://my-preview.vercel.app; locally nothing changes.",
+        "Open a pull request: Vercel comments with a preview URL; the preview works (sign-up verification email is printed in Vercel's function logs because EMAIL_TRANSPORT=console); a Neon branch preview/<branch> appears and is seeded once (redeploy → _\"Database…",
+        "Production variables are set; vercel env pull matches the checklist.",
+        "Email: all templates tested, DNS records verified, mail-tester score recorded.",
+        "Merging this PR does not change production (the pipeline arrives in the next ticket)."
+      ],
+      "tasks": [
+        "The app URL must follow the deployment",
+        "vercel.json and a build script that knows the environment",
+        "Create the services (dashboards — once)",
+        "Email domain (Resend)",
+        "Custom domain, HTTPS, HSTS",
+        "The deployment guide"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S8-T07",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "The deploy pipeline: migrate, smoke test, promote, roll back",
+      "story": "US-084",
+      "sp": 2,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "ci/s8-t07-deploy-pipeline",
+      "commit": "ci(deploy): add gated production pipeline with migration lint, smoke test, promote and preview cleanup",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/scripts && pnpm check",
+        "Open the PR: _Quality_ now runs check:migrations; the workflow files lint (gh workflow list).",
+        "First real deploy (after merging): merge a small fix: PR → CI → _Release_ creates v1.0.0 → _Deploy_ starts and waits for approval → approve → migrate, deploy, smoke test ({\"status\":\"ok\",\"version\":\"1.0.0\"…}), promote → the live site reports 1.0.0 at…",
+        "Break it on purpose (a throw-away tag on a branch you can delete, e.g. dispatch with a tag whose smoke test fails): the job stops before _Promote_; https://your-domain/ still serves the previous version.",
+        "Rollback and database-restore timings are in the rehearsal log."
+      ],
+      "tasks": [
+        "A lint for dangerous migrations",
+        "The deploy workflow",
+        "Clean up preview databases when a PR closes",
+        "The rehearsal (do it — it is the point of the ticket)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S8-T08",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "CodeRabbit, templates, CODEOWNERS, Dependabot, rules as code",
+      "story": "US-081",
+      "sp": 3,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "chore/s8-t08-governance",
+      "commit": "chore: add coderabbit config, templates, codeowners, grouped dependabot with patch auto-merge and rulesets as code",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm check",
+        "Open the PR: CodeRabbit posts a summary and path-aware comments (try touching src/data/ in a throw-away commit to see its security instructions at work).",
+        "_New issue_ shows the two forms, no blank issue, and the security link; _New pull request_ is pre-filled with the checklist.",
+        "Dependabot: _Insights → Dependency graph → Dependabot_ shows the groups; a patch PR (or run _Check for updates_) auto-merges once CI OK is green; a minor PR waits for you.",
+        "gh api repos/{owner}/{repo}/rulesets lists the one main ruleset; pushing directly to main as a non-admin is rejected; the release bot (admin PAT) can still push."
+      ],
+      "tasks": [
+        "CodeRabbit (AI review that knows our rules)",
+        "Pull-request and issue templates",
+        "Owners and dependency updates",
+        "Branch protection as code"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T09",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "The template init script",
+      "story": "US-083",
+      "sp": 3,
+      "priority": "P1",
+      "area": "Tooling",
+      "branch": "feat/s8-t09-init-template",
+      "commit": "feat(tooling): add idempotent init-template script with dry run",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/scripts; git worktree add ../init-test && cd ../init-test; pnpm install; pnpm init:template --dry-run --yes --name \"Acme Cloud\" --repo https://github.com/acme/cloud --accent blue",
+        "Try it on a throw-away copy (never on your working tree):",
+        "Header, footer, titles, emails and the manifest say Acme Cloud; buttons are blue (accent).",
+        "README.md has the new title/description and links to acme/cloud; LICENSE, CODEOWNERS, the issue-template link and SECURITY.md carry the new owner.",
+        ".env.local has a unique secret; running again keeps it.",
+        "--fresh-git asks for confirmation (typing reset) and leaves a single \"initial commit\" (try it only in the throw-away copy)."
+      ],
+      "tasks": ["The pure part", "The command"],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T10",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Strip optional modules",
+      "story": "US-083",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Tooling",
+      "branch": "feat/s8-t10-strip-modules",
+      "commit": "feat(tooling): add module manifest and stripping engine with a nightly removal matrix",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/scripts && pnpm check; git worktree add ../strip-test && cd ../strip-test && pnpm install; pnpm init:template --dry-run --yes --name \"Strip Test\" --repo https://github.com/acme/strip-test --remove…",
+        "Prove it on a throw-away worktree (never your working copy), one module at a time and then all together:",
+        "The build is green without Sentry/PostHog; the browser bundle no longer contains @sentry/posthog (check with pnpm analyze).",
+        "Run the dry-run for storybook, arcjet, better-stack, checkly, crowdin too (or trigger the Module removal workflow once: gh workflow run modules.yml) — all eight matrix jobs green.",
+        "A deliberately unbalanced marker (delete one @strip:…:end line) makes strip-markers.test.ts fail.",
+        "Anything the script leaves behind that knip/typecheck complains about → add it to that module's delete/stubs and re-run."
+      ],
+      "tasks": [
+        "Remove the last direct vendor imports",
+        "Strip markers in the few files that must change",
+        "The module manifest",
+        "The engine (pure over a file-system interface)",
+        "Docs and the nightly proof"
+      ],
+      "tags": ["P2", "Optional"]
+    },
+    {
+      "id": "S8-T11",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Threat model, dependency audit and an ASVS pass",
+      "story": "US-085",
+      "sp": 2,
+      "priority": "P0",
+      "area": "Security",
+      "branch": "docs/s8-t11-security-review",
+      "commit": "docs(security): add threat model and asvs checklist, and audit dependencies and licences in ci",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "These commands succeed: pnpm test tests/scripts && pnpm audit:prod && pnpm licenses:check && pnpm check",
+        "Every High row of the threat model names a control and an existing test file (git ls-files | grep <name> finds each one; fix wrong names).",
+        "pnpm audit:prod is clean or every exception is documented with an expiry; pnpm licenses:check passes (exceptions listed with reasons).",
+        "The ASVS table is filled in; every ❌ has an issue (P0/P1 if it's a real hole — those block launch).",
+        "The Dependency audit workflow is green on the PR."
+      ],
+      "tasks": [
+        "The threat model (STRIDE per trust boundary)",
+        "Dependency audit: vulnerabilities and licences",
+        "A penetration pass (OWASP ASVS Level 2, subset)"
+      ],
+      "tags": ["P0"]
+    },
+    {
+      "id": "S8-T12",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Load smoke test",
+      "story": "US-085",
+      "sp": 2,
+      "priority": "P2",
+      "area": "Testing",
+      "branch": "test/s8-t12-load-smoke",
+      "commit": "test(load): add k6 smoke scenarios, a staging-only workflow and recorded results",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "The k6 run ends with all thresholds ✓: dashboard p95 < 500 ms at 50 VUs, failures < 1 %.",
+        "The results table and pooling notes are in performance.md; any unfixed bottleneck has a TD- entry.",
+        "The workflow refuses a non-staging URL (try https://app.your-domain.example → it stops).",
+        "Staging is back to its normal settings (AUTH_RATE_LIMIT, Arcjet mode) afterwards."
+      ],
+      "tasks": ["Prepare staging", "The script", "Run it, read it, fix what it finds"],
+      "tags": ["P2"]
+    },
+    {
+      "id": "S8-T13",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Beta bug bash and cross-browser pass",
+      "story": "US-085",
+      "sp": 1,
+      "priority": "P1",
+      "area": "CI-CD",
+      "branch": "docs/s8-t13-beta",
+      "commit": "docs(release): add beta programme, triage rules and browser matrix",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "At least 5 beta reports are triaged (or: you documented why fewer — e.g. a private beta of 3 plus your own clean-clone runs).",
+        "gh issue list --label P0 --state open and --label P1 both print nothing.",
+        "The browser matrix is complete for the six browsers; any ❌ is an issue, any ⚠️ is a documented caveat in the relevant guide (usually auth.md for passkeys).",
+        "Average time-to-first-run ≤ 5 min and time-to-first-deploy ≤ 30 min — or the gap and the doc fixes are recorded."
+      ],
+      "tasks": [
+        "The feedback channel",
+        "The programme",
+        "Cross-browser pass (manual, ~1 hour)",
+        "Close the loop"
+      ],
+      "tags": ["P1"]
+    },
+    {
+      "id": "S8-T14",
+      "sprint": "Sprint 8",
+      "featureSprint": "Sprint 8",
+      "title": "Launch checklist and v1.0.0",
+      "story": "US-086",
+      "sp": 3,
+      "priority": "P0",
+      "area": "CI-CD",
+      "branch": "chore/s8-t14-launch",
+      "commit": "feat!: general availability",
+      "source": "sprint-08-tutorial.md",
+      "criteria": [
+        "pnpm launch:check <production-url> prints no ❌; the manual lines are all ticked in launch-checklist.md with evidence links.",
+        "https://github.com/OWNER/REPO/releases/tag/v1.0.0 exists with notes; git tag -l 'v*' shows v0.9.0 and v1.0.0 (plus the rc pre-release if you kept it); CHANGELOG.md starts at 1.0.0 with only the post-baseline changes.",
+        "Production serves 1.0.0 (/api/health), Sentry shows release 1.0.0, Checkly is green.",
+        "The repository is marked Template (the green _Use this template_ button), Discussions are on, topics are set.",
+        "The v1.1–v2.0 milestones and issues exist; the beta P2s are on the board.",
+        "Retrospective written; risk register updated."
+      ],
+      "tasks": [
+        "An automated gate for the things a machine can check",
+        "The checklist (evidence, not promises)",
+        "The final gates, on main",
+        "The demo deployment and the 7 days",
+        "Publish v1.0.0",
+        "Make the repository adoptable",
+        "The post-launch board",
+        "Retrospective"
+      ],
+      "tags": ["P0"]
+    }
+  ]
+}
