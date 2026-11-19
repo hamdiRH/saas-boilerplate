@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('home page renders', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle(/SaaS Boilerplate/u);
+  await expect(page).toHaveTitle(/Nexora/u);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ship your SaaS faster');
 });
 
