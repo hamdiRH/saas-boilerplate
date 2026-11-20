@@ -1,6 +1,6 @@
 <!-- init:title -->
 
-# SaaS Boilerplate
+# SaaS Boilerplate (Nexora)
 
 <!-- /init:title -->
 

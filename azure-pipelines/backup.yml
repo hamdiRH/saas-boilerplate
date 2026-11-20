@@ -1,0 +1,68 @@
+# azure-pipelines/backup.yml
+# One-way backup: GitHub (source of truth) -> Azure Repos. Never the other way round.
+trigger:
+  branches:
+    include: [main]
+  tags:
+    include: ['v*']
+
+pr: none
+
+schedules:
+  - cron: '0 3 * * 1' # weekly, Monday 03:00 UTC: all branches (decision D6)
+    displayName: Weekly full sync
+    branches:
+      include: [main]
+    always: true
+
+pool:
+  vmImage: ubuntu-latest
+
+resources:
+  repositories:
+    - repository: backup
+      type: git
+      name: Nexora/Nexora
+
+variables:
+  BACKUP_URL: https://uzumaki26@dev.azure.com/uzumaki26/Nexora/_git/Nexora
+
+steps:
+  - checkout: self
+    fetchDepth: 0
+    persistCredentials: false
+
+  - bash: |
+      set -euo pipefail
+      git config user.name "azure-backup"
+      git config user.email "azure-backup@users.noreply.local"
+
+      # Make sure every GitHub branch and tag is present locally.
+      git fetch origin '+refs/heads/*:refs/remotes/origin/*' --tags --prune
+
+      AUTH="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN"
+      git remote add backup "$BACKUP_URL"
+
+      if [ "$BUILD_REASON" = "Schedule" ]; then
+        echo "Full sync: all branches and tags"
+        git -c http.extraheader="$AUTH" push backup \
+          'refs/remotes/origin/*:refs/heads/*' 'refs/tags/*:refs/tags/*'
+      else
+        echo "Incremental: main and tags"
+        git -c http.extraheader="$AUTH" push backup \
+          'refs/remotes/origin/main:refs/heads/main' 'refs/tags/*:refs/tags/*'
+      fi
+    displayName: Push to Azure Repos (fast-forward only)
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+  - bash: |
+      set -euo pipefail
+      SRC=$(git rev-parse origin/main)
+      DST=$(git -c http.extraheader="AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN" ls-remote backup refs/heads/main | cut -f1)
+      echo "GitHub main: $SRC"
+      echo "Backup main: $DST"
+      test "$SRC" = "$DST"
+    displayName: Verify both remotes agree on main
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
