@@ -15,7 +15,7 @@ variables:
   # NEVER set this in a CD file or on a real deployment.
   ALLOW_LOCAL_SERVICES: 'true'
   NEXT_PUBLIC_APP_URL: http://localhost:3000
-  NEXT_PUBLIC_APP_NAME: SaaS Boilerplate
+  NEXT_PUBLIC_APP_NAME: Nexora
   # Dummy value, same as .github/workflows/ci.yml. Not a secret.
   BETTER_AUTH_SECRET: ci-only-secret-ci-only-secret-0123456789
 

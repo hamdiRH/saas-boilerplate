@@ -1053,7 +1053,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
   }
 }
 /* -------------------------------------------------------------------------- */
-/*  Enhacement to do ( branche not updated )List :                                                              */
+/*  Enhacement to do ( branche not updated , PR not merged)
+List :                                                              */
 /*  - Add a check for uncommitted changes before starting the process. */
 /*  - Add a check for unpushed commits before starting the process. */
 /*  - Add a check for unmerged branches before starting the process. */
