@@ -18,13 +18,6 @@ schedules:
 pool:
   vmImage: ubuntu-latest
 
-resources:
-  repositories:
-    - repository: backup
-      type: git
-      name: Nexora/Nexora
-      ref: refs/heads/main
-
 variables:
   BACKUP_URL: https://dev.azure.com/uzumaki26/Nexora/_git/Nexora
 
