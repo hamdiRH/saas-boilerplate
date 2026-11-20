@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const baseline = () => {
+  vi.stubEnv('ALLOW_LOCAL_SERVICES', 'false');
   vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
   vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');
   vi.stubEnv('NODE_ENV', 'production');

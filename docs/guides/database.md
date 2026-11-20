@@ -27,12 +27,6 @@ Run the pieces separately when debugging: `pnpm db:server` in one tab, `pnpm dev
 
 ### Fallback: Docker Postgres
 
-If PGlite misbehaves on your machine:
-
-```bash
-docker run --name saas-pg -e POSTGRES_PASSWORD=postgres -p 5433:5432 -d postgres:17
-```
-
-and set `DATABASE_URL=postgres://postgres:postgres@127.0.0.1:5433/postgres` in `.env.local` (skip `pnpm db:server`; use `pnpm dev:web`).
+Use the [Docker development stack](./docker.md#local-development) to run Next.js with PostgreSQL instead of PGlite.
 
 After adding/removing a Better Auth plugin run `pnpm auth:schema`, copy new tables/columns into `src/db/schema/auth.ts` (use our helpers/indexes), delete `auth.generated.ts`, then `pnpm db:generate` and commit the migration.

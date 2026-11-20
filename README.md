@@ -169,6 +169,7 @@ e2e/  tests/  .storybook/  docs/  scripts/  loadtest/
 | I want to… | Run |
 | --- | --- |
 | start developing | `pnpm dev` |
+| develop with Docker | `pnpm docker:up` ([guide](docs/guides/docker.md)) |
 | run everything CI runs, locally | `pnpm check` |
 | commit, open a PR, wait for CI, merge, and sync `main` | `pnpm git:pr` (stages all changes) |
 | run tests | `pnpm test` (unit) · `pnpm test:browser` (components) · `pnpm test:coverage` |
