@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in this repository. Humans: see `README.md` and `docs/guides/`.
+Instructions for AI coding agents working in this repository. Humans: see `README.md` `docs` and `docs/guides/`.
 
 ## Project
 
