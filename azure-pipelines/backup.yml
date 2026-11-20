@@ -25,7 +25,7 @@ resources:
       name: Nexora/Nexora
 
 variables:
-  BACKUP_URL: https://uzumaki26@dev.azure.com/uzumaki26/Nexora/_git/Nexora
+  BACKUP_URL: https://dev.azure.com/uzumaki26/Nexora/_git/Nexora
 
 steps:
   - checkout: self
