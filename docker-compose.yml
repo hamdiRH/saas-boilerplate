@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    command:
+      - sh
+      - -c
+      - pnpm db:migrate && pnpm dev:web --hostname 0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+      DATABASE_URL_UNPOOLED: postgres://postgres:postgres@db:5432/postgres
+      EMAIL_TRANSPORT: console
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Nexora}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NODE_ENV: development
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

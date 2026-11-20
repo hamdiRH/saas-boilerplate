@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  output: 'standalone',
   partialPrefetching: true,
   poweredByHeader: false,
   reactStrictMode: true,

@@ -322,7 +322,22 @@ git switch -c docs/s2.3-t02-boards-linking
 
 - In the **PR description** (and optionally the PR title): `AB#123`
 - In a **commit body or footer** (never the header, so commitlint is unaffected): `AB#123`
-- Word + `AB#123` such as `Fixes AB#123` in a PR description moves the item according to the Boards GitHub connection rules when the PR merges. 🔍 Verify the exact keywords and resulting states in the Microsoft docs and configure them to match your Scrum states.
+- A **word right before** `AB#123` in the **PR description** (or title) changes the state **when the PR is merged into the default branch (`main`)**. A bare `AB#123` only creates a link and never changes the state:
+
+| You write in the PR description | What happens on merge into `main` |
+| --- | --- |
+| `AB#123` | Link only. State stays `New` |
+| `Fixes AB#123` | First "Resolved" state, else the first "Done" state of the process: **Done** for a Scrum PBI |
+| `Committed AB#123` | Exactly **Committed** (any state name of that work item type works: `Approved`, `Committed`, `Done`) |
+| `Fixes AB#1, AB#2` | Only AB#1 moves. Repeat the word: `Fixes AB#1, Fixes AB#2` |
+
+Valid state names depend on the work item type (PBI: New, Approved, Committed, Done · Task: To Do, In Progress, Done). A word that is neither a keyword nor a state name is ignored. A merge into any branch other than `main` never changes a state. Commit footers (`AB#123`) only link.
+
+To move a ticket to a state **without** a PR (for example `Approved` when you start planning it):
+
+```bash
+az boards work-item update --id <id> --state "Committed" --detect false
+```
 
 Example commit:
 
@@ -345,7 +360,7 @@ cat >> CONTRIBUTING.md <<'EOF'
 
 - Put `AB#<id>` in the PR description (and optionally the PR title).
 - Put `AB#<id>` in a commit body or footer, never in the header, so commitlint is unaffected.
-- `Fixes AB#<id>` in a PR description moves the work item when the PR merges.
+- A bare `AB#<id>` only links. `Fixes AB#<id>` in a PR description moves the work item to Done when the PR is merged into `main`; `Committed AB#<id>` moves it to Committed (any state name of the work item type works).
 - Linking is optional: an unlinked PR still merges normally.
 EOF
 echo '- [ ] Linked work item (optional): `AB#<id>`' >> .github/pull_request_template.md
@@ -362,13 +377,32 @@ git push -u origin docs/s2.3-t02-boards-linking
 gh pr create --fill --base main --body "Links the work item. Fixes AB#$(wid S2.3-T02)"
 ```
 
+(`Fixes AB#…` in the body moves the PBI to **Done** when this PR is merged. Use `Committed AB#…` instead if the ticket is not finished yet.)
+
 Open the PBI in Azure Boards: the PR appears under **Development** within a few minutes. The commit hook (Lefthook + commitlint) must accept the footer **without** `--no-verify`.
+
+### 5. Check that the sync really works (script)
+
+Put `azure-boards-sync-check.mjs` in `scripts/`. It needs your PAT (`export AZURE_DEVOPS_EXT_PAT=<token>`) and the GitHub CLI logged in (`gh auth login`).
+
+```bash
+# Audit: for each merged PR, what Azure should have done and what it did
+node scripts/azure-boards-sync-check.mjs --org=uzumaki26
+# Only the PRs of one ticket
+node scripts/azure-boards-sync-check.mjs --org=uzumaki26 --ticket=S2.3-T02
+# One work item: state + GitHub links
+node scripts/azure-boards-sync-check.mjs --org=uzumaki26 --id=<work item id>
+# Live example: throwaway PBI + 2 empty PRs ("Committed AB#id" then "Fixes AB#id"), merged, state watched
+node scripts/azure-boards-sync-check.mjs --org=uzumaki26 --demo
+```
+
+If the audit says **"NOT linked"**: the Azure Boards GitHub app is not connected to this repository or project (Project settings → Boards → GitHub connections: the repo must be listed). If it says **"only AB#… no word"** or **"ignored"**: fix the word before `AB#`.
 
 ### ✅ Verify
 
 - [ ] PR with `AB#id` shows under **Development** on that work item
 - [ ] Commit with `AB#id` in the footer is linked and passes the hooks
-- [ ] Merging the PR moves the item as configured
+- [ ] Merging a PR whose description says `Fixes AB#id` moves the item to **Done** (`--demo` proves it)
 - [ ] An unlinked PR still merges
 - [ ] `git diff main --stat` shows **no** change under `.github/workflows/`
 
