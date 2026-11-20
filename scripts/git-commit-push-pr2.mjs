@@ -1052,3 +1052,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
     process.exitCode = 1;
   }
 }
+/* -------------------------------------------------------------------------- */
+/*  Enhacement to do ( branche not updated )List :                                                              */
+/*  - Add a check for uncommitted changes before starting the process. */
+/*  - Add a check for unpushed commits before starting the process. */
+/*  - Add a check for unmerged branches before starting the process. */
+/*  - Add a check for unmerged PRs before starting the process. */
+/*  - Add a check for unmerged PRs in the current branch before starting the process. */
+/*  - Add a check for unmerged PRs in the current branch after creating the PR. */
+/*  - Add a check for unmerged PRs in the current branch after merging the PR. */
+/*  - Add a check for unmerged PRs in the current branch after switching to main. */
+/*  - Add a check for unmerged PRs in the current branch after pulling main. */
+/*  - Add a check for unmerged PRs in the current branch after setting work item state. */
