@@ -1,10 +1,16 @@
 import { createEnv } from '@t3-oss/env-nextjs';
 import { z } from 'zod';
 
+export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 export const Env = createEnv({
   client: {
     NEXT_PUBLIC_APP_NAME: z.string().min(1),
     NEXT_PUBLIC_APP_URL: z.url(),
+    // Kill switch: "false" at build time ships a worker that unregisters itself (docs/guides/pwa.md).
+    NEXT_PUBLIC_PWA_ENABLED: z.stringbool().default(true),
+    // Public half of the VAPID key pair. The private half NEVER gets a NEXT_PUBLIC_ name.
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1).optional(),
   },
   // Production-only safety checks (see the refinements below). Server-side only.
   createFinalSchema: (shape, isServer) => {
@@ -13,6 +19,22 @@ export const Env = createEnv({
       return schema;
     }
     return schema.superRefine((env, ctx) => {
+      if (env.PUSH_ENABLED) {
+        const missing = (
+          [
+            ['NEXT_PUBLIC_VAPID_PUBLIC_KEY', env.NEXT_PUBLIC_VAPID_PUBLIC_KEY],
+            ['VAPID_PRIVATE_KEY', env.VAPID_PRIVATE_KEY],
+            ['VAPID_SUBJECT', env.VAPID_SUBJECT],
+          ] as const
+        ).filter(([, value]) => !value);
+        for (const [name] of missing) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `${name} is required when PUSH_ENABLED=true (generate keys: pnpm exec web-push generate-vapid-keys)`,
+            path: [name],
+          });
+        }
+      }
       if (env.NODE_ENV !== 'production' || env.ALLOW_LOCAL_SERVICES) {
         return;
       }
@@ -48,8 +70,13 @@ export const Env = createEnv({
     LOG_LEVEL: process.env.LOG_LEVEL,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_PWA_ENABLED: process.env.NEXT_PUBLIC_PWA_ENABLED,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     NODE_ENV: process.env.NODE_ENV,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+    PUSH_ENABLED: process.env.PUSH_ENABLED,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT,
   },
   server: {
     // CI/e2e only: lets a production build use the embedded database and the console email transport.
@@ -73,6 +100,15 @@ export const Env = createEnv({
     LOG_LEVEL: z.enum(['debug', 'info', 'warning', 'error']).default('info'),
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     RESEND_API_KEY: z.string().min(1).optional(),
+
+    PUSH_ENABLED: z.stringbool().default(false),
+    // SERVER ONLY. Never log it, never expose it to the client.
+    VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+    // Contact for push services, e.g. "mailto:ops@example.com" or an https URL.
+    VAPID_SUBJECT: z
+      .string()
+      .regex(/^(?:mailto:|https:\/\/)/u)
+      .optional(),
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

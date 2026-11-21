@@ -13,7 +13,11 @@
     "getStarted": "Get started",
     "dashboard": "Dashboard",
     "workspace": "Workspace",
-    "account": "Account"
+    "account": "Account",
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "pwa": "App"
   },
   "theme": { "toggle": "Toggle theme", "light": "Light", "dark": "Dark", "system": "System" },
   "locale": { "label": "Language", "en": "English", "fr": "Français" },
@@ -234,5 +238,49 @@
       "button": "Approve change",
       "ignore": "If you didn't ask for this, secure your account right away."
     }
+  },
+  "pwa": {
+    "offline": {
+      "banner": "You are offline. Pending requests will retry when you are back online."
+    },
+    "install": {
+      "title": "Install the app",
+      "description": "Add it to your home screen for faster access and a full-screen experience.",
+      "action": "Install",
+      "iosHint": "On iPhone or iPad, tap Share, then \"Add to Home Screen\".",
+      "dismiss": "Not now"
+    },
+    "update": {
+      "message": "A new version is available.",
+      "action": "Reload"
+    },
+    "status": {
+      "title": "App and offline data",
+      "description": "Installation status and what this device stores for offline use.",
+      "installed": "Installed",
+      "notInstalled": "Not installed",
+      "version": "Version",
+      "unsupported": "Offline features are not supported in this browser.",
+      "clear": "Clear offline data",
+      "cleared": "Offline data cleared.",
+      "clearFailed": "Could not clear offline data."
+    }
+  },
+  "push": {
+    "title": "Notifications",
+    "description": "Choose whether this device receives push notifications.",
+    "enable": "Enable notifications",
+    "disable": "Disable notifications",
+    "enabled": "Notifications are on for this device.",
+    "disabled": "Notifications are off for this device.",
+    "denied": "Notifications are blocked. Allow them in your browser settings, then try again.",
+    "unsupported": "This browser does not support push notifications.",
+    "iosInstalledOnly": "On iPhone and iPad, install the app to your home screen first to receive notifications.",
+    "unavailable": "Notifications are not available right now.",
+    "test": "Send a test notification",
+    "testSent": "Test notification sent.",
+    "error": "Something went wrong. Please try again.",
+    "testTitle": "Test notification",
+    "testBody": "Notifications work on this device."
   }
 }

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from '@/i18n/navigation';
 import { authClient } from '@/libs/auth-client';
+import { clearPwaData } from '@/libs/pwa/register';
 
 interface Props {
   user: { name: string; email: string };
@@ -35,6 +36,8 @@ export function UserMenu({ user }: Props) {
   async function signOut() {
     // invalidates the session server-side and clears the cookie
     await authClient.signOut();
+    // Nothing from this session may stay readable on a shared device.
+    await clearPwaData();
     router.replace('/');
     router.refresh();
   }

@@ -13,7 +13,11 @@
     "getStarted": "Commencer",
     "dashboard": "Tableau de bord",
     "workspace": "Espace de travail",
-    "account": "Compte"
+    "account": "Compte",
+    "profile": "Profil",
+    "security": "Sécurité",
+    "notifications": "Notifications",
+    "pwa": "Application"
   },
   "theme": {
     "toggle": "Changer de thème",
@@ -239,5 +243,49 @@
       "button": "Approuver le changement",
       "ignore": "Si vous n'êtes pas à l'origine de cette demande, sécurisez votre compte immédiatement."
     }
+  },
+  "pwa": {
+    "offline": {
+      "banner": "Vous êtes hors ligne. Les requêtes en attente seront relancées au retour de la connexion."
+    },
+    "install": {
+      "title": "Installer l'application",
+      "description": "Ajoutez-la à votre écran d'accueil pour un accès plus rapide et un affichage plein écran.",
+      "action": "Installer",
+      "iosHint": "Sur iPhone ou iPad, touchez Partager, puis « Sur l'écran d'accueil ».",
+      "dismiss": "Plus tard"
+    },
+    "update": {
+      "message": "Une nouvelle version est disponible.",
+      "action": "Recharger"
+    },
+    "status": {
+      "title": "Application et données hors ligne",
+      "description": "État de l'installation et ce que cet appareil conserve pour un usage hors ligne.",
+      "installed": "Installée",
+      "notInstalled": "Non installée",
+      "version": "Version",
+      "unsupported": "Les fonctions hors ligne ne sont pas prises en charge par ce navigateur.",
+      "clear": "Effacer les données hors ligne",
+      "cleared": "Données hors ligne effacées.",
+      "clearFailed": "Impossible d'effacer les données hors ligne."
+    }
+  },
+  "push": {
+    "title": "Notifications",
+    "description": "Choisissez si cet appareil reçoit des notifications push.",
+    "enable": "Activer les notifications",
+    "disable": "Désactiver les notifications",
+    "enabled": "Les notifications sont activées sur cet appareil.",
+    "disabled": "Les notifications sont désactivées sur cet appareil.",
+    "denied": "Les notifications sont bloquées. Autorisez-les dans les réglages du navigateur, puis réessayez.",
+    "unsupported": "Ce navigateur ne prend pas en charge les notifications push.",
+    "iosInstalledOnly": "Sur iPhone et iPad, installez d'abord l'application sur l'écran d'accueil pour recevoir des notifications.",
+    "unavailable": "Les notifications ne sont pas disponibles pour le moment.",
+    "test": "Envoyer une notification de test",
+    "testSent": "Notification de test envoyée.",
+    "error": "Une erreur est survenue. Veuillez réessayer.",
+    "testTitle": "Notification de test",
+    "testBody": "Les notifications fonctionnent sur cet appareil."
   }
 }

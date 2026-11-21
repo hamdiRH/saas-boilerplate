@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "lib": ["esnext", "webworker"],
+    "noEmit": true,
+    "paths": { "@/*": ["../*"] },
+    "plugins": [],
+    "types": []
+  },
+  "include": ["./*.ts", "../libs/pwa/*.ts"],
+  "exclude": ["../libs/pwa/*.test.ts"]
+}

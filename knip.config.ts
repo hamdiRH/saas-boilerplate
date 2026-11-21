@@ -8,6 +8,7 @@ const config: KnipConfig = {
     // 'src/proxy.ts',
     'src/templates/emails/**/*.tsx',
     'scripts/**/*.{ts,mjs}',
+    'src/sw/{sw,kill}.ts',
     // 'e2e/**/*.ts',
     // 'src/**/*.stories.{ts,tsx}',
     // 'src/**/*.test.{ts,tsx}',

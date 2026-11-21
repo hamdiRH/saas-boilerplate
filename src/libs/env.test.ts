@@ -14,6 +14,41 @@ describe('Env', () => {
     vi.restoreAllMocks();
   });
 
+  it('requires all VAPID values when PUSH_ENABLED=true', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    baseline();
+    vi.stubEnv('DATABASE_URL', 'postgres://user:pw@db.example.com/app?sslmode=require');
+    vi.stubEnv('EMAIL_TRANSPORT', 'resend');
+    vi.stubEnv('PUSH_ENABLED', 'true');
+
+    await expect(import('./env')).rejects.toThrow(/Invalid environment variables/iu);
+  });
+
+  it('accepts push when every VAPID value is present', async () => {
+    baseline();
+    vi.stubEnv('DATABASE_URL', 'postgres://user:pw@db.example.com/app?sslmode=require');
+    vi.stubEnv('EMAIL_TRANSPORT', 'resend');
+    vi.stubEnv('PUSH_ENABLED', 'true');
+    vi.stubEnv('NEXT_PUBLIC_VAPID_PUBLIC_KEY', 'public-key');
+    vi.stubEnv('VAPID_PRIVATE_KEY', 'private-key');
+    vi.stubEnv('VAPID_SUBJECT', 'mailto:ops@example.com');
+
+    const { Env } = await import('./env');
+
+    expect(Env.PUSH_ENABLED).toBe(true);
+  });
+
+  it('leaves push disabled by default and the PWA enabled', async () => {
+    baseline();
+    vi.stubEnv('DATABASE_URL', 'postgres://user:pw@db.example.com/app?sslmode=require');
+    vi.stubEnv('EMAIL_TRANSPORT', 'resend');
+
+    const { Env } = await import('./env');
+
+    expect(Env.PUSH_ENABLED).toBe(false);
+    expect(Env.NEXT_PUBLIC_PWA_ENABLED).toBe(true);
+  });
+
   it('loads when all variables are valid', async () => {
     vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://example.com');
     vi.stubEnv('NEXT_PUBLIC_APP_NAME', 'My App');

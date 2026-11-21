@@ -8,10 +8,12 @@ import { cn } from '@/utils/cn';
 const ITEMS = [
   { href: '/dashboard/account/profile', key: 'profile' },
   { href: '/dashboard/account/security', key: 'security' },
+  { href: '/dashboard/account/notifications', key: 'notifications' },
+  { href: '/dashboard/account/pwa', key: 'pwa' },
 ] as const;
 
 export function AccountNav() {
-  const t = useTranslations('account.nav');
+  const t = useTranslations('nav');
   const pathname = usePathname();
 
   return (
