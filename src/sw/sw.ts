@@ -70,7 +70,7 @@ async function staleWhileRevalidate(event: FetchEvent): Promise<Response> {
   return refresh;
 }
 
-/** Pages always come from the network. The offline page is only a fallback, never a copy of a page. */
+/** Pages always come from the network. The offline page is only a fallback, never a copy of a page */
 async function networkWithOfflineFallback(request: Request): Promise<Response> {
   try {
     return await fetch(request);
