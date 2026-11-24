@@ -209,6 +209,7 @@ const cliArgs = process.argv.slice(2);
 const hasFlag = (name) => cliArgs.includes(`--${name}`);
 const optionValue = (name) =>
   cliArgs.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 
 const DRY_RUN = hasFlag('dry-run');
 const ASSUME_YES = hasFlag('yes');
@@ -830,7 +831,7 @@ const findWorkItem = async (ticket) => {
   const query = `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = 'Product Backlog Item' AND [System.Title] CONTAINS '${ticket}'`;
   const result = await azureApi('POST', `${projectPath()}/_apis/wit/wiql`, { body: { query } });
   const ids = (result?.workItems ?? []).map((item) => item.id);
-  const prefix = new RegExp(`^${ticket.replaceAll('.', '\\.')}\\s`, 'iu');
+  const prefix = new RegExp(`^${escapeRegExp(ticket)}\\s`, 'iu');
   const match = (await fetchWorkItems(ids)).find((raw) =>
     prefix.test(String(raw.fields?.['System.Title'] ?? '')),
   );

@@ -49,7 +49,8 @@
     "auth:schema": "pnpm dlx @better-auth/cli@latest generate --config src/libs/auth.ts --output src/db/schema/auth.generated.ts",
     "azure:backlog": "node scripts/azure-devops-backlog.mjs",
     "azure:sync": "node scripts/azure-boards-sync-check.mjs --org=uzumaki26",
-    "pwa:icons": "node scripts/generate-pwa-icons.mjs"
+    "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "auth:redirect-uris": "node scripts/auth-redirect-uris.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
