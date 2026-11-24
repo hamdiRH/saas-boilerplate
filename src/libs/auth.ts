@@ -63,7 +63,7 @@ export function createAuth(database: DbLike) {
       // 1 hour (seconds)
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: ({ user, url }, request) => {
+      sendResetPassword: ({ user, url }: AuthEmailData, request: Request | undefined) => {
         runInBackground(() => sendResetPasswordEmail({ request, url, user }));
         return Promise.resolve();
       },
@@ -75,7 +75,7 @@ export function createAuth(database: DbLike) {
       // we re-send explicitly from the sign-in form (S2-T08) so the link carries the right callbackURL
       sendOnSignIn: false,
       sendOnSignUp: true,
-      sendVerificationEmail: ({ user, url }, request) => {
+      sendVerificationEmail: ({ user, url }: AuthEmailData, request: Request | undefined) => {
         runInBackground(() => sendVerificationEmail({ request, url, user }));
         return Promise.resolve();
       },

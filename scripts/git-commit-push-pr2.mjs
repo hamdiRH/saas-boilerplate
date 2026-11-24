@@ -209,7 +209,7 @@ const cliArgs = process.argv.slice(2);
 const hasFlag = (name) => cliArgs.includes(`--${name}`);
 const optionValue = (name) =>
   cliArgs.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
-const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+const escapeRegExp = (value) => String(value).replaceAll(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 
 const DRY_RUN = hasFlag('dry-run');
 const ASSUME_YES = hasFlag('yes');
