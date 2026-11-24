@@ -4,6 +4,8 @@ import { getEmailTranslator } from '@/templates/emails/i18n';
 import { renderEmail } from '@/templates/emails/render';
 import {
   ChangeEmailEmail,
+  MagicLinkEmail,
+  OtpEmail,
   PasswordChangedEmail,
   ResetPasswordEmail,
   VerifyEmail,
@@ -76,5 +78,39 @@ export async function sendChangeEmailEmail({
     tags: { type: 'change-email' },
     text,
     to: user.email,
+  });
+}
+
+export async function sendMagicLinkEmail({
+  email,
+  url,
+  request,
+}: {
+  email: string;
+  url: string;
+  request?: Request;
+}) {
+  const locale = localeFromRequest(request);
+  const { html, text } = await renderEmail(<MagicLinkEmail locale={locale} url={url} />);
+  await sendEmail({
+    to: email,
+    subject: getEmailTranslator(locale)('magicLink.subject'),
+    html,
+    text,
+    tags: { type: 'magic-link' },
+  });
+}
+
+export async function sendOtpEmail({ user, code, request }: Input & { code: string }) {
+  const locale = localeFromRequest(request);
+  const { html, text } = await renderEmail(
+    <OtpEmail locale={locale} name={user.name} code={code} />,
+  );
+  await sendEmail({
+    to: user.email,
+    subject: getEmailTranslator(locale)('otp.subject'),
+    html,
+    text,
+    tags: { type: 'email-otp' },
   });
 }

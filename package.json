@@ -6,7 +6,7 @@
     "dev": "concurrently -k -n db,web -c blue,green \"pnpm db:server\" \"next dev\"",
     "build": "node scripts/build-sw.mjs && next build",
     "build:sw": "node scripts/build-sw.mjs",
-    "start": "next start",
+    "start": "node scripts/start-standalone.mjs",
     "docker:up": "pnpm setup:env && docker compose --env-file .env.local up --build",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs --follow",

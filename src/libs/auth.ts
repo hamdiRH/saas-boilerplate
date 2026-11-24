@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
+import { magicLink } from 'better-auth/plugins';
 
 import { db } from '@/db/client';
 import * as schema from '@/db/schema';
@@ -12,11 +13,14 @@ import {
   sendChangeEmailEmail,
   sendResetPasswordEmail,
   sendVerificationEmail,
+  sendMagicLinkEmail,
 } from '@/libs/auth-emails';
+import { decideMagicLink } from '@/libs/auth-magic-link';
 import { Env } from '@/libs/env';
 import { runInBackground } from '@/utils/background';
 
 import { AUTH_RATE_LIMIT_DEFAULT, AUTH_RATE_LIMIT_RULES } from './auth-rate-limit';
+import { getLogger } from './logger';
 
 interface AuthEmailData {
   user: { email: string; name: string };
@@ -63,7 +67,30 @@ export function createAuth(database: DbLike) {
     },
 
     // Required so cookies set inside Server Actions reach the browser
-    plugins: [nextCookies()],
+    plugins: [
+      magicLink({
+        // seconds
+        expiresIn: 60 * 5,
+        sendMagicLink: ({ email, url }, request) => {
+          if (!Env.AUTH_MAGIC_LINK_ENABLED) {
+            return;
+          }
+
+          runInBackground(async () => {
+            const decision = await decideMagicLink(database, {
+              email,
+              allowSignUp: Env.AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK,
+            });
+            if (decision !== 'send') {
+              getLogger('security').info('Magic link not sent: {decision}', { decision });
+              return;
+            }
+            await sendMagicLinkEmail({ email, url, request: request?.request });
+          });
+        },
+      }),
+      nextCookies(),
+    ],
     rateLimit: {
       ...AUTH_RATE_LIMIT_DEFAULT,
       customRules: { ...AUTH_RATE_LIMIT_RULES },

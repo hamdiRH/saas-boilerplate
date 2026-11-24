@@ -41,7 +41,11 @@
       "submit": "Se connecter",
       "forgot": "Mot de passe oublié ?",
       "noAccount": "Pas encore de compte ?",
-      "signUpLink": "S'inscrire"
+      "signUpLink": "S'inscrire",
+      "or": "ou",
+      "social": "Continuer avec {provider}",
+      "magicLink": "Recevoir un lien de connexion par e-mail",
+      "passkey": "Se connecter avec une clé d'accès"
     },
     "signUp": {
       "title": "Créez votre compte",
@@ -113,7 +117,41 @@
       "userExists": "Nous n'avons pas pu créer votre compte. Si vous en avez déjà un, connectez-vous ou réinitialisez votre mot de passe.",
       "invalidToken": "Ce lien est invalide ou a expiré.",
       "wrongPassword": "Votre mot de passe actuel est incorrect.",
-      "freshRequired": "Pour votre sécurité, déconnectez-vous puis reconnectez-vous, et réessayez."
+      "freshRequired": "Pour votre sécurité, déconnectez-vous puis reconnectez-vous, et réessayez.",
+      "accountNotLinked": "Cet e-mail est déjà enregistré. Connectez-vous avec votre méthode d'origine, puis associez ce fournisseur dans les paramètres de sécurité.",
+      "emailMissing": "Votre fournisseur n'a pas communiqué d'adresse e-mail, nous ne pouvons pas vous connecter.",
+      "oauthFailed": "La connexion avec ce fournisseur a échoué. Veuillez réessayer.",
+      "signupDisabled": "L'inscription avec cette méthode est actuellement désactivée.",
+      "invalidCode": "Ce code n'est pas valide. Vérifiez-le et réessayez.",
+      "twoFactorExpired": "Votre session de connexion a expiré. Veuillez vous reconnecter.",
+      "passkeyFailed": "Impossible d'utiliser votre clé d'accès. Réessayez ou utilisez une autre méthode.",
+      "passkeyCancelled": "Demande de clé d'accès annulée."
+    },
+    "magicLink": {
+      "title": "Connexion par lien e-mail",
+      "description": "Nous vous envoyons un lien qui vous connecte. Pas de mot de passe.",
+      "email": "E-mail",
+      "submit": "Envoyer le lien",
+      "sentTitle": "Consultez votre boîte mail",
+      "sentDescription": "Si vous pouvez vous connecter avec {email}, un lien est en route. Il expire dans 5 minutes et ne sert qu'une fois.",
+      "back": "Utiliser un mot de passe",
+      "resend": "Envoyer un autre lien"
+    },
+    "twoFactor": {
+      "title": "Authentification à deux facteurs",
+      "description": "Saisissez le code à 6 chiffres de votre application d'authentification.",
+      "code": "Code d'authentification",
+      "submit": "Vérifier",
+      "trustDevice": "Faire confiance à cet appareil pendant 30 jours",
+      "useBackup": "Utiliser un code de secours",
+      "useApp": "Utiliser mon application d'authentification",
+      "useEmail": "Recevoir un code par e-mail",
+      "backupTitle": "Utiliser un code de secours",
+      "backupDescription": "Saisissez l'un de vos codes de secours enregistrés. Chaque code ne fonctionne qu'une fois.",
+      "backupCode": "Code de secours",
+      "emailDescription": "Nous enverrons un code à 6 chiffres à l'adresse de votre compte.",
+      "sendEmail": "Envoyez-moi un code",
+      "emailSent": "Nous vous avons envoyé un code à 6 chiffres."
     }
   },
   "account": {
@@ -192,7 +230,10 @@
     "passwordMax": "Le mot de passe ne doit pas dépasser 128 caractères",
     "passwordComplexity": "Utilisez des lettres majuscules et minuscules et un chiffre",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
-    "confirmPhrase": "Tapez le mot de confirmation exact"
+    "confirmPhrase": "Tapez le mot de confirmation exact",
+    "totpCode": "Saisissez le code à 6 chiffres",
+    "backupCode": "Saisissez un code de secours",
+    "passkeyName": "Donnez un nom à votre clé d'accès (40 caractères max)"
   },
   "errors": {
     "title": "Une erreur est survenue",
@@ -242,6 +283,21 @@
       "body": "Vous avez demandé à remplacer l'e-mail de votre compte par {newEmail}. Approuvez ce changement pour continuer.",
       "button": "Approuver le changement",
       "ignore": "Si vous n'êtes pas à l'origine de cette demande, sécurisez votre compte immédiatement."
+    },
+    "magicLink": {
+      "subject": "Votre lien de connexion",
+      "heading": "Connectez-vous à votre compte",
+      "greeting": "Bonjour,",
+      "body": "Utilisez le bouton ci-dessous pour vous connecter. Le lien expire dans 5 minutes et ne peut être utilisé qu'une fois.",
+      "button": "Se connecter",
+      "ignore": "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message."
+    },
+    "otp": {
+      "subject": "Votre code de connexion",
+      "heading": "Votre code de vérification",
+      "greeting": "Bonjour {name},",
+      "body": "Saisissez ce code pour terminer la connexion. Il expire dans 5 minutes.",
+      "ignore": "Si ce n'était pas vous, changez immédiatement votre mot de passe."
     }
   },
   "pwa": {
@@ -287,5 +343,76 @@
     "error": "Une erreur est survenue. Veuillez réessayer.",
     "testTitle": "Notification de test",
     "testBody": "Les notifications fonctionnent sur cet appareil."
+  },
+  "security": {
+    "reauth": {
+      "title": "Veuillez vous reconnecter",
+      "description": "Pour votre sécurité, cette action nécessite une connexion récente.",
+      "action": "Se reconnecter"
+    },
+    "score": {
+      "title": "Bilan de sécurité",
+      "summary": "{count} protections sur {total} activées",
+      "emailVerified": "E-mail vérifié",
+      "twoFactor": "Authentification à deux facteurs",
+      "passkey": "Clé d'accès"
+    },
+    "connected": {
+      "title": "Comptes associés",
+      "description": "Connectez-vous plus vite avec des comptes que vous utilisez déjà.",
+      "connect": "Associer",
+      "disconnect": "Dissocier",
+      "linked": "Associé",
+      "none": "Aucun fournisseur social n'est configuré.",
+      "disconnected": "{provider} dissocié.",
+      "lastMethod": "Vous ne pouvez pas dissocier votre unique méthode de connexion."
+    },
+    "passkeys": {
+      "title": "Clés d'accès",
+      "description": "Connectez-vous avec votre empreinte, votre visage ou le code de l'appareil — sans mot de passe.",
+      "add": "Ajouter une clé d'accès",
+      "name": "Nom de la clé d'accès",
+      "namePlaceholder": "ex. Ordinateur du bureau",
+      "added": "Clé d'accès ajoutée.",
+      "removed": "Clé d'accès supprimée.",
+      "renamed": "Clé d'accès renommée.",
+      "empty": "Vous n'avez pas encore ajouté de clé d'accès.",
+      "unsupported": "Ce navigateur ne prend pas en charge les clés d'accès.",
+      "created": "Ajoutée le {date}",
+      "rename": "Renommer",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "synced": "Synchronisée entre vos appareils"
+    },
+    "mfa": {
+      "title": "Authentification à deux facteurs",
+      "description": "Protégez votre compte avec un code issu d'une application d'authentification.",
+      "on": "Activée",
+      "off": "Non activée",
+      "enable": "Activer la double authentification",
+      "password": "Confirmez votre mot de passe",
+      "continue": "Continuer",
+      "scanTitle": "Scannez le QR code",
+      "scanDescription": "Utilisez une application comme 1Password, Authy ou Google Authenticator.",
+      "manualKey": "Impossible de scanner ? Saisissez cette clé manuellement",
+      "code": "Code à 6 chiffres",
+      "verify": "Vérifier et activer",
+      "backupTitle": "Enregistrez vos codes de secours",
+      "backupDescription": "Chaque code ne fonctionne qu'une fois si vous perdez l'accès à votre application. Ils ne seront plus affichés.",
+      "copy": "Copier",
+      "copied": "Copié dans le presse-papiers.",
+      "download": "Télécharger",
+      "saved": "J'ai enregistré mes codes de secours",
+      "done": "Terminé",
+      "enabled": "Authentification à deux facteurs activée.",
+      "disable": "Désactiver la double authentification",
+      "disableTitle": "Désactiver l'authentification à deux facteurs ?",
+      "disableDescription": "Votre compte ne sera protégé que par votre méthode de connexion. Saisissez votre mot de passe pour confirmer.",
+      "disabled": "Authentification à deux facteurs désactivée.",
+      "regenerate": "Régénérer les codes de secours",
+      "regenerated": "Nouveaux codes de secours générés. Les anciens ne fonctionnent plus.",
+      "cancel": "Annuler"
+    }
   }
 }

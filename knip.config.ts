@@ -9,6 +9,7 @@ const config: KnipConfig = {
     'src/templates/emails/**/*.tsx',
     'scripts/**/*.{ts,mjs}',
     'src/sw/{sw,kill}.ts',
+    'src/libs/auth-emails.tsx',
     // 'e2e/**/*.ts',
     // 'src/**/*.stories.{ts,tsx}',
     // 'src/**/*.test.{ts,tsx}',

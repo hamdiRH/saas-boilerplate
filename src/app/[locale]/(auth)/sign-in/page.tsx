@@ -1,23 +1,25 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
 
-import { SignInForm } from '@/components/auth/sign-in-form';
+import { SignInPanel } from '@/components/auth/sign-in-panel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireGuest } from '@/data/session';
 import { Link, getPathname } from '@/i18n/navigation';
+import { callbackErrorKey } from '@/libs/auth-callback-errors';
+import { Env } from '@/libs/env';
 import { sanitizeCallbackUrl } from '@/utils/safe-redirect';
 
 interface SignInPageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ callbackUrl?: string }>;
+  searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }
 
 async function SignInContent({ params, searchParams }: SignInPageProps) {
   const { locale } = await params;
+  const { callbackUrl, error } = await searchParams;
   setRequestLocale(locale as 'en' | 'fr');
   await requireGuest();
 
-  const { callbackUrl } = await searchParams;
   const destination = sanitizeCallbackUrl(
     callbackUrl,
     getPathname({ href: '/dashboard', locale: locale as 'en' | 'fr' }),
@@ -30,7 +32,12 @@ async function SignInContent({ params, searchParams }: SignInPageProps) {
         <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-muted-foreground text-sm">{t('description')}</p>
       </header>
-      <SignInForm callbackUrl={destination} />
+
+      <SignInPanel
+        callbackUrl={destination}
+        initialErrorKey={callbackErrorKey(error)}
+        magicLinkEnabled={Env.AUTH_MAGIC_LINK_ENABLED}
+      />
       <p className="text-muted-foreground text-center text-sm">
         {t('noAccount')}{' '}
         <Link href="/sign-up" className="text-foreground underline">

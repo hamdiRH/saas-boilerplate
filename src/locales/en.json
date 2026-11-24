@@ -36,7 +36,11 @@
       "submit": "Sign in",
       "forgot": "Forgot your password?",
       "noAccount": "Don't have an account?",
-      "signUpLink": "Sign up"
+      "signUpLink": "Sign up",
+      "or": "or",
+      "social": "Continue with {provider}",
+      "magicLink": "Email me a sign-in link",
+      "passkey": "Sign in with a passkey"
     },
     "signUp": {
       "title": "Create your account",
@@ -108,7 +112,41 @@
       "userExists": "We couldn't create your account. If you already have one, sign in or reset your password.",
       "invalidToken": "This link is invalid or expired.",
       "wrongPassword": "Your current password is incorrect.",
-      "freshRequired": "For your security, please sign out and sign in again, then retry."
+      "freshRequired": "For your security, please sign out and sign in again, then retry.",
+      "accountNotLinked": "This email is already registered. Sign in with your original method, then connect this provider in Security settings.",
+      "emailMissing": "Your provider didn't share an email address, so we can't sign you in.",
+      "oauthFailed": "Signing in with this provider failed. Please try again.",
+      "signupDisabled": "Sign-up with this method is currently disabled.",
+      "invalidCode": "That code is not valid. Check it and try again.",
+      "twoFactorExpired": "Your sign-in session expired. Please sign in again.",
+      "passkeyFailed": "We couldn't use your passkey. Try again or use another method.",
+      "passkeyCancelled": "Passkey request cancelled."
+    },
+    "magicLink": {
+      "title": "Sign in with an email link",
+      "description": "We'll email you a link that signs you in. No password needed.",
+      "email": "Email",
+      "submit": "Send sign-in link",
+      "sentTitle": "Check your email",
+      "sentDescription": "If you can sign in with {email}, a link is on its way. It expires in 5 minutes and works once.",
+      "back": "Use a password instead",
+      "resend": "Send another link"
+    },
+    "twoFactor": {
+      "title": "Two-factor authentication",
+      "description": "Enter the 6-digit code from your authenticator app.",
+      "code": "Authentication code",
+      "submit": "Verify",
+      "trustDevice": "Trust this device for 30 days",
+      "useBackup": "Use a backup code instead",
+      "useApp": "Use my authenticator app instead",
+      "useEmail": "Email me a code instead",
+      "backupTitle": "Use a backup code",
+      "backupDescription": "Enter one of your saved backup codes. Each code works only once.",
+      "backupCode": "Backup code",
+      "emailDescription": "We'll email a 6-digit code to the address on your account.",
+      "sendEmail": "Send me a code",
+      "emailSent": "We emailed you a 6-digit code."
     }
   },
   "account": {
@@ -187,7 +225,10 @@
     "passwordMax": "Password must be at most 128 characters",
     "passwordComplexity": "Use upper and lower case letters and a number",
     "passwordMismatch": "Passwords do not match",
-    "confirmPhrase": "Type the exact confirmation word"
+    "confirmPhrase": "Type the exact confirmation word",
+    "totpCode": "Enter the 6-digit code",
+    "backupCode": "Enter a backup code",
+    "passkeyName": "Give your passkey a name (max 40 characters)"
   },
   "errors": {
     "title": "Something went wrong",
@@ -237,6 +278,21 @@
       "body": "You asked to change your account email to {newEmail}. Approve this change to continue.",
       "button": "Approve change",
       "ignore": "If you didn't ask for this, secure your account right away."
+    },
+    "magicLink": {
+      "subject": "Your sign-in link",
+      "heading": "Sign in to your account",
+      "greeting": "Hi there,",
+      "body": "Use the button below to sign in. The link expires in 5 minutes and can be used once.",
+      "button": "Sign in",
+      "ignore": "If you didn't request this, you can safely ignore this email."
+    },
+    "otp": {
+      "subject": "Your sign-in code",
+      "heading": "Your verification code",
+      "greeting": "Hi {name},",
+      "body": "Enter this code to finish signing in. It expires in 5 minutes.",
+      "ignore": "If this wasn't you, change your password right away."
     }
   },
   "pwa": {
@@ -282,5 +338,76 @@
     "error": "Something went wrong. Please try again.",
     "testTitle": "Test notification",
     "testBody": "Notifications work on this device."
+  },
+  "security": {
+    "reauth": {
+      "title": "Please sign in again",
+      "description": "For your security, this action needs a recent sign-in.",
+      "action": "Sign in again"
+    },
+    "score": {
+      "title": "Security checkup",
+      "summary": "{count} of {total} protections enabled",
+      "emailVerified": "Email verified",
+      "twoFactor": "Two-factor authentication",
+      "passkey": "Passkey"
+    },
+    "connected": {
+      "title": "Connected accounts",
+      "description": "Sign in faster with accounts you already use.",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "linked": "Connected",
+      "none": "No social providers are configured.",
+      "disconnected": "{provider} disconnected.",
+      "lastMethod": "You can't disconnect your only sign-in method."
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in with your fingerprint, face or device PIN — no password needed.",
+      "add": "Add a passkey",
+      "name": "Passkey name",
+      "namePlaceholder": "e.g. Work laptop",
+      "added": "Passkey added.",
+      "removed": "Passkey removed.",
+      "renamed": "Passkey renamed.",
+      "empty": "You haven't added a passkey yet.",
+      "unsupported": "This browser doesn't support passkeys.",
+      "created": "Added {date}",
+      "rename": "Rename",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "synced": "Synced across your devices"
+    },
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "Protect your account with a code from an authenticator app.",
+      "on": "Enabled",
+      "off": "Not enabled",
+      "enable": "Enable two-factor",
+      "password": "Confirm your password",
+      "continue": "Continue",
+      "scanTitle": "Scan the QR code",
+      "scanDescription": "Use an authenticator app such as 1Password, Authy or Google Authenticator.",
+      "manualKey": "Can't scan? Enter this key manually",
+      "code": "6-digit code",
+      "verify": "Verify and enable",
+      "backupTitle": "Save your backup codes",
+      "backupDescription": "Each code works once if you lose access to your authenticator. They won't be shown again.",
+      "copy": "Copy",
+      "copied": "Copied to clipboard.",
+      "download": "Download",
+      "saved": "I have saved my backup codes",
+      "done": "Done",
+      "enabled": "Two-factor authentication enabled.",
+      "disable": "Disable two-factor",
+      "disableTitle": "Disable two-factor authentication?",
+      "disableDescription": "Your account will only be protected by your sign-in method. Enter your password to confirm.",
+      "disabled": "Two-factor authentication disabled.",
+      "regenerate": "Regenerate backup codes",
+      "regenerated": "New backup codes generated. The old ones no longer work.",
+      "cancel": "Cancel"
+    }
   }
 }

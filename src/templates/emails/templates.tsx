@@ -72,3 +72,33 @@ export function ChangeEmailEmail({
     />
   );
 }
+
+export function MagicLinkEmail({ locale, url }: { locale: Locale; url: string }) {
+  const t = getEmailTranslator(locale);
+  return (
+    <ActionEmail
+      lang={locale}
+      heading={t('magicLink.heading')}
+      greeting={t('magicLink.greeting')}
+      body={t('magicLink.body')}
+      action={{ label: t('magicLink.button'), url }}
+      ignore={t('magicLink.ignore')}
+      footer={t('footer', { appName: Env.NEXT_PUBLIC_APP_NAME })}
+    />
+  );
+}
+
+export function OtpEmail({ locale, name, code }: Base & { code: string }) {
+  const t = getEmailTranslator(locale);
+  return (
+    <ActionEmail
+      lang={locale}
+      heading={t('otp.heading')}
+      greeting={t('otp.greeting', { name })}
+      body={t('otp.body')}
+      code={code}
+      ignore={t('otp.ignore')}
+      footer={t('footer', { appName: Env.NEXT_PUBLIC_APP_NAME })}
+    />
+  );
+}
