@@ -85,6 +85,16 @@ export const Env = createEnv({
     PUSH_ENABLED: process.env.PUSH_ENABLED,
     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
     VAPID_SUBJECT: process.env.VAPID_SUBJECT,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+    FACEBOOK_CLIENT_ID: process.env.FACEBOOK_CLIENT_ID,
+    FACEBOOK_CLIENT_SECRET: process.env.FACEBOOK_CLIENT_SECRET,
+    TWITTER_CLIENT_ID: process.env.TWITTER_CLIENT_ID,
+    TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET,
+    APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
+    APPLE_CLIENT_SECRET: process.env.APPLE_CLIENT_SECRET,
   },
   server: {
     // CI/e2e only: lets a production build use the embedded database and the console email transport.
@@ -120,6 +130,16 @@ export const Env = createEnv({
     AUTH_MAGIC_LINK_ENABLED: flag('true'),
     // false → unknown emails never receive a link (response stays identical)
     AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK: flag('true'),
+    GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+    GITHUB_CLIENT_ID: z.string().min(1).optional(),
+    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
+    FACEBOOK_CLIENT_ID: z.string().min(1).optional(),
+    FACEBOOK_CLIENT_SECRET: z.string().min(1).optional(),
+    TWITTER_CLIENT_ID: z.string().min(1).optional(),
+    TWITTER_CLIENT_SECRET: z.string().min(1).optional(),
+    APPLE_CLIENT_ID: z.string().min(1).optional(),
+    APPLE_CLIENT_SECRET: z.string().min(1).optional(),
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

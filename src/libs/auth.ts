@@ -16,6 +16,12 @@ import {
   sendMagicLinkEmail,
 } from '@/libs/auth-emails';
 import { decideMagicLink } from '@/libs/auth-magic-link';
+import {
+  buildSocialProviders,
+  buildTrustedOrigins,
+  getEnabledProviders,
+  incompleteProviders,
+} from '@/libs/auth-providers';
 import { Env } from '@/libs/env';
 import { runInBackground } from '@/utils/background';
 
@@ -25,6 +31,15 @@ import { getLogger } from './logger';
 interface AuthEmailData {
   user: { email: string; name: string };
   url: string;
+}
+
+const enabledProviderIds = getEnabledProviders(Env).map((provider) => provider.id);
+
+for (const id of incompleteProviders(Env)) {
+  getLogger('auth').warning(
+    'Social provider "{id}" has only one of CLIENT_ID / CLIENT_SECRET set — ignoring it',
+    { id },
+  );
 }
 
 /** Factory so integration tests can run the real auth stack on an in-memory database. */
@@ -108,7 +123,7 @@ export function createAuth(database: DbLike) {
       updateAge: 60 * 60 * 24,
     },
 
-    trustedOrigins: [Env.NEXT_PUBLIC_APP_URL],
+    trustedOrigins: buildTrustedOrigins(Env.NEXT_PUBLIC_APP_URL, enabledProviderIds),
     user: {
       changeEmail: {
         enabled: true,
@@ -127,6 +142,8 @@ export function createAuth(database: DbLike) {
         // of an organization that still has other members.
       },
     },
+
+    socialProviders: buildSocialProviders(Env),
   });
 }
 

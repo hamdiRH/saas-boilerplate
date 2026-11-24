@@ -8,7 +8,10 @@ const appEnv = {
   ALLOW_LOCAL_SERVICES: 'true',
   AUTH_RATE_LIMIT: 'on',
   EMAIL_TRANSPORT: 'console',
+  // Git Bash sets HOSTNAME to the PC name; Next standalone would bind to that, not localhost.
+  HOSTNAME: '0.0.0.0',
   NEXT_PUBLIC_APP_NAME: 'Nexora',
+  PORT: '3000',
 };
 
 export default defineConfig({

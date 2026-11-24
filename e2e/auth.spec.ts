@@ -93,8 +93,16 @@ test('forgot → reset → old password dead, new password works', async ({
 
   await expect(page).toHaveURL(/\/reset-password\?token=/u);
   const newPassword = 'Brand-New-Passw0rd-E2E!';
-  await page.getByLabel('New password', { exact: true }).fill(newPassword);
-  await page.getByLabel('Confirm new password', { exact: true }).fill(newPassword);
+  const newPasswordField = page
+    .getByLabel('New password', { exact: true })
+    .filter({ visible: true });
+  const confirmPasswordField = page
+    .getByLabel('Confirm new password', { exact: true })
+    .filter({ visible: true });
+  await expect(newPasswordField).toHaveCount(1);
+  await expect(confirmPasswordField).toHaveCount(1);
+  await newPasswordField.fill(newPassword);
+  await confirmPasswordField.fill(newPassword);
   await page.getByRole('button', { name: 'Reset password' }).click();
   await expect(page).toHaveURL(/\/sign-in/u, { timeout: 10_000 });
 

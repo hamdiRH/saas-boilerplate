@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { requireGuest } from '@/data/session';
 import { Link, getPathname } from '@/i18n/navigation';
 import { callbackErrorKey } from '@/libs/auth-callback-errors';
+import { getEnabledProviders } from '@/libs/auth-providers';
 import { Env } from '@/libs/env';
 import { sanitizeCallbackUrl } from '@/utils/safe-redirect';
 
@@ -37,6 +38,7 @@ async function SignInContent({ params, searchParams }: SignInPageProps) {
         callbackUrl={destination}
         initialErrorKey={callbackErrorKey(error)}
         magicLinkEnabled={Env.AUTH_MAGIC_LINK_ENABLED}
+        providers={getEnabledProviders(Env)}
       />
       <p className="text-muted-foreground text-center text-sm">
         {t('noAccount')}{' '}
