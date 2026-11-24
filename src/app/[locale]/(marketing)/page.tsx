@@ -1,9 +1,7 @@
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
-import { getLogger } from '@/libs/logger';
 
-getLogger('app').info('home rendered', { password: 'hunter2', user: 'ada' });
 export default function HomePage() {
   const t = useTranslations('marketing');
 

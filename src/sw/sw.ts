@@ -70,10 +70,22 @@ async function staleWhileRevalidate(event: FetchEvent): Promise<Response> {
   return refresh;
 }
 
+/**
+ * Chrome can replay navigations with cache: 'only-if-cached', which fetch() rejects unless
+ * mode is 'same-origin'. Rebuild those as a normal request so a live server is not treated
+ * as offline.
+ */
+const toNetworkRequest = (request: Request): Request => {
+  if (request.cache === 'only-if-cached' && request.mode !== 'same-origin') {
+    return new Request(request, { cache: 'reload' });
+  }
+  return request;
+};
+
 /** Pages always come from the network. The offline page is only a fallback, never a copy of a page */
 async function networkWithOfflineFallback(request: Request): Promise<Response> {
   try {
-    return await fetch(request);
+    return await fetch(toNetworkRequest(request));
   } catch {
     const cache = await caches.open(precacheName);
     const fallback = await cache.match(OFFLINE_URL);
