@@ -13,5 +13,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const { user } = await requireSession();
   const t = await getTranslations('dashboard');
 
-  return <PageHeader title={t('title')} description={t('welcome', { name: user.name })} />;
+  return (
+    <PageHeader title={t('title')} description={t('welcome', { name: user.name || user.email })} />
+  );
 }

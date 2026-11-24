@@ -19,6 +19,7 @@ export interface ActionEmailProps {
   /** Omit for informational emails (no button). */
   action?: { label: string; url: string };
   ignore?: string;
+  code?: string;
 }
 
 export function ActionEmail({
@@ -29,6 +30,7 @@ export function ActionEmail({
   footer,
   action,
   ignore,
+  code,
 }: ActionEmailProps) {
   return (
     <Html lang={lang}>
@@ -50,6 +52,21 @@ export function ActionEmail({
           </Heading>
           <Text>{greeting}</Text>
           <Text>{body}</Text>
+          {code ? (
+            <Text
+              style={{
+                backgroundColor: '#f4f4f5',
+                borderRadius: 6,
+                fontFamily: 'monospace',
+                fontSize: 28,
+                letterSpacing: 6,
+                padding: '12px 16px',
+                textAlign: 'center',
+              }}
+            >
+              {code}
+            </Text>
+          ) : null}
           {action ? (
             <Button
               href={action.url}

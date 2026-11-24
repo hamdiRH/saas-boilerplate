@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { expect } from '@playwright/test';
 
-const DIR = path.resolve('.emails');
+const DIRS = [path.resolve('.emails'), path.resolve('.next/standalone/.emails')];
 
 export interface CapturedEmail {
   to: string;
@@ -14,18 +14,20 @@ export interface CapturedEmail {
 }
 
 function find(to: string, since: number): CapturedEmail | undefined {
-  if (!existsSync(DIR)) {
-    return undefined;
-  }
+  for (const dir of DIRS) {
+    if (!existsSync(dir)) {
+      continue;
+    }
 
-  for (const file of readdirSync(DIR).toSorted().toReversed()) {
-    try {
-      const email = JSON.parse(readFileSync(path.join(DIR, file), 'utf-8')) as CapturedEmail;
-      if (email.to === to && email.createdAt >= since) {
-        return email;
+    for (const file of readdirSync(dir).toSorted().toReversed()) {
+      try {
+        const email = JSON.parse(readFileSync(path.join(dir, file), 'utf-8')) as CapturedEmail;
+        if (email.to === to && email.createdAt >= since) {
+          return email;
+        }
+      } catch {
+        // file still being written — try again on the next poll
       }
-    } catch {
-      // file still being written — try again on the next poll
     }
   }
   return undefined;

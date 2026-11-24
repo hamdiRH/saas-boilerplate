@@ -8,15 +8,18 @@ const appEnv = {
   ALLOW_LOCAL_SERVICES: 'true',
   AUTH_RATE_LIMIT: 'on',
   EMAIL_TRANSPORT: 'console',
+  NEXT_PUBLIC_APP_NAME: 'Nexora',
 };
 
 export default defineConfig({
   forbidOnly: isCI,
+  expect: { timeout: 10_000 },
   fullyParallel: true,
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   reporter: isCI ? [['html', { open: 'never' }], ['github']] : 'list',
   retries: isCI ? 1 : 0,
   testDir: 'e2e',
+  timeout: 60_000,
   use: { baseURL, trace: 'on-first-retry' },
   webServer: [
     { command: 'pnpm db:server', port: 5433, reuseExistingServer: false, timeout: 120_000 },

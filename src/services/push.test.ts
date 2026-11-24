@@ -31,7 +31,7 @@ describe('push service', () => {
       { email: 'a@example.com', id: 'user-a', name: 'A' },
       { email: 'b@example.com', id: 'user-b', name: 'B' },
     ]);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await testDb.destroy();

@@ -3,6 +3,12 @@ import { z } from 'zod';
 
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
+const flag = (fallback: 'true' | 'false') =>
+  z
+    .enum(['true', 'false'])
+    .default(fallback)
+    .transform((value) => value === 'true');
+
 export const Env = createEnv({
   client: {
     NEXT_PUBLIC_APP_NAME: z.string().min(1),
@@ -59,7 +65,9 @@ export const Env = createEnv({
   // Next.js inlines NEXT_PUBLIC_* at build time, so each var must be listed explicitly.
   runtimeEnv: {
     ALLOW_LOCAL_SERVICES: process.env.ALLOW_LOCAL_SERVICES,
+    AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK: process.env.AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK,
     AUTH_IP_HEADER: process.env.AUTH_IP_HEADER,
+    AUTH_MAGIC_LINK_ENABLED: process.env.AUTH_MAGIC_LINK_ENABLED,
     AUTH_RATE_LIMIT: process.env.AUTH_RATE_LIMIT,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
@@ -109,6 +117,9 @@ export const Env = createEnv({
       .string()
       .regex(/^(?:mailto:|https:\/\/)/u)
       .optional(),
+    AUTH_MAGIC_LINK_ENABLED: flag('true'),
+    // false → unknown emails never receive a link (response stays identical)
+    AUTH_ALLOW_SIGNUP_VIA_MAGIC_LINK: flag('true'),
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

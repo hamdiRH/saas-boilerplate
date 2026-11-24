@@ -5,9 +5,12 @@ import { firstLink, waitForEmail } from './helpers/inbox';
 import { createUser, PASSWORD, randomIp, uniqueEmail } from './helpers/users';
 
 async function signInViaUi(page: Page, email: string, password: string) {
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  const form = page.locator('form').filter({
+    has: page.getByRole('button', { name: 'Sign in' }),
+  });
+  await form.getByLabel('Email', { exact: true }).fill(email);
+  await form.getByLabel('Password', { exact: true }).fill(password);
+  await form.getByRole('button', { name: 'Sign in' }).click();
 }
 
 test('sign up → verify → dashboard → sign out → sign in', async ({ page }) => {

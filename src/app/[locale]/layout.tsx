@@ -19,7 +19,7 @@ import { APPLE_TOUCH_ICON, PWA_BRAND } from '@/libs/pwa/brand';
 import '@/styles/global.css';
 
 export const metadata: Metadata = {
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'SaaS Boilerplate' },
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: Env.NEXT_PUBLIC_APP_NAME },
   description: 'Production-ready SaaS starter',
   icons: { apple: APPLE_TOUCH_ICON },
   title: Env.NEXT_PUBLIC_APP_NAME,
