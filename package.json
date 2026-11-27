@@ -1,6 +1,6 @@
 {
   "name": "nextjs-boilerplate",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "scripts": {
     "dev": "concurrently -k -n db,web -c blue,green \"pnpm db:server\" \"next dev\"",
