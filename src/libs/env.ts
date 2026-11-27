@@ -95,6 +95,8 @@ export const Env = createEnv({
     TWITTER_CLIENT_SECRET: process.env.TWITTER_CLIENT_SECRET,
     APPLE_CLIENT_ID: process.env.APPLE_CLIENT_ID,
     APPLE_CLIENT_SECRET: process.env.APPLE_CLIENT_SECRET,
+    PASSKEY_RP_ID: process.env.PASSEKEY_RP_ID,
+    PASSKEY_RP_NAME: process.env.PASSKEY_RP_NAME,
   },
   server: {
     // CI/e2e only: lets a production build use the embedded database and the console email transport.
@@ -140,6 +142,9 @@ export const Env = createEnv({
     TWITTER_CLIENT_SECRET: z.string().min(1).optional(),
     APPLE_CLIENT_ID: z.string().min(1).optional(),
     APPLE_CLIENT_SECRET: z.string().min(1).optional(),
+    // Defaults: hostname of NEXT_PUBLIC_APP_URL / app name
+    PASSKEY_RP_ID: z.string().min(1).optional(),
+    PASSKEY_RP_NAME: z.string().min(1).optional(),
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });

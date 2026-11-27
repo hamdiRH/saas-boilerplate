@@ -8,6 +8,7 @@ import {
   ExternalServiceError,
   NotFoundError,
   RateLimitError,
+  ReauthRequiredError,
   ValidationError,
 } from './errors';
 
@@ -20,6 +21,7 @@ describe('AppError hierarchy', () => {
     [new ConflictError(), 409, 'CONFLICT', 'errors.conflict'],
     [new RateLimitError(), 429, 'RATE_LIMITED', 'errors.rateLimited'],
     [new ExternalServiceError(), 502, 'EXTERNAL_SERVICE', 'errors.external'],
+    [new ReauthRequiredError(), 401, 'REAUTH_REQUIRED', 'auth.errors.freshRequired'],
   ] as const;
 
   for (const [error, status, code, key] of errorMappings) {

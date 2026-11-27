@@ -13,3 +13,12 @@ it('maps known codes, rate limits and unknown errors', () => {
   expect(authErrorKey({ code: 'SOMETHING_NEW', status: 500 })).toBe('errors.internal');
   expect(authErrorKey(null)).toBe('errors.internal');
 });
+
+it('uses the per-feature fallback and maps cancelled passkey prompts', () => {
+  expect(authErrorKey({ code: 'UNKNOWN' }, 'auth.errors.passkeyFailed')).toBe(
+    'auth.errors.passkeyFailed',
+  );
+  expect(authErrorKey({ code: 'AUTH_CANCELLED' }, 'auth.errors.passkeyFailed')).toBe(
+    'auth.errors.passkeyCancelled',
+  );
+});

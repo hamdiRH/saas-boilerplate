@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { ChangePasswordForm } from '@/components/account/change-password-form';
 import { ConnectedAccounts } from '@/components/account/connected-accounts';
 import { DeleteAccountForm } from '@/components/account/delete-account-form';
+import { PasskeysCard } from '@/components/account/passkeys-card';
 import { SessionsList } from '@/components/account/sessions-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,7 @@ async function SecurityContent({ params }: SecurityPageProps) {
   const { locale } = await params;
   setRequestLocale(locale as 'fr' | 'en');
   await requireSession();
+  const tPasskeys = await getTranslations('security.passkeys');
   const t = await getTranslations('account.password');
   const sessions = await listUserSessions();
   const tSessions = await getTranslations('account.sessions');
@@ -48,6 +50,15 @@ async function SecurityContent({ params }: SecurityPageProps) {
         </CardHeader>
         <CardContent>
           <ChangePasswordForm />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>{tPasskeys('title')}</CardTitle>
+          <CardDescription>{tPasskeys('description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PasskeysCard passkeys={snapshot.passkeys} />
         </CardContent>
       </Card>
       <Card>

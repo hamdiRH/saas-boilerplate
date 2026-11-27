@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 
+import { passkey } from '@better-auth/passkey';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
@@ -17,6 +18,7 @@ import {
 } from '@/libs/auth-emails';
 import { ACCOUNT_LINKING } from '@/libs/auth-linking';
 import { decideMagicLink } from '@/libs/auth-magic-link';
+import { buildPasskeyConfig } from '@/libs/auth-passkey';
 import {
   buildSocialProviders,
   buildTrustedOrigins,
@@ -26,6 +28,7 @@ import {
 import { Env } from '@/libs/env';
 import { runInBackground } from '@/utils/background';
 
+import { SESSION_FRESH_SECONDS } from './auth-constants';
 import { AUTH_RATE_LIMIT_DEFAULT, AUTH_RATE_LIMIT_RULES } from './auth-rate-limit';
 import { getLogger } from './logger';
 
@@ -106,6 +109,14 @@ export function createAuth(database: DbLike) {
           });
         },
       }),
+      passkey(
+        buildPasskeyConfig({
+          appUrl: Env.NEXT_PUBLIC_APP_URL,
+          appName: Env.NEXT_PUBLIC_APP_NAME,
+          rpId: Env.PASSKEY_RP_ID,
+          rpName: Env.PASSKEY_RP_NAME,
+        }),
+      ),
       nextCookies(),
     ],
     rateLimit: {
@@ -120,7 +131,7 @@ export function createAuth(database: DbLike) {
       // 7 days
       expiresIn: 60 * 60 * 24 * 7,
       // "fresh" for 10 minutes → sensitive actions need recent sign-in
-      freshAge: 60 * 10,
+      freshAge: SESSION_FRESH_SECONDS,
       // refresh the expiry once a day,
       updateAge: 60 * 60 * 24,
     },
