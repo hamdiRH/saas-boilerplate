@@ -5,7 +5,8 @@ import { cache } from 'react';
 
 import { redirect } from '@/i18n/navigation';
 import { auth } from '@/libs/auth';
-import { AuthenticationError } from '@/libs/errors';
+import { SESSION_FRESH_SECONDS } from '@/libs/auth-constants';
+import { AuthenticationError, ReauthRequiredError } from '@/libs/errors';
 
 /** Validated against the database. `cache()` dedupes calls within one request. */
 export const getSession = cache(async () =>
@@ -36,6 +37,16 @@ export async function getSessionOrThrow(): Promise<Session> {
   const session = await getSession();
   if (!session?.user.emailVerified) {
     throw new AuthenticationError();
+  }
+  return session;
+}
+
+/** For sensitive Server Actions: signed in AND authenticated recently. */
+export async function requireFreshSession(maxAgeSeconds = SESSION_FRESH_SECONDS): Promise<Session> {
+  const session = await getSessionOrThrow();
+  const ageSeconds = (Date.now() - new Date(session.session.createdAt).getTime()) / 1000;
+  if (ageSeconds > maxAgeSeconds) {
+    throw new ReauthRequiredError();
   }
   return session;
 }

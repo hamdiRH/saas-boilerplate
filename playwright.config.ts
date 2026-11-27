@@ -7,6 +7,8 @@ const baseURL = 'http://localhost:3000';
 const appEnv = {
   ALLOW_LOCAL_SERVICES: 'true',
   AUTH_RATE_LIMIT: 'on',
+  DATABASE_URL: 'postgres://postgres:postgres@127.0.0.1:5433/postgres',
+  DB_SERVER_PORT: '5433',
   EMAIL_TRANSPORT: 'console',
   // Git Bash sets HOSTNAME to the PC name; Next standalone would bind to that, not localhost.
   HOSTNAME: '0.0.0.0',
@@ -25,7 +27,13 @@ export default defineConfig({
   timeout: 60_000,
   use: { baseURL, trace: 'on-first-retry' },
   webServer: [
-    { command: 'pnpm db:server', port: 5433, reuseExistingServer: false, timeout: 120_000 },
+    {
+      command: 'pnpm db:server',
+      env: { DB_SERVER_PORT: '5433' },
+      port: 5433,
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
     {
       command: 'pnpm build && pnpm start',
       env: appEnv,

@@ -10,6 +10,7 @@ const KEYS: Record<string, string> = {
   TOKEN_EXPIRED: 'auth.errors.invalidToken',
   USER_ALREADY_EXISTS: 'auth.errors.userExists',
   USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: 'auth.errors.userExists',
+  AUTH_CANCELLED: 'auth.errors.passkeyCancelled',
 };
 
 interface AuthClientError {
@@ -18,10 +19,13 @@ interface AuthClientError {
 }
 
 /** Maps a Better Auth client error to a full i18n key. */
-export function authErrorKey(error: AuthClientError | null | undefined): string {
+export function authErrorKey(
+  error: AuthClientError | null | undefined,
+  fallback = 'errors.internal',
+): string {
   if (error?.status === 429) {
     return 'errors.rateLimited';
   }
   const key = error?.code ? KEYS[error.code] : undefined;
-  return key ?? 'errors.internal';
+  return key ?? fallback;
 }

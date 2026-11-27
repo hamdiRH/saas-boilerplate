@@ -16,6 +16,15 @@ export interface SecuritySnapshot {
   /** credential + social accounts — if this is 1, nothing may be disconnected */
   accountCount: number;
   providers: ProviderSummary[];
+  passkeys: PasskeySummary[];
+}
+
+export interface PasskeySummary {
+  id: string;
+  name: string;
+  createdAt: string | null;
+  deviceType: string;
+  backedUp: boolean;
 }
 
 export async function getSecuritySnapshot(): Promise<SecuritySnapshot> {
@@ -23,7 +32,7 @@ export async function getSecuritySnapshot(): Promise<SecuritySnapshot> {
 
   // 🔍 `listUserAccounts` in current versions (older: `listAccounts`)
   const accounts = await auth.api.listUserAccounts({ headers: await headers() });
-
+  const passkeys = await auth.api.listPasskeys({ headers: await headers() });
   return {
     emailVerified: user.emailVerified,
     hasPassword: accounts.some((account) => account.providerId === 'credential'),
@@ -32,5 +41,12 @@ export async function getSecuritySnapshot(): Promise<SecuritySnapshot> {
       .map(({ id, providerId }) => ({ accountId: id, providerId })),
     accountCount: accounts.length,
     providers: getEnabledProviders(Env),
+    passkeys: passkeys.map((item) => ({
+      id: item.id,
+      name: item.name ?? 'Passkey',
+      createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : null,
+      deviceType: item.deviceType,
+      backedUp: item.backedUp,
+    })),
   };
 }

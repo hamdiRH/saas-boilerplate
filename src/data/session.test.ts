@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AuthenticationError } from '@/libs/errors';
+import { AuthenticationError, ReauthRequiredError } from '@/libs/errors';
 
-import { getSessionOrThrow, requireGuest, requireSession } from './session';
+import { getSessionOrThrow, requireGuest, requireSession, requireFreshSession } from './session';
 import { withAuth } from './with-auth';
 
 const getSessionMock = vi.hoisted(() => vi.fn());
@@ -87,5 +87,20 @@ describe('getSessionOrThrow / withAuth', () => {
     const result = await withAuth(handler)({ a: 1 });
     expect(result.input).toEqual({ a: 1 });
     expect(result.ctx.session).toBe(verified);
+  });
+});
+
+describe('requireFreshSession', () => {
+  it('accepts a recent session', async () => {
+    getSessionMock.mockResolvedValue({ ...verified, session: { id: 's1', createdAt: new Date() } });
+    await expect(requireFreshSession()).resolves.toBeDefined();
+  });
+
+  it('asks for re-authentication when the session is old', async () => {
+    getSessionMock.mockResolvedValue({
+      ...verified,
+      session: { id: 's1', createdAt: new Date(Date.now() - 60 * 60 * 1000) },
+    });
+    await expect(requireFreshSession()).rejects.toBeInstanceOf(ReauthRequiredError);
   });
 });
