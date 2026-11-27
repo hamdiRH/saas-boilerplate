@@ -15,6 +15,7 @@ import {
   sendVerificationEmail,
   sendMagicLinkEmail,
 } from '@/libs/auth-emails';
+import { ACCOUNT_LINKING } from '@/libs/auth-linking';
 import { decideMagicLink } from '@/libs/auth-magic-link';
 import {
   buildSocialProviders,
@@ -45,6 +46,7 @@ for (const id of incompleteProviders(Env)) {
 /** Factory so integration tests can run the real auth stack on an in-memory database. */
 export function createAuth(database: DbLike) {
   return betterAuth({
+    account: { accountLinking: ACCOUNT_LINKING },
     advanced: {
       // 🔍 older versions: advanced.generateId
       database: { generateId: () => randomUUID() },
@@ -127,10 +129,9 @@ export function createAuth(database: DbLike) {
     user: {
       changeEmail: {
         enabled: true,
-        // 🔍 Option name/flow differs across versions (sendChangeEmailConfirmation in older ones)
-        sendChangeEmailVerification: (
+        sendChangeEmailConfirmation: (
           { user, newEmail, url }: AuthEmailData & { newEmail: string },
-          request: Request | undefined,
+          request?: Request,
         ) => {
           runInBackground(() => sendChangeEmailEmail({ newEmail, request, url, user }));
           return Promise.resolve();
