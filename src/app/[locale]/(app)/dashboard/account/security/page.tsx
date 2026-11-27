@@ -2,10 +2,12 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Suspense } from 'react';
 
 import { ChangePasswordForm } from '@/components/account/change-password-form';
+import { ConnectedAccounts } from '@/components/account/connected-accounts';
 import { DeleteAccountForm } from '@/components/account/delete-account-form';
 import { SessionsList } from '@/components/account/sessions-list';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getSecuritySnapshot } from '@/data/security';
 import { requireSession } from '@/data/session';
 import { listUserSessions } from '@/data/sessions';
 
@@ -21,9 +23,24 @@ async function SecurityContent({ params }: SecurityPageProps) {
   const sessions = await listUserSessions();
   const tSessions = await getTranslations('account.sessions');
   const tDanger = await getTranslations('account.danger');
+  const snapshot = await getSecuritySnapshot();
+  const tConnected = await getTranslations('security.connected');
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>{tConnected('title')}</CardTitle>
+          <CardDescription>{tConnected('description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ConnectedAccounts
+            providers={snapshot.providers}
+            linkedAccounts={snapshot.linkedAccounts}
+            accountCount={snapshot.accountCount}
+          />
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle>{t('title')}</CardTitle>
